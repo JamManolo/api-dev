@@ -3,13 +3,20 @@ source 'https://rubygems.org'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.0.0'
 
-gem 'xmlsoccer'
+gem 'xmlsoccer', path: '/Users/jimcar/Work-test/xmlsoccer'
 
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3'
 
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 4.0.0'
+gem 'bootstrap-sass',  github: 'thomas-mcdonald/bootstrap-sass', branch: '3'
+
+# Use HAML instead of ERB
+gem 'haml-rails', '>= 0.3.4'
+
+# Use Dropbox for file storage
+gem 'dropbox-sdk'
 
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '>= 1.3.0'

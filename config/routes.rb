@@ -1,6 +1,14 @@
 Xmlsoccer::Application.routes.draw do
   get "soccer_stats/home"
   get "soccer_stats/index"
+  get "soccer_stats/leagues"
+  get "soccer_stats/scores"
+  get "soccer_stats/earliest_match_dates"
+  get  "dropbox/main"
+  post "dropbox/upload"
+  get  "dropbox/auth_start"
+  get  "dropbox/auth_finish"
+  # match "dropbox/auth_finish" => redirect("http://localhost:3000/dropbox/auth_finish?action=auth_finish&controller=dropbox"), via: [:get, :post]
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

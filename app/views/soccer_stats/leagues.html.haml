@@ -1,0 +1,7 @@
+%h2= "SoccerStats#leagues"
+%ul
+ - @leagues.each do |league|
+  .row
+   .col-md-2= "#{league[:id]} #{league[:country]}"
+   .col-md-3= "#{league[:name]}"
+   
