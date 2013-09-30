@@ -22,6 +22,17 @@ APP_SECRET = "lfp3x6qyrsdq9bm"
 
 class DropboxController < ApplicationController
 
+    def push
+        client = get_dropbox_client
+        logger.debug "freddddd"
+        unless client
+            logger.debug "YOYOYOYO"
+            redirect_to(action: :auth_start) and return
+        end
+
+        render inline: "<h2>dropbox#push</h2>"
+    end
+
     def main
         client = get_dropbox_client
         unless client

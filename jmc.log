@@ -1,0 +1,313 @@
+# Logfile created on 2013-09-29 11:25:48 -0700 by logger.rb/36483
+D, [2013-09-29T11:27:46.935354 #589] DEBUG -- : 
+D, [2013-09-29T11:27:46.935630 #589] DEBUG -- : 
+I, [2013-09-29T11:27:46.936016 #589]  INFO -- : Started GET "/dropbox/main" for 127.0.0.1 at 2013-09-29 11:27:46 -0700
+I, [2013-09-29T11:27:48.173911 #589]  INFO -- : Processing by DropboxController#main as HTML
+I, [2013-09-29T11:27:48.210332 #589]  INFO -- : Redirected to http://localhost:3000/dropbox/auth_start
+I, [2013-09-29T11:27:48.210715 #589]  INFO -- : Completed 302 Found in 37ms (ActiveRecord: 0.0ms)
+D, [2013-09-29T11:27:48.217574 #589] DEBUG -- : 
+D, [2013-09-29T11:27:48.217662 #589] DEBUG -- : 
+I, [2013-09-29T11:27:48.217809 #589]  INFO -- : Started GET "/dropbox/auth_start" for 127.0.0.1 at 2013-09-29 11:27:48 -0700
+I, [2013-09-29T11:27:48.221138 #589]  INFO -- : Processing by DropboxController#auth_start as HTML
+I, [2013-09-29T11:27:48.222845 #589]  INFO -- : Redirected to https://www.dropbox.com/1/oauth2/authorize?client_id=umupoy3f0n4r787&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fdropbox%2Fauth_finish&state=MJpCi0XS66S%2FAGvvSoHy9A%3D%3D
+I, [2013-09-29T11:27:48.223114 #589]  INFO -- : Completed 302 Found in 2ms (ActiveRecord: 0.0ms)
+D, [2013-09-29T11:28:03.546449 #589] DEBUG -- : 
+D, [2013-09-29T11:28:03.546539 #589] DEBUG -- : 
+I, [2013-09-29T11:28:03.546829 #589]  INFO -- : Started GET "/dropbox/auth_finish?code=oZ5zHAEFPNYAAAAAAAAAAZjt_6ZLXyEgtUC-nGcBQQ4&state=MJpCi0XS66S%2FAGvvSoHy9A%3D%3D" for 127.0.0.1 at 2013-09-29 11:28:03 -0700
+I, [2013-09-29T11:28:03.549168 #589]  INFO -- : Processing by DropboxController#auth_finish as HTML
+I, [2013-09-29T11:28:03.549273 #589]  INFO -- :   Parameters: {"code"=>"oZ5zHAEFPNYAAAAAAAAAAZjt_6ZLXyEgtUC-nGcBQQ4", "state"=>"MJpCi0XS66S/AGvvSoHy9A=="}
+I, [2013-09-29T11:28:04.476503 #589]  INFO -- : Redirected to http://localhost:3000/dropbox/main
+I, [2013-09-29T11:28:04.476782 #589]  INFO -- : Completed 302 Found in 927ms (ActiveRecord: 0.0ms)
+D, [2013-09-29T11:28:04.483822 #589] DEBUG -- : 
+D, [2013-09-29T11:28:04.483912 #589] DEBUG -- : 
+I, [2013-09-29T11:28:04.484049 #589]  INFO -- : Started GET "/dropbox/main" for 127.0.0.1 at 2013-09-29 11:28:04 -0700
+I, [2013-09-29T11:28:04.485901 #589]  INFO -- : Processing by DropboxController#main as HTML
+I, [2013-09-29T11:28:04.707202 #589]  INFO -- :   Rendered inline template (3.2ms)
+I, [2013-09-29T11:28:04.707633 #589]  INFO -- : Completed 200 OK in 222ms (Views: 33.0ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T11:28:17.349436 #589] DEBUG -- : 
+D, [2013-09-29T11:28:17.349526 #589] DEBUG -- : 
+I, [2013-09-29T11:28:17.349687 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 11:28:17 -0700
+I, [2013-09-29T11:28:17.354245 #589]  INFO -- : Processing by DropboxController#push as HTML
+I, [2013-09-29T11:28:17.360438 #589]  INFO -- : Completed 500 Internal Server Error in 6ms
+F, [2013-09-29T11:28:17.371145 #589] FATAL -- : 
+NameError (undefined local variable or method `account_info' for #<DropboxController:0x007fde75b251a0>):
+  app/controllers/dropbox_controller.rb:31:in `push'
+
+
+I, [2013-09-29T11:28:17.473211 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_source.erb (1.1ms)
+I, [2013-09-29T11:28:17.484309 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_trace.erb (1.6ms)
+I, [2013-09-29T11:28:17.495064 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_request_and_response.erb (1.4ms)
+I, [2013-09-29T11:28:17.495247 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/diagnostics.erb within rescues/layout (66.1ms)
+D, [2013-09-29T11:28:48.180493 #589] DEBUG -- : 
+D, [2013-09-29T11:28:48.180588 #589] DEBUG -- : 
+I, [2013-09-29T11:28:48.180793 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 11:28:48 -0700
+I, [2013-09-29T11:28:48.222043 #589]  INFO -- : Processing by DropboxController#push as HTML
+I, [2013-09-29T11:28:48.271694 #589]  INFO -- : Completed 500 Internal Server Error in 49ms
+F, [2013-09-29T11:28:48.277050 #589] FATAL -- : 
+NameError (undefined local variable or method `account_info' for #<DropboxController:0x007fde770c99c0>):
+  app/controllers/dropbox_controller.rb:31:in `push'
+
+
+I, [2013-09-29T11:28:48.302608 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_source.erb (1.0ms)
+I, [2013-09-29T11:28:48.310617 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_trace.erb (1.7ms)
+I, [2013-09-29T11:28:48.318989 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_request_and_response.erb (1.3ms)
+I, [2013-09-29T11:28:48.319157 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/diagnostics.erb within rescues/layout (27.7ms)
+D, [2013-09-29T11:29:02.762424 #589] DEBUG -- : 
+D, [2013-09-29T11:29:02.762522 #589] DEBUG -- : 
+I, [2013-09-29T11:29:02.762693 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 11:29:02 -0700
+I, [2013-09-29T11:29:02.799975 #589]  INFO -- : Processing by DropboxController#push as HTML
+I, [2013-09-29T11:29:02.804597 #589]  INFO -- : Completed 500 Internal Server Error in 4ms
+F, [2013-09-29T11:29:02.814595 #589] FATAL -- : 
+NameError (undefined local variable or method `account_info' for #<DropboxController:0x007fde75b3c350>):
+  app/controllers/dropbox_controller.rb:31:in `push'
+
+
+I, [2013-09-29T11:29:02.847030 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_source.erb (1.0ms)
+I, [2013-09-29T11:29:02.855081 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_trace.erb (1.6ms)
+I, [2013-09-29T11:29:02.863253 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_request_and_response.erb (1.4ms)
+I, [2013-09-29T11:29:02.863435 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/diagnostics.erb within rescues/layout (30.3ms)
+D, [2013-09-29T11:30:02.995918 #589] DEBUG -- : 
+D, [2013-09-29T11:30:02.996004 #589] DEBUG -- : 
+I, [2013-09-29T11:30:02.996169 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 11:30:02 -0700
+I, [2013-09-29T11:30:03.073059 #589]  INFO -- : Processing by DropboxController#push as HTML
+I, [2013-09-29T11:30:03.075890 #589]  INFO -- :   Rendered inline template (0.5ms)
+I, [2013-09-29T11:30:03.076351 #589]  INFO -- : Completed 200 OK in 3ms (Views: 1.5ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T11:31:15.663562 #589] DEBUG -- : 
+D, [2013-09-29T11:31:15.663655 #589] DEBUG -- : 
+I, [2013-09-29T11:31:15.663821 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 11:31:15 -0700
+I, [2013-09-29T11:31:15.693606 #589]  INFO -- : Processing by DropboxController#push as HTML
+I, [2013-09-29T11:31:15.695889 #589]  INFO -- :   Rendered inline template (0.4ms)
+I, [2013-09-29T11:31:15.696269 #589]  INFO -- : Completed 200 OK in 2ms (Views: 1.2ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T11:31:54.327966 #589] DEBUG -- : 
+D, [2013-09-29T11:31:54.328056 #589] DEBUG -- : 
+I, [2013-09-29T11:31:54.328217 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 11:31:54 -0700
+I, [2013-09-29T11:31:54.367548 #589]  INFO -- : Processing by DropboxController#push as HTML
+D, [2013-09-29T11:31:54.368896 #589] DEBUG -- : freddddd
+I, [2013-09-29T11:31:54.370465 #589]  INFO -- :   Rendered inline template (0.5ms)
+I, [2013-09-29T11:31:54.371022 #589]  INFO -- : Completed 200 OK in 3ms (Views: 1.6ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T12:59:25.987812 #589] DEBUG -- : 
+D, [2013-09-29T12:59:25.987896 #589] DEBUG -- : 
+I, [2013-09-29T12:59:25.988145 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 12:59:25 -0700
+I, [2013-09-29T12:59:25.999732 #589]  INFO -- : Processing by DropboxController#push as HTML
+D, [2013-09-29T12:59:26.000982 #589] DEBUG -- : freddddd
+I, [2013-09-29T12:59:26.002527 #589]  INFO -- : Completed 500 Internal Server Error in 3ms
+F, [2013-09-29T12:59:26.007334 #589] FATAL -- : 
+NoMethodError (undefined method `degug' for #<Logger:0x007fde731e8850>):
+  app/controllers/dropbox_controller.rb:29:in `push'
+
+
+I, [2013-09-29T12:59:26.034357 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_source.erb (1.1ms)
+I, [2013-09-29T12:59:26.042531 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_trace.erb (1.7ms)
+I, [2013-09-29T12:59:26.050676 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_request_and_response.erb (1.4ms)
+I, [2013-09-29T12:59:26.050838 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/diagnostics.erb within rescues/layout (25.5ms)
+D, [2013-09-29T13:00:51.115103 #589] DEBUG -- : 
+D, [2013-09-29T13:00:51.115188 #589] DEBUG -- : 
+I, [2013-09-29T13:00:51.115327 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 13:00:51 -0700
+I, [2013-09-29T13:00:51.150411 #589]  INFO -- : Processing by DropboxController#push as HTML
+D, [2013-09-29T13:00:51.152037 #589] DEBUG -- : freddddd
+D, [2013-09-29T13:00:51.152151 #589] DEBUG -- : YOYOYOYO
+I, [2013-09-29T13:00:51.153747 #589]  INFO -- : Redirected to http://localhost:3000/dropbox/auth_start
+I, [2013-09-29T13:00:51.154085 #589]  INFO -- : Completed 302 Found in 3ms (ActiveRecord: 0.0ms)
+D, [2013-09-29T13:00:51.167386 #589] DEBUG -- : 
+D, [2013-09-29T13:00:51.167470 #589] DEBUG -- : 
+I, [2013-09-29T13:00:51.167629 #589]  INFO -- : Started GET "/dropbox/auth_start" for 127.0.0.1 at 2013-09-29 13:00:51 -0700
+I, [2013-09-29T13:00:51.227484 #589]  INFO -- : Processing by DropboxController#auth_start as HTML
+I, [2013-09-29T13:00:51.229596 #589]  INFO -- : Redirected to https://www.dropbox.com/1/oauth2/authorize?client_id=umupoy3f0n4r787&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fdropbox%2Fauth_finish&state=le6BGiSeLsccjQe7fg9Sdg%3D%3D
+I, [2013-09-29T13:00:51.229974 #589]  INFO -- : Completed 302 Found in 2ms (ActiveRecord: 0.0ms)
+D, [2013-09-29T13:01:36.718453 #589] DEBUG -- : 
+D, [2013-09-29T13:01:36.718539 #589] DEBUG -- : 
+I, [2013-09-29T13:01:36.718796 #589]  INFO -- : Started GET "/dropbox/auth_finish?code=aBLJ7OZ65xEAAAAAAAAAAZkmPtzET4iaMxmra8rZdwo&state=le6BGiSeLsccjQe7fg9Sdg%3D%3D" for 127.0.0.1 at 2013-09-29 13:01:36 -0700
+I, [2013-09-29T13:01:36.721580 #589]  INFO -- : Processing by DropboxController#auth_finish as HTML
+I, [2013-09-29T13:01:36.721679 #589]  INFO -- :   Parameters: {"code"=>"aBLJ7OZ65xEAAAAAAAAAAZkmPtzET4iaMxmra8rZdwo", "state"=>"le6BGiSeLsccjQe7fg9Sdg=="}
+I, [2013-09-29T13:01:37.838311 #589]  INFO -- : Redirected to http://localhost:3000/dropbox/main
+I, [2013-09-29T13:01:37.838597 #589]  INFO -- : Completed 302 Found in 1117ms (ActiveRecord: 0.0ms)
+D, [2013-09-29T13:01:37.845897 #589] DEBUG -- : 
+D, [2013-09-29T13:01:37.845992 #589] DEBUG -- : 
+I, [2013-09-29T13:01:37.846136 #589]  INFO -- : Started GET "/dropbox/main" for 127.0.0.1 at 2013-09-29 13:01:37 -0700
+I, [2013-09-29T13:01:37.848477 #589]  INFO -- : Processing by DropboxController#main as HTML
+I, [2013-09-29T13:01:38.033867 #589]  INFO -- :   Rendered inline template (1.8ms)
+I, [2013-09-29T13:01:38.034310 #589]  INFO -- : Completed 200 OK in 186ms (Views: 2.9ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T13:23:27.922131 #589] DEBUG -- : 
+D, [2013-09-29T13:23:27.922229 #589] DEBUG -- : 
+I, [2013-09-29T13:23:27.922403 #589]  INFO -- : Started GET "/dropbox/main" for 127.0.0.1 at 2013-09-29 13:23:27 -0700
+I, [2013-09-29T13:23:27.926015 #589]  INFO -- : Processing by DropboxController#main as HTML
+I, [2013-09-29T13:23:28.628824 #589]  INFO -- :   Rendered inline template (1.7ms)
+I, [2013-09-29T13:23:28.629251 #589]  INFO -- : Completed 200 OK in 703ms (Views: 2.4ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T13:23:35.375962 #589] DEBUG -- : 
+D, [2013-09-29T13:23:35.376054 #589] DEBUG -- : 
+I, [2013-09-29T13:23:35.376216 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 13:23:35 -0700
+I, [2013-09-29T13:23:35.379805 #589]  INFO -- : Processing by DropboxController#push as HTML
+D, [2013-09-29T13:23:35.380604 #589] DEBUG -- : freddddd
+I, [2013-09-29T13:23:35.384413 #589]  INFO -- :   Rendered inline template (3.0ms)
+I, [2013-09-29T13:23:35.384900 #589]  INFO -- : Completed 200 OK in 5ms (Views: 3.9ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T13:23:51.047783 #589] DEBUG -- : 
+D, [2013-09-29T13:23:51.050053 #589] DEBUG -- : 
+I, [2013-09-29T13:23:51.050489 #589]  INFO -- : Started GET "/soccer_stats" for 127.0.0.1 at 2013-09-29 13:23:51 -0700
+F, [2013-09-29T13:23:51.059145 #589] FATAL -- : 
+ActionController::RoutingError (No route matches [GET] "/soccer_stats"):
+  actionpack (4.0.0) lib/action_dispatch/middleware/debug_exceptions.rb:21:in `call'
+  actionpack (4.0.0) lib/action_dispatch/middleware/show_exceptions.rb:30:in `call'
+  railties (4.0.0) lib/rails/rack/logger.rb:38:in `call_app'
+  railties (4.0.0) lib/rails/rack/logger.rb:23:in `call'
+  actionpack (4.0.0) lib/action_dispatch/middleware/request_id.rb:21:in `call'
+  rack (1.5.2) lib/rack/methodoverride.rb:21:in `call'
+  rack (1.5.2) lib/rack/runtime.rb:17:in `call'
+  activesupport (4.0.0) lib/active_support/cache/strategy/local_cache.rb:83:in `call'
+  rack (1.5.2) lib/rack/lock.rb:17:in `call'
+  actionpack (4.0.0) lib/action_dispatch/middleware/static.rb:64:in `call'
+  railties (4.0.0) lib/rails/engine.rb:511:in `call'
+  railties (4.0.0) lib/rails/application.rb:97:in `call'
+  rack (1.5.2) lib/rack/lock.rb:17:in `call'
+  rack (1.5.2) lib/rack/content_length.rb:14:in `call'
+  rack (1.5.2) lib/rack/handler/webrick.rb:60:in `service'
+  /Users/jimcar/.rvm/rubies/ruby-2.0.0-p247/lib/ruby/2.0.0/webrick/httpserver.rb:138:in `service'
+  /Users/jimcar/.rvm/rubies/ruby-2.0.0-p247/lib/ruby/2.0.0/webrick/httpserver.rb:94:in `run'
+  /Users/jimcar/.rvm/rubies/ruby-2.0.0-p247/lib/ruby/2.0.0/webrick/server.rb:295:in `block in start_thread'
+
+
+I, [2013-09-29T13:23:51.099382 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_trace.erb (1.5ms)
+I, [2013-09-29T13:23:51.368223 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/routes/_route.html.erb (1.8ms)
+I, [2013-09-29T13:23:51.423129 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/routes/_table.html.erb (46.0ms)
+I, [2013-09-29T13:23:51.423403 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/routing_error.erb within rescues/layout (333.1ms)
+D, [2013-09-29T13:24:12.766544 #589] DEBUG -- : 
+D, [2013-09-29T13:24:12.766817 #589] DEBUG -- : 
+I, [2013-09-29T13:24:12.770118 #589]  INFO -- : Started GET "/soccer_stats/leagues" for 127.0.0.1 at 2013-09-29 13:24:12 -0700
+I, [2013-09-29T13:24:12.779078 #589]  INFO -- : Processing by SoccerStatsController#leagues as HTML
+I, [2013-09-29T13:24:43.073633 #589]  INFO -- :   Rendered soccer_stats/leagues.html.haml within layouts/application (4.7ms)
+I, [2013-09-29T13:24:43.510373 #589]  INFO -- : Completed 200 OK in 30731ms (Views: 510.1ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T13:24:43.528672 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.528758 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.528995 #589]  INFO -- : Started GET "/assets/application.css?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.600435 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.600525 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.600770 #589]  INFO -- : Started GET "/assets/bootstrap/affix.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.607472 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.608066 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.608347 #589]  INFO -- : Started GET "/assets/custom.css?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.622710 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.622797 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.622994 #589]  INFO -- : Started GET "/assets/soccer_stats.css?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.628580 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.628663 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.628863 #589]  INFO -- : Started GET "/assets/jquery.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.644315 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.644406 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.644694 #589]  INFO -- : Started GET "/assets/jquery_ujs.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.654381 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.654495 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.654736 #589]  INFO -- : Started GET "/assets/bootstrap/collapse.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.674139 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.674240 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.674904 #589]  INFO -- : Started GET "/assets/bootstrap/carousel.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.680581 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.680662 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.680850 #589]  INFO -- : Started GET "/assets/bootstrap/alert.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.689851 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.690132 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.691049 #589]  INFO -- : Started GET "/assets/bootstrap/button.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.703166 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.703257 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.703468 #589]  INFO -- : Started GET "/assets/bootstrap/scrollspy.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.715876 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.715965 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.716161 #589]  INFO -- : Started GET "/assets/bootstrap/dropdown.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.724385 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.724477 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.724690 #589]  INFO -- : Started GET "/assets/bootstrap/transition.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.731871 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.732038 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.732245 #589]  INFO -- : Started GET "/assets/bootstrap/tab.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.737148 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.737226 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.737408 #589]  INFO -- : Started GET "/assets/bootstrap/popover.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.749272 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.749365 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.749580 #589]  INFO -- : Started GET "/assets/bootstrap/tooltip.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.761387 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.761465 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.761653 #589]  INFO -- : Started GET "/assets/soccer_stats.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.767025 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.767120 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.767362 #589]  INFO -- : Started GET "/assets/bootstrap.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.788145 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.788225 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.788431 #589]  INFO -- : Started GET "/assets/bootstrap/modal.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.793037 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.793122 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.793489 #589]  INFO -- : Started GET "/assets/turbolinks.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:43.800569 #589] DEBUG -- : 
+D, [2013-09-29T13:24:43.800650 #589] DEBUG -- : 
+I, [2013-09-29T13:24:43.803207 #589]  INFO -- : Started GET "/assets/application.js?body=1" for 127.0.0.1 at 2013-09-29 13:24:43 -0700
+D, [2013-09-29T13:24:49.458756 #589] DEBUG -- : 
+D, [2013-09-29T13:24:49.458850 #589] DEBUG -- : 
+I, [2013-09-29T13:24:49.458980 #589]  INFO -- : Started GET "/" for 127.0.0.1 at 2013-09-29 13:24:49 -0700
+I, [2013-09-29T13:24:49.540009 #589]  INFO -- : Processing by Rails::WelcomeController#index as HTML
+I, [2013-09-29T13:24:49.546018 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/railties-4.0.0/lib/rails/templates/rails/welcome/index.html.erb (1.0ms)
+I, [2013-09-29T13:24:49.546447 #589]  INFO -- : Completed 200 OK in 6ms (Views: 5.1ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T13:24:58.149478 #589] DEBUG -- : 
+D, [2013-09-29T13:24:58.149564 #589] DEBUG -- : 
+I, [2013-09-29T13:24:58.149721 #589]  INFO -- : Started GET "/scores" for 127.0.0.1 at 2013-09-29 13:24:58 -0700
+F, [2013-09-29T13:24:58.164205 #589] FATAL -- : 
+ActionController::RoutingError (No route matches [GET] "/scores"):
+  actionpack (4.0.0) lib/action_dispatch/middleware/debug_exceptions.rb:21:in `call'
+  actionpack (4.0.0) lib/action_dispatch/middleware/show_exceptions.rb:30:in `call'
+  railties (4.0.0) lib/rails/rack/logger.rb:38:in `call_app'
+  railties (4.0.0) lib/rails/rack/logger.rb:23:in `call'
+  actionpack (4.0.0) lib/action_dispatch/middleware/request_id.rb:21:in `call'
+  rack (1.5.2) lib/rack/methodoverride.rb:21:in `call'
+  rack (1.5.2) lib/rack/runtime.rb:17:in `call'
+  activesupport (4.0.0) lib/active_support/cache/strategy/local_cache.rb:83:in `call'
+  rack (1.5.2) lib/rack/lock.rb:17:in `call'
+  actionpack (4.0.0) lib/action_dispatch/middleware/static.rb:64:in `call'
+  railties (4.0.0) lib/rails/engine.rb:511:in `call'
+  railties (4.0.0) lib/rails/application.rb:97:in `call'
+  rack (1.5.2) lib/rack/lock.rb:17:in `call'
+  rack (1.5.2) lib/rack/content_length.rb:14:in `call'
+  rack (1.5.2) lib/rack/handler/webrick.rb:60:in `service'
+  /Users/jimcar/.rvm/rubies/ruby-2.0.0-p247/lib/ruby/2.0.0/webrick/httpserver.rb:138:in `service'
+  /Users/jimcar/.rvm/rubies/ruby-2.0.0-p247/lib/ruby/2.0.0/webrick/httpserver.rb:94:in `run'
+  /Users/jimcar/.rvm/rubies/ruby-2.0.0-p247/lib/ruby/2.0.0/webrick/server.rb:295:in `block in start_thread'
+
+
+I, [2013-09-29T13:24:58.205921 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_trace.erb (1.7ms)
+I, [2013-09-29T13:24:58.229211 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/routes/_route.html.erb (1.8ms)
+I, [2013-09-29T13:24:58.237554 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/routes/_table.html.erb (1.7ms)
+I, [2013-09-29T13:24:58.237774 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/routing_error.erb within rescues/layout (59.1ms)
+D, [2013-09-29T13:25:23.550929 #589] DEBUG -- : 
+D, [2013-09-29T13:25:23.551025 #589] DEBUG -- : 
+I, [2013-09-29T13:25:23.551182 #589]  INFO -- : Started GET "/soccer_stats/scores" for 127.0.0.1 at 2013-09-29 13:25:23 -0700
+I, [2013-09-29T13:25:23.554606 #589]  INFO -- : Processing by SoccerStatsController#scores as HTML
+I, [2013-09-29T13:25:29.578733 #589]  INFO -- :   Rendered soccer_stats/scores.html.haml within layouts/application (4.9ms)
+I, [2013-09-29T13:25:29.578994 #589]  INFO -- : Completed 500 Internal Server Error in 6024ms
+F, [2013-09-29T13:25:29.581699 #589] FATAL -- : 
+ActionView::Template::Error (undefined method `each' for nil:NilClass):
+    1: %h2= "SoccerStats#scores"
+    2: %ul
+    3:  - @scores.each do |score|
+    4:   .row= "#{score}"
+  app/views/soccer_stats/scores.html.haml:3:in `_app_views_soccer_stats_scores_html_haml___1862674168350191564_70296716962280'
+
+
+I, [2013-09-29T13:25:29.643793 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_trace.erb (1.7ms)
+I, [2013-09-29T13:25:29.657965 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/_request_and_response.erb (2.9ms)
+I, [2013-09-29T13:25:29.658140 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/actionpack-4.0.0/lib/action_dispatch/middleware/templates/rescues/template_error.erb within rescues/layout (29.2ms)
+D, [2013-09-29T13:25:43.660477 #589] DEBUG -- : 
+D, [2013-09-29T13:25:43.660572 #589] DEBUG -- : 
+I, [2013-09-29T13:25:43.660733 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 13:25:43 -0700
+I, [2013-09-29T13:25:43.664287 #589]  INFO -- : Processing by DropboxController#push as HTML
+D, [2013-09-29T13:25:43.665354 #589] DEBUG -- : freddddd
+I, [2013-09-29T13:25:43.666688 #589]  INFO -- :   Rendered inline template (0.5ms)
+I, [2013-09-29T13:25:43.667226 #589]  INFO -- : Completed 200 OK in 3ms (Views: 1.4ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T13:27:27.782969 #589] DEBUG -- : 
+D, [2013-09-29T13:27:27.783054 #589] DEBUG -- : 
+I, [2013-09-29T13:27:27.783203 #589]  INFO -- : Started GET "/dropbox/push" for 127.0.0.1 at 2013-09-29 13:27:27 -0700
+I, [2013-09-29T13:27:27.863747 #589]  INFO -- : Processing by DropboxController#push as HTML
+D, [2013-09-29T13:27:27.865284 #589] DEBUG -- : freddddd
+I, [2013-09-29T13:27:27.867052 #589]  INFO -- :   Rendered inline template (0.5ms)
+I, [2013-09-29T13:27:27.867626 #589]  INFO -- : Completed 200 OK in 4ms (Views: 1.7ms | ActiveRecord: 0.0ms)
+D, [2013-09-29T17:01:37.068345 #589] DEBUG -- : 
+D, [2013-09-29T17:01:37.068498 #589] DEBUG -- : 
+I, [2013-09-29T17:01:37.068751 #589]  INFO -- : Started GET "/" for 127.0.0.1 at 2013-09-29 17:01:37 -0700
+I, [2013-09-29T17:01:37.148885 #589]  INFO -- : Processing by Rails::WelcomeController#index as HTML
+I, [2013-09-29T17:01:37.214083 #589]  INFO -- :   Rendered /Users/jimcar/.rvm/gems/ruby-2.0.0-p247@railstutorial_rails_4_0/gems/railties-4.0.0/lib/rails/templates/rails/welcome/index.html.erb (0.1ms)
+I, [2013-09-29T17:01:37.214420 #589]  INFO -- : Completed 200 OK in 65ms (Views: 64.7ms | ActiveRecord: 0.0ms)
