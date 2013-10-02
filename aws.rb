@@ -7,8 +7,6 @@ require "json"
 aws_config_keys = JSON.parse(File.open('aws_config.json').read)
 AWS.config(aws_config_keys)
 
-bucket_name = 'fff-info-files'
-
 # Get an instance of the S3 interface
 puts "Getting S3 instance"
 s3 = AWS::S3.new
@@ -25,13 +23,11 @@ s3.buckets.each do |bucket|
 			end
 			file.close
 		end
-		object.keys.each do |key|
-			puts "object key: '#{key}"
-		end
 	end
 end
 
 # Upload some files
+bucket_name = s3.buckets.nil? ? "fff-info-files" : s3.buckets.first.name
 upload_files =['jmc.log', 'Gemfile']
 
 upload_files.each do |file_name|

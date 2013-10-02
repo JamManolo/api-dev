@@ -1,7 +1,6 @@
 #!/Users/jimcar/.rvm/rubies/ruby-2.0.0-p247/bin/ruby -w
 #coding:utf-8
 
-# Inspired by https://gist.github.com/3166610
 require 'google/api_client'
 require 'json'
 require 'httparty'
