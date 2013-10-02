@@ -5,7 +5,14 @@ gem 'rails', '4.0.0'
 
 gem 'xmlsoccer', path: '/Users/jimcar/Work-test/xmlsoccer'
 
+# Use fog to manage Rackspace API
 gem 'fog'
+
+# Google cloud storage
+gem "google-api-client"
+
+# Try out HTTParty to get google objects via json api
+gem 'httparty'
 
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3'
