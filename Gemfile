@@ -11,8 +11,11 @@ gem 'fog'
 # Google cloud storage
 gem "google-api-client"
 
-# Try out HTTParty to get google objects via json api
+# Use HTTParty to get google objects via json api
 gem 'httparty'
+
+# AWS S3 (Amazon simple storage service)
+gem 'aws-sdk'
 
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3'

@@ -11,10 +11,10 @@ test_bucket_get = true      # storage-bucket-list, storage-bucket_get
 test_object_get = true      # storage-object-list, storage-object-get
 test_object_insert = true   # storage-object-insert
 
-# Email of service account
-service_account_email = "765280027324-l4aq4o9r9pkk6bjtn8m0dgolkfo0v30j@developer.gserviceaccount.com" 
-key_file = 'privatekey.p12' # File containing your private key
-key_secret = 'notasecret'   # Password to unlock private key
+gapi_config = JSON.parse(File.open('gapi_config.json').read)
+service_account_email = gapi_config['service_account_email']
+key_file = gapi_config['key_file']
+key_secret = gapi_config['key_secret']
 
 client = Google::APIClient.new(application_name: "Soccer App", application_version: "0.1")
 
@@ -95,7 +95,8 @@ end
 # ==============================================
 if test_object_insert
 
-  media = Google::APIClient::UploadIO.new('jmc.log', 'text/plain')
+  upload_file = "jmc.log"
+  media = Google::APIClient::UploadIO.new(upload_file, 'text/plain')
   metadata = {
     'title' => 'My log file',
     'descrription' => 'It tells the story',
@@ -103,9 +104,9 @@ if test_object_insert
 
   storage_info = client.execute(
     api_method:  storage.objects.insert,
-    parameters:  { bucket: "fff-info-files", 
+    parameters:  { bucket: bucket, 
                    uploadType: 'resumable',
-                   name: "jmc.log", },
+                   name: upload_file, },
     body_object: metadata,
     media:       media
   )
