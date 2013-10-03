@@ -24,8 +24,10 @@
 /jmc.log
 
 /XML/
+/downloads/
 
 /aws_config.json
 /gapi_config.json
-/xmlsoccer_config.json
 /dropbox_config.json
+/rackspace_config.json
+/xmlsoccer_config.json
