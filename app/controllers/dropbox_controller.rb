@@ -17,16 +17,15 @@
 require 'dropbox_sdk'
 require 'securerandom'
 
-APP_KEY = "umupoy3f0n4r787"
-APP_SECRET = "lfp3x6qyrsdq9bm"
+dropbox_config = JSON.parse(File.open('dropbox_config.json').read)
+APP_KEY = dropbox_config['APP_KEY']
+APP_SECRET = dropbox_config['APP_SECRET']
 
 class DropboxController < ApplicationController
 
     def push
         client = get_dropbox_client
-        logger.debug "freddddd"
         unless client
-            logger.debug "YOYOYOYO"
             redirect_to(action: :auth_start) and return
         end
 
