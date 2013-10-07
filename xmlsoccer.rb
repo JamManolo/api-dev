@@ -162,12 +162,12 @@ def test_GetAllLeagues
 	# end
 
 	@league_ids = @xml_doc.xpath("//League/Id").map{ |node| node.text }
-	# puts "Dumping array of league ids"
-	# puts @league_ids
+	puts "Dumping array of league ids"
+	puts @league_ids
 
 	@league_names = @xml_doc.xpath("//League/Name").map{ |node| node.text }
-	# puts "Dumping array of league names"
-	# puts @league_names
+	puts "Dumping array of league names"
+	puts @league_names
 end
 
 

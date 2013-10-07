@@ -6,7 +6,7 @@ require 'json'
 
 rackspace_config = JSON.parse(File.open('rackspace_config.json').read)
 
-service = Fog::Storage.new({
+rackspace_service = Fog::Storage.new({
 	provider:          'Rackspace',
 	rackspace_username: rackspace_config['username'],
 	rackspace_api_key:  rackspace_config['api_key'],
@@ -14,23 +14,23 @@ service = Fog::Storage.new({
 	connection_options: {},
 })
 
-puts "-------- service.requests ---------"
-puts service.requests
+puts "-------- rackspace_service.requests ---------"
+puts rackspace_service.requests
 
-puts "------ service.cdn.requests ------"
-puts service.cdn.requests
+puts "------ rackspace_service.cdn.requests ------"
+puts rackspace_service.cdn.requests
 
-puts "----- service.head_containers -----"
-response = service.head_containers
+puts "----- rackspace_service.head_containers -----"
+response = rackspace_service.head_containers
 puts response.status
 
-puts "------- service.directories -------"
-directories = service.directories
+puts "------- rackspace_service.directories -------"
+directories = rackspace_service.directories
 directories.each do |d|
 	puts d
 end
 
-puts "------service.directories.get ------"
+puts "------rackspace_service.directories.get ------"
 if !directories.first.nil?
 	puts directories.first 
 	directories.first.files.each do |file|
