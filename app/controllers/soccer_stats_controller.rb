@@ -53,7 +53,7 @@ class SoccerStatsController < ApplicationController
       api_type: "Demo"
     })
     
-    match_xml = Nokogiri::XML(File.open("XML/HistoricMatches-league3-1314.xml").read)
+    match_xml = Nokogiri::XML(File.open("XML/HistoricMatches-league3-1314.xml"))
     # match_xml = Nokogiri::XML(xmlsoccer_client.get_historic_matches_by_league_and_season(3, '1314').body)
     live_score_xml = Nokogiri::XML(File.open("XML/JMC-LiveScore.xml").read)
     live_score_match_ids = live_score_xml.xpath("//Match/Id").map{ |node| node.text }
@@ -66,12 +66,14 @@ class SoccerStatsController < ApplicationController
       # Get substitution info from LiveScore data
       home_sub_details = Array.new
       away_sub_details = Array.new
-      jmc = Hash.new
+
+      tmpthing = Hash.new
+      
       fixture_match_id = node.xpath("FixtureMatch_Id").text
       if live_score_match_ids.include? fixture_match_id
         node_2 = live_score_xml.at("Id:contains(#{fixture_match_id})").parent
         ["Home","Away"].each do |team|
-          node << "<#{team}SubDetails />"
+          jmc = Array.new
           node_2.xpath("#{team}SubDetails").text.split(';').reverse_each do |sub|
             time, name = sub.split(':')
             if name =~ /^ out /
@@ -82,26 +84,24 @@ class SoccerStatsController < ApplicationController
               name.sub!(/ in /, '')
             end
             sub_details = team == "Home" ? home_sub_details : away_sub_details
-            # sub_details << { dir: dir, name: name, time: time }
-            # node << "<#{team}SubDetail>#{name}</#{team}SubDetail>"
-            node << "<#{team}SubDetail>#{name}</#{team}SubDetail>"
-            jmc[name] = { name: name, dir: dir, time: time }
+            node.add_child("<#{team}SubDetail></#{team}SubDetail>")
+            jmc << { name: name, dir: dir, time: time }
           end
 
           sub_details = team == "Home" ? home_sub_details : away_sub_details
+          i = 0
           node.xpath("#{team}SubDetail").each do |detail|
-            name = detail.text
-            sub_detail_string = 
-                                "<Time>#{jmc[detail.text][:time]}</Time>" +
-                                "<Name>#{jmc[name][:name]}</Name>" +
-                                "<Direction>#{jmc[detail.text][:dir]}</Direction>"
+            sub_detail_string = "<Time>#{jmc[i][:time]}</Time>" +
+                                "<Name>#{jmc[i][:name]}</Name>" +
+                                "<Direction>#{jmc[i][:dir]}</Direction>"
             detail << sub_detail_string
+            i += 1
             detail.element_children.each do |child|
-              logger.debug "JMCJMC: #{child.name} #{child.text}"
+              tmpthing[child.name] = child.text 
             end
-            sub_details << { time: detail.first_element_child.text,
-                             name: name,
-                             dir:  detail.last_element_child.text }
+            sub_details << { time: tmpthing['Time'],
+                             name: tmpthing['Name'],
+                             dir:  tmpthing['Direction'] }
           end
         end
         logger.debug "JMC: #{node.elements}"
@@ -246,7 +246,7 @@ class SoccerStatsController < ApplicationController
 
                   }
 
-      break if true
+      # break if true
     end
 
     @reports = WillPaginate::Collection.create(1, 0, reports.length) do |pager|

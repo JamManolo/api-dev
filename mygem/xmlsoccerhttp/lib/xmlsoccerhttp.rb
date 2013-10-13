@@ -9,8 +9,8 @@ module XMLsoccerHTTP
 
 	class RequestManager
 
-		@api_type = "Demo"
-		@base_url
+		@api_type = 'Demo'
+		@base_url = ''
 
 		attr_accessor :base_url, :api_type, :api_key
 
@@ -32,7 +32,7 @@ module XMLsoccerHTTP
 				end
 			end
 			@api_url = @base_url + args[:api_name]
-			response = Net::HTTP.post_form( URI.parse( @api_url ), api_args )
+			Net::HTTP.post_form( URI.parse( @api_url ), api_args )
 		end
 		private :make_the_call
 
@@ -62,15 +62,15 @@ module XMLsoccerHTTP
 			make_the_call({ api_name: "GetFixturesByDateInterval",
 						       	  api_args: { "startDateString" => start_date,
 						                      "endDateString" => end_date } })
-	  end
+		end
 
-	  def get_fixtures_by_date_interval_and_team(team, start_date, end_date)
+		def get_fixtures_by_date_interval_and_team(team, start_date, end_date)
 	  	make_the_call({ api_name: "GetFixturesByDateIntervalAndTeam", 
 	                    api_args: { "teamId" => team, "startDateString" => start_date,
 	                                                  "endDateString" => end_date } })
-	  end
+		end
 
-	  def get_fixtures_by_date_interval_and_league(league, start_date, end_date)
+		def get_fixtures_by_date_interval_and_league(league, start_date, end_date)
 	  	make_the_call({ api_name: "GetFixturesByDateIntervalAndLeague",
 	                    api_args: { league: league, "startDateString" => start_date,
 	                                                "endDateString" => end_date } })
@@ -95,18 +95,18 @@ module XMLsoccerHTTP
 			make_the_call({ api_name: "GetHistoricMatchesByLeagueAndDateInterval", 
 	                    api_args: { league: league, "startDateString" => start_date,
 	                                                "endDateString" => end_date } })
-	  end
+		end
 
-	  def get_historic_matches_by_league_and_season(league, season)
+	 	def get_historic_matches_by_league_and_season(league, season)
 	  	make_the_call({ api_name: "GetHistoricMatchesByLeagueAndSeason", 
 				              api_args: { league: league, "seasonDateString" => season } })
-	  end
+	 	end
 
-	  def get_historic_matches_by_team_and_date_interval(team, start_date, end_date)
+		def get_historic_matches_by_team_and_date_interval(team, start_date, end_date)
 	  	make_the_call({ api_name: "GetHistoricMatchesByTeamAndDateInterval",
                       api_args: { "teamId" => team, "startDateString" => start_date,
                                                     "endDateString" => end_date } })
-    end
+		end
 
     def get_leagues_standings_by_season(league, season)
     	make_the_call( { api_name: "GetLeagueStandingsBySeason",
@@ -117,12 +117,12 @@ module XMLsoccerHTTP
     	make_the_call( { api_name: "GetLiveScore" })
     end
 
-    def get_live_score_by_league(league)
+ 		def get_live_score_by_league(league)
     	make_the_call( { api_name: "GetLiveScoreByLeague", 
 			                api_args: { league: league, } })
-	  end
+		end
 
-	  def get_odds_by_fixture_match_id(fixture_match_id)
+		def get_odds_by_fixture_match_id(fixture_match_id)
 	  	make_the_call({ api_name: "GetOddsByFixtureMatchId",
 		                  api_args: { "fixtureMatch_Id" => fixture_match_id } })
 		end
