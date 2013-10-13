@@ -3,7 +3,11 @@ source 'https://rubygems.org'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.0.0'
 
-gem 'xmlsoccer', path: '/Users/jimcar/Work-test/xmlsoccer'
+gem 'xmlsoccer',     path: '/Users/jimcar/Work-test/xmlsoccer'
+gem 'xmlsoccerhttp', path: '/Users/jimcar/rails_projects/api-dev/mygem/xmlsoccerhttp'
+
+gem 'nokogiri'
+gem 'json'
 
 # Use fog to manage Rackspace API
 gem 'fog'
@@ -11,11 +15,14 @@ gem 'fog'
 # Google cloud storage
 gem "google-api-client"
 
-# Use HTTParty to get google objects via json api
+# Use HTTParty to get Google objects via json api
 gem 'httparty'
 
 # AWS S3 (Amazon simple storage service)
 gem 'aws-sdk'
+
+# Use Dropbox for file storage
+gem 'dropbox-sdk'
 
 # Use sqlite3 as the database for Active Record
 gem 'sqlite3'
@@ -27,8 +34,9 @@ gem 'bootstrap-sass',  github: 'thomas-mcdonald/bootstrap-sass', branch: '3'
 # Use HAML instead of ERB
 gem 'haml-rails', '>= 0.3.4'
 
-# Use Dropbox for file storage
-gem 'dropbox-sdk'
+# Use will_paginate
+gem 'will_paginate', '3.0.4'
+gem 'bootstrap-will_paginate', '0.0.10'
 
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '>= 1.3.0'

@@ -1,35 +1,276 @@
 class SoccerStatsController < ApplicationController
+
+  # require 'will_paginate/array'
+  # require 'will_paginate/collection'
+
   def home
   end
 
   def index
-  	xmlsoccer_client = 
-  	 Xmlsoccer::RequestManager.new(api_key: 'BTZXWQKMFDKHIBEYMIQWPENPKRZTPOGIMXGICHMGYXRIQGIJGY', 
-  	 	                           api_type: "Demo")
+  	xmlsoccer_client =
+      Xmlsoccer::RequestManager.new({
+        api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'], 
+  	 	  api_type: "Demo"
+      })
 
   	 @leagues = xmlsoccer_client.get_all_leagues
   end
 
   def leagues
   	xmlsoccer_client = 
-  	 Xmlsoccer::RequestManager.new(api_key: 'BTZXWQKMFDKHIBEYMIQWPENPKRZTPOGIMXGICHMGYXRIQGIJGY', 
-  	 	                           api_type: "Demo")
+  	 Xmlsoccer::RequestManager.new({
+      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
+  	 	api_type: "Demo"
+      })
 
   	 @leagues = xmlsoccer_client.get_all_leagues
   end
 
+  def teams
+    xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
+      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
+      api_type: "Demo"
+    })
+
+    # response = xmlsoccer_client.get_all_teams
+    # f = open( "XML/JMC-GET-ALL-TEAMS.xml", "w" )
+    # f.puts( response.body )
+    # f.close
+
+    @teams = Array.new
+    # Nokogiri::XML(File.open("XML/JMC-GET-ALL-TEAMS.xml").read).xpath("//Team").each do |node|
+    Nokogiri::XML(xmlsoccer_client.get_all_teams.body).xpath("//Team").each do |node|
+      @teams << { team_id: node.xpath("Team_Id").text, country: node.xpath("Country").text,
+                  name: node.xpath("Name").text, stadium: node.xpath("Stadium").text,
+                  home_page_url: node.xpath("HomePageURL").text,
+                  wiki_link: node.xpath("WIKILink").text }
+    end
+  end
+
+  def reports
+    xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
+      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
+      api_type: "Demo"
+    })
+    
+    match_xml = Nokogiri::XML(File.open("XML/HistoricMatches-league3-1314.xml").read)
+    # match_xml = Nokogiri::XML(xmlsoccer_client.get_historic_matches_by_league_and_season(3, '1314').body)
+    live_score_xml = Nokogiri::XML(File.open("XML/JMC-LiveScore.xml").read)
+    live_score_match_ids = live_score_xml.xpath("//Match/Id").map{ |node| node.text }
+
+    reports = Array.new
+    match_xml.xpath("//Match").each do |node|
+
+      next if node.xpath("Round").text.to_i < 9
+
+      # Get substitution info from LiveScore data
+      home_sub_details = Array.new
+      away_sub_details = Array.new
+      jmc = Hash.new
+      fixture_match_id = node.xpath("FixtureMatch_Id").text
+      if live_score_match_ids.include? fixture_match_id
+        node_2 = live_score_xml.at("Id:contains(#{fixture_match_id})").parent
+        ["Home","Away"].each do |team|
+          node << "<#{team}SubDetails />"
+          node_2.xpath("#{team}SubDetails").text.split(';').reverse_each do |sub|
+            time, name = sub.split(':')
+            if name =~ /^ out /
+              dir = "out"
+              name.sub!(/ out /, '')
+            elsif name =~  /^ in /
+              dir = "in"
+              name.sub!(/ in /, '')
+            end
+            sub_details = team == "Home" ? home_sub_details : away_sub_details
+            # sub_details << { dir: dir, name: name, time: time }
+            # node << "<#{team}SubDetail>#{name}</#{team}SubDetail>"
+            node << "<#{team}SubDetail>#{name}</#{team}SubDetail>"
+            jmc[name] = { name: name, dir: dir, time: time }
+          end
+
+          sub_details = team == "Home" ? home_sub_details : away_sub_details
+          node.xpath("#{team}SubDetail").each do |detail|
+            name = detail.text
+            sub_detail_string = 
+                                "<Time>#{jmc[detail.text][:time]}</Time>" +
+                                "<Name>#{jmc[name][:name]}</Name>" +
+                                "<Direction>#{jmc[detail.text][:dir]}</Direction>"
+            detail << sub_detail_string
+            detail.element_children.each do |child|
+              logger.debug "JMCJMC: #{child.name} #{child.text}"
+            end
+            sub_details << { time: detail.first_element_child.text,
+                             name: name,
+                             dir:  detail.last_element_child.text }
+          end
+        end
+        logger.debug "JMC: #{node.elements}"
+      end
+      max_sub_index = home_sub_details.size > away_sub_details.size ? home_sub_details.size - 1 :
+                                                                      away_sub_details.size - 1
+
+      # Goal scorers
+      node.xpath("HomeGoalDetails").text.split(';').reverse_each do |goal|
+        time, scorer = goal.split(':')
+        node << "<HomeGoalDetail>#{scorer} (#{time})</HomeGoalDetail>"
+      end
+      home_goal_details = Array.new
+      node.xpath("HomeGoalDetail").each do |goal|
+        home_goal_details << goal.text
+      end
+      node.xpath("AwayGoalDetails").text.split(';').reverse_each do |goal|
+        time, scorer = goal.split(':')
+        node << ("<AwayGoalDetail>(#{time}) #{scorer}</AwayGoalDetail>")
+      end
+      away_goal_details = Array.new
+      node.xpath("AwayGoalDetail").each do |goal|
+        away_goal_details << goal.text
+      end
+      max_goal_index = home_goal_details.size > away_goal_details.size ? home_goal_details.size - 1 : 
+                                                                         away_goal_details.size - 1
+
+      # Lineups
+      home_lineup = Array.new
+      home_lineup << "#{node.xpath("HomeLineupGoalkeeper").text} (G)"
+      node.xpath("HomeLineupDefense").text.split(';').each do |player|
+        node << ("<HomeLineupDefender>#{player} (D)</HomeLineupDefender>")
+      end
+      node.xpath("HomeLineupDefender").each do |player|
+        home_lineup << player.text
+      end
+      node.xpath("HomeLineupMidfield").text.split(';').each do |player|
+        node << ("<HomeLineupMidfielder>#{player} (M)</HomeLineupMidfielder>")
+      end
+      node.xpath("HomeLineupMidfielder").each do |player|
+        home_lineup << player.text
+      end
+      node.xpath("HomeLineupForward").text.split(';').each do |player|
+        node << ("<HomeLineupForwardist>#{player} (F)</HomeLineupForwardist>")
+      end
+      node.xpath("HomeLineupForwardist").each do |player|
+        home_lineup << player.text
+      end
+
+      away_lineup = Array.new
+      away_lineup << "(G) #{node.xpath("AwayLineupGoalkeeper").text}"
+      node.xpath("AwayLineupDefense").text.split(';').each do |player|
+        node << ("<AwayLineupDefender>(D) #{player}</AwayLineupDefender>")
+      end
+      node.xpath("AwayLineupDefender").each do |player|
+        away_lineup << player.text
+      end
+      node.xpath("AwayLineupMidfield").text.split(';').each do |player|
+        node << ("<AwayLineupMidfielder>(M) #{player}</AwayLineupMidfielder>")
+      end
+      node.xpath("AwayLineupMidfielder").each do |player|
+        away_lineup << player.text
+      end
+      node.xpath("AwayLineupForward").text.split(';').each do |player|
+        node << ("<AwayLineupForwardist>(F) #{player}</AwayLineupForwardist>")
+      end
+      node.xpath("AwayLineupForwardist").each do |player|
+        away_lineup << player.text
+      end
+
+      # Yellow Cards
+      home_team_yellow_card_details = Array.new
+      node.xpath("HomeTeamYellowCardDetails").text.split(';').reverse_each do |offense|
+        time, offender = offense.split(':')
+        home_team_yellow_card_details << "#{offender} (#{time})"
+      end
+      away_team_yellow_card_details = Array.new
+      node.xpath("AwayTeamYellowCardDetails").text.split(';').reverse_each do |offense|
+        time, offender = offense.split(':')
+        away_team_yellow_card_details << "(#{time}) #{offender}"
+      end
+      max_yellow_card_index = home_team_yellow_card_details.size > away_team_yellow_card_details.size ?
+                              home_team_yellow_card_details.size : away_team_yellow_card_details.size
+      max_yellow_card_index -= 1 if max_yellow_card_index > 0
+
+      # Red cards
+      home_team_red_card_details = Array.new
+      node.xpath("HomeTeamRedCardDetails").text.split(';').reverse_each do |offense|
+        time, offender = offense.split(':')
+        home_team_red_card_details << "#{offender} (#{time})"
+      end
+      away_team_red_card_details = Array.new
+      node.xpath("AwayTeamRedCardDetails").text.split(';').reverse_each do |offense|
+        time, offender = offense.split(':')
+        away_team_red_card_details << "(#{time}) #{offender}"
+      end
+      max_red_card_index = home_team_red_card_details.size > away_team_red_card_details.size ?
+                           home_team_red_card_details.size : away_team_red_card_details.size
+      max_red_card_index -= 1 if max_red_card_index > 0
+
+      # Add to the reports array
+      reports << {  league: node.xpath("League").text,
+                    round: node.xpath("Round").text,
+                    date: node.xpath("Date").text,
+                    
+                    home_team: node.xpath("HomeTeam").text,
+                    home_goals: node.xpath("HomeGoals").text,
+                    half_time_home_goals: node.xpath("HalfTimeHomeGoals").text,
+                    home_shots: node.xpath("HomeShots").text,
+                    home_shots_on_target: node.xpath("HomeShotsOnTarget").text,
+                    home_corners: node.xpath("HomeCorners").text,
+                    home_yellow_cards: node.xpath("HomeYellowCards").text,
+                    home_red_cards: node.xpath("HomeRedCards").text,
+                    home_goal_details: home_goal_details,
+                    home_team_formation: node.xpath("HomeTeamFormation").text,
+                    home_lineup: home_lineup,
+                    home_fouls: node.xpath("HomeFouls").text,
+                    home_team_yellow_card_details: home_team_yellow_card_details,
+                    home_team_red_card_details: home_team_red_card_details,
+                    home_sub_details: home_sub_details,
+
+                    away_team: node.xpath("AwayTeam").text,
+                    away_goals: node.xpath("AwayGoals").text,
+                    half_time_away_goals: node.xpath("HalfTimeAwayGoals").text,
+                    away_shots: node.xpath("AwayShots").text,
+                    away_shots_on_target: node.xpath("AwayShotsOnTarget").text,
+                    away_corners: node.xpath("AwayCorners").text,
+                    away_yellow_cards: node.xpath("AwayYellowCards").text,
+                    away_red_cards: node.xpath("AwayRedCards").text,
+                    away_goal_details: away_goal_details,
+                    away_team_formation: node.xpath("AwayTeamFormation").text,
+                    away_lineup: away_lineup,
+                    away_fouls: node.xpath("AwayFouls").text,
+                    away_team_yellow_card_details: away_team_yellow_card_details,
+                    away_team_red_card_details: away_team_red_card_details,
+                    away_sub_details: away_sub_details,
+
+                    max_goal_index: max_goal_index,
+                    max_sub_index: max_sub_index,
+                    max_yellow_card_index: max_yellow_card_index,
+                    max_red_card_index: max_red_card_index,
+
+                  }
+
+      break if true
+    end
+
+    @reports = WillPaginate::Collection.create(1, 0, reports.length) do |pager|
+      pager.replace reports
+    end
+    # @reports = reports
+  end
+
   def scores
   	xmlsoccer_client = 
-  	 Xmlsoccer::RequestManager.new(api_key: 'BTZXWQKMFDKHIBEYMIQWPENPKRZTPOGIMXGICHMGYXRIQGIJGY', 
-  	 	                           api_type: "Demo")
+  	 Xmlsoccer::RequestManager.new({
+      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
+      api_type: "Demo"
+      })
 
   	 @scores = xmlsoccer_client.get_live_score
   end
 
   def earliest_match_dates
   	xmlsoccer_client = 
-  	 Xmlsoccer::RequestManager.new(api_key: 'BTZXWQKMFDKHIBEYMIQWPENPKRZTPOGIMXGICHMGYXRIQGIJGY', 
-  	 	                           api_type: "Demo")
+  	 Xmlsoccer::RequestManager.new({
+      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
+  	 	api_type: "Demo"
+     })
 
   	 @dates = xmlsoccer_client.get_earliest_match_date(3)
   end

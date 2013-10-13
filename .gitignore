@@ -20,14 +20,17 @@
 
 /jmc.objects/
 /jmc.aws.objects/
-
+/JMC.JMC
 /jmc.log
 
 /XML/
 /downloads/
 
+/jmc.rb
+
 /bogus.txt
 
+/test_config.json
 /aws_config.json
 /gapi_config.json
 /dropbox_config.json

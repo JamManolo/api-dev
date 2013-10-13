@@ -1,0 +1,123 @@
+%h3.center= "SoccerStats#reports"
+
+/ = @reports.paginate(page: params[:page], per_page: 6)
+
+%ul.reports.list-group
+ - @reports.each do |report|
+  .center
+   %li.list-group-item
+    %h3.list-group-item-heading
+     = "#{report[:league]} - Round #{report[:round]} - "
+     = "#{report[:date].in_time_zone.strftime('%a %b %d, %Y at %H:%M')}"
+    %ul.list-group
+     %li.list-group-item
+      .row.list-group-item-heading
+       .col-md-6.col-md-offset-3= "SCORING SUMMARY"
+      .row.team-heading
+       .col-md-3.col-md-offset-1.home-team= "#{report[:home_team]}"
+       .col-md-1= "#{report[:home_goals]}"
+       .col-md-2= "FT"
+       .col-md-1= "#{report[:away_goals]}"
+       .col-md-3.away-team= "#{report[:away_team]}"
+      - if report[:max_goal_index] >= 0
+       - (0..report[:max_goal_index]).each do |i|
+        .row
+         .col-md-5.col-md-offset-1.home-team= "#{report[:home_goal_details][i]}"
+         .col-md-5.away-team= "#{report[:away_goal_details][i]}"
+     %li.list-group-item
+      .row.list-group-item-heading
+       .col-md-6.col-md-offset-3= "MATCH STATS"
+      .row.team-heading
+       .col-md-5.col-md-offset-1.home-team= "#{report[:home_team]}"
+       .col-md-5.away-team= "#{report[:away_team]}"
+      .row
+       .col-md-2.col-md-offset-1.home-team= "#{report[:home_shots]}(#{report[:home_shots_on_target]})"
+       .col-md-6= "Shots (on goal)"
+       .col-md-2.away-team= "#{report[:away_shots]}(#{report[:away_shots_on_target]})"
+      .row
+       .col-md-2.col-md-offset-1.home-team= "#{report[:home_fouls]}"
+       .col-md-6= "Fouls"
+       .col-md-2.away-team= "#{report[:away_fouls]}"
+      .row
+       .col-md-2.col-md-offset-1.home-team= "#{report[:home_corners]}"
+       .col-md-6= "Corner kicks"
+       .col-md-2.away-team= "#{report[:away_corners]}"
+      / .row
+      /  .col-md-2.col-md-offset-1.home-team= "-"
+      /  .col-md-6= "Offsides"
+      /  .col-md-2.away-team= "-"
+      / .row
+      /  .col-md-2.col-md-offset-1.home-team= "-"
+      /  .col-md-6= "Time of Possession"
+      /  .col-md-2.away-team= "-"
+      .row
+       .col-md-2.col-md-offset-1.home-team= "#{report[:home_yellow_cards]}"
+       .col-md-6= "Yellow Cards"
+       .col-md-2.away-team= "#{report[:away_yellow_cards]}"
+      .row
+       .col-md-2.col-md-offset-1.home-team= "#{report[:home_red_cards]}"
+       .col-md-6= "Red Cards"
+       .col-md-2.away-team= "#{report[:away_red_cards]}"
+      / .row
+      /  .col-md-2.col-md-offset-1.home-team= "-"
+      /  .col-md-6= "Saves"
+      /  .col-md-2.away-team= "-"
+     %li.list-group-item
+      .row.list-group-item-heading
+       .col-md-6.col-md-offset-3= "TEAMS"
+      .row.team-heading
+       .col-md-5.col-md-offset-1.home-team= "#{report[:home_team]}"
+       / .col-md-5.away-team= "(#{report[:away_team_formation]}) #{report[:away_team]}"
+       .col-md-5.away-team= "#{report[:away_team]}"
+      .row.team-heading
+       .col-md-5.col-md-offset-1.home-team= "(#{report[:home_team_formation]})"
+       .col-md-5.away-team= "(#{report[:away_team_formation]})"
+      - (0..10).each do |i|
+       .row
+        .col-md-5.col-md-offset-1.home-team= "#{report[:home_lineup][i]}"
+        .col-md-5.away-team= "#{report[:away_lineup][i]}"
+      / .row.list-group-item-heading
+      /  .col-md-4.col-md-offset-4= "Substitutes"
+      .row.list-group-item-heading
+       .col-md-4.col-md-offset-4= "Substitutions"
+      - (0..report[:max_sub_index]).each do |idx|
+       .row
+        .col-md-5.col-md-offset-1.home-team
+         - if report[:home_sub_details].size > idx
+          - sub = report[:home_sub_details].fetch(idx)
+          = "(#{sub[:time]}) #{sub[:name]} "
+          - glyph = (sub[:dir] == 'out') ? "chevron-down" : "chevron-up"
+          %span{"class" => "sub-#{sub[:dir]} glyphicon glyphicon-#{glyph}"}
+        .col-md-5.away-team
+         - if report[:away_sub_details].size > idx
+          - sub = report[:away_sub_details].fetch(idx)
+          - glyph = (sub[:dir] == 'out') ? "chevron-down" : "chevron-up"
+          %span{"class" => "sub-#{sub[:dir]} glyphicon glyphicon-#{glyph}"}
+          = " #{sub[:name]} (#{sub[:time]})"
+      .row.list-group-item-heading
+       .col-md-4.col-md-offset-4= "Yellow Cards"
+      - (0..report[:max_yellow_card_index]).each do |i|
+       .row
+        .col-md-5.col-md-offset-1.home-team
+         - unless report[:home_team_yellow_card_details][i].nil?
+          = "#{report[:home_team_yellow_card_details][i]} "
+          %span.yellow-card.glyphicon.glyphicon-book
+        .col-md-5.away-team
+         - unless report[:away_team_yellow_card_details][i].nil?
+          %span.yellow-card.glyphicon.glyphicon-book
+          = "#{report[:away_team_yellow_card_details][i]}"
+      .row.list-group-item-heading
+       .col-md-4.col-md-offset-4= "Red Cards"
+      - (0..report[:max_red_card_index]).each do |i|
+       .row
+        .col-md-5.col-md-offset-1.home-team
+         - unless report[:home_team_red_card_details][i].nil?
+          = "#{report[:home_team_red_card_details][i]} "
+          %span.red-card.glyphicon.glyphicon-book
+        .col-md-5.away-team
+         - unless report[:away_team_red_card_details][i].nil?
+          %span.red-card.glyphicon.glyphicon-book
+          = "#{report[:away_team_red_card_details][i]}"
+        
+
+/ = @reports.paginate(page: params[:page], per_page: 6)

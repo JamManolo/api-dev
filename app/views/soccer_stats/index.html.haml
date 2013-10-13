@@ -1,4 +1,15 @@
 %h2= "SoccerStats#index"
+
 %ul
+ .row
+  %strong
+   .col-md-2= "ID Country"
+   .col-md-3= "Name"
+   .col-md-1= "Matches"
+   .col-md-3= "Latest Match Date"
  - @leagues.each do |league|
-  %li= league
+  .row
+   .col-md-2= "#{league[:id]} #{league[:country]}"
+   .col-md-3= "#{league[:name]}"
+   .col-md-1= "#{league[:number_of_matches]}"
+   .col-md-3= "#{league[:latest_match]}"
