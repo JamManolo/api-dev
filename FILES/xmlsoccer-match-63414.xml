@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Matches>
+<Match>
+<Id>63414</Id>
+<FixtureMatch_Id>309438</FixtureMatch_Id>
+<Date>2013-10-05T16:00:00+02:00</Date>
+<Round>9</Round>
+<Spectators/>
+<League>Scottish Premier League</League>
+<HomeTeam>Ross County</HomeTeam>
+<HomeTeam_Id>360</HomeTeam_Id>
+<HomeCorners>7</HomeCorners>
+<HomeGoals>1</HomeGoals>
+<HalfTimeHomeGoals>0</HalfTimeHomeGoals>
+<HomeShots>7</HomeShots>
+<HomeShotsOnTarget>2</HomeShotsOnTarget>
+<HomeFouls>12</HomeFouls>
+<HomeGoalDetails>
+  <GoalDetail>
+    <Name>Rocco Quinn</Name>
+    <Time>52'</Time>
+  </GoalDetail>
+</HomeGoalDetails>
+<HomeLineupGoalkeeper>Mark Brown</HomeLineupGoalkeeper>
+<HomeLineupDefense>
+  <Name>Scott Boyd</Name>
+  <Name>Ben Gordon</Name>
+  <Name>Michael Kovacevic</Name>
+  <Name>Brian McLean</Name>
+</HomeLineupDefense>
+<HomeLineupMidfield>
+  <Name>Richard Brittain</Name>
+  <Name>Stuart Kettlewell</Name>
+  <Name>Graham Carey</Name>
+  <Name>Melvin de Leeuw</Name>
+  <Name>Rocco Quinn</Name>
+</HomeLineupMidfield>
+<HomeLineupForward>
+  <Name>Steven Ross</Name>
+</HomeLineupForward>
+<HomeYellowCards>4</HomeYellowCards>
+<HomeRedCards>0</HomeRedCards>
+<HomeTeamFormation>4-1-4-1</HomeTeamFormation>
+<AwayTeam>Aberdeen</AwayTeam>
+<AwayTeam_Id>45</AwayTeam_Id>
+<AwayCorners>14</AwayCorners>
+<AwayGoals>0</AwayGoals>
+<HalfTimeAwayGoals>0</HalfTimeAwayGoals>
+<AwayShots>7</AwayShots>
+<AwayShotsOnTarget>3</AwayShotsOnTarget>
+<AwayFouls>14</AwayFouls>
+<AwayGoalDetails/>
+<AwayLineupGoalkeeper>Jamie Langfield</AwayLineupGoalkeeper>
+<AwayLineupDefense>
+  <Name>Mark Reynolds</Name>
+  <Name>Lawrence Shankland</Name>
+  <Name>Michael Hector</Name>
+  <Name>Andrew Considine</Name>
+</AwayLineupDefense>
+<AwayLineupMidfield>
+  <Name>Scott Vernon</Name>
+  <Name>Ryan Jack</Name>
+  <Name>Cameron Smith</Name>
+  <Name>Jonathan Hayes</Name>
+</AwayLineupMidfield>
+<AwayLineupForward>
+  <Name>Niall McGinn</Name>
+  <Name>Peter Pawlett</Name>
+</AwayLineupForward>
+<AwayYellowCards>4</AwayYellowCards>
+<AwayRedCards>0</AwayRedCards>
+<AwayTeamFormation>4-4-2</AwayTeamFormation>
+<HomeTeamYellowCardDetails>
+  <CardDetail>
+    <Name>Rocco Quinn</Name>
+    <Time>26'</Time>
+  </CardDetail>
+  <CardDetail>
+    <Name>Ben Gordon</Name>
+    <Time>48'</Time>
+  </CardDetail>
+  <CardDetail>
+    <Name>Richard Brittain</Name>
+    <Time>74'</Time>
+  </CardDetail>
+  <CardDetail>
+    <Name>Graham Carey</Name>
+    <Time>83'</Time>
+  </CardDetail>
+</HomeTeamYellowCardDetails>
+<AwayTeamYellowCardDetails>
+  <CardDetail>
+    <Name>Andrew Considine</Name>
+    <Time>3'</Time>
+  </CardDetail>
+  <CardDetail>
+    <Name>Scott Vernon</Name>
+    <Time>44'</Time>
+  </CardDetail>
+</AwayTeamYellowCardDetails>
+<HomeTeamRedCardDetails/>
+<AwayTeamRedCardDetails/>
+<HomeSubDetails>
+  <SubDetail>
+    <Time>71'</Time>
+    <Name>Melvin de Leeuw</Name>
+    <Direction>out</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>71'</Time>
+    <Name>Kevin Luckassen</Name>
+    <Direction>in</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>73'</Time>
+    <Name>Ivan Sproule</Name>
+    <Direction>in</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>73'</Time>
+    <Name>Steven Ross</Name>
+    <Direction>out</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>83'</Time>
+    <Name>Steven Saunders</Name>
+    <Direction>in</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>83'</Time>
+    <Name>Rocco Quinn</Name>
+    <Direction>out</Direction>
+  </SubDetail>
+</HomeSubDetails>
+<AwaySubDetails>
+  <SubDetail>
+    <Time>57'</Time>
+    <Name>Cameron Smith</Name>
+    <Direction>out</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>57'</Time>
+    <Name>Willo Flood</Name>
+    <Direction>in</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>57'</Time>
+    <Name>Andrew Considine</Name>
+    <Direction>out</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>57'</Time>
+    <Name>Clark Robertson</Name>
+    <Direction>in</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>71'</Time>
+    <Name>Scott Vernon</Name>
+    <Direction>out</Direction>
+  </SubDetail>
+  <SubDetail>
+    <Time>71'</Time>
+    <Name>Josh Magennis</Name>
+    <Direction>in</Direction>
+  </SubDetail>
+</AwaySubDetails>
+<HomeLineupDefender>Scott Boyd</HomeLineupDefender>
+<HomeLineupDefender>Ben Gordon</HomeLineupDefender>
+<HomeLineupDefender>Michael Kovacevic</HomeLineupDefender>
+<HomeLineupDefender>Brian McLean</HomeLineupDefender>
+<HomeLineupMidfielder>Richard Brittain</HomeLineupMidfielder>
+<HomeLineupMidfielder>Stuart Kettlewell</HomeLineupMidfielder>
+<HomeLineupMidfielder>Graham Carey</HomeLineupMidfielder>
+<HomeLineupMidfielder>Melvin de Leeuw</HomeLineupMidfielder>
+<HomeLineupMidfielder>Rocco Quinn</HomeLineupMidfielder>
+<HomeLineupForwardist>Steven Ross</HomeLineupForwardist>
+<AwayLineupDefender>Mark Reynolds</AwayLineupDefender>
+<AwayLineupDefender>Lawrence Shankland</AwayLineupDefender>
+<AwayLineupDefender>Michael Hector</AwayLineupDefender>
+<AwayLineupDefender>Andrew Considine</AwayLineupDefender>
+<AwayLineupMidfielder>Scott Vernon</AwayLineupMidfielder>
+<AwayLineupMidfielder>Ryan Jack</AwayLineupMidfielder>
+<AwayLineupMidfielder>Cameron Smith</AwayLineupMidfielder>
+<AwayLineupMidfielder>Jonathan Hayes</AwayLineupMidfielder>
+<AwayLineupForwardist>Niall McGinn</AwayLineupForwardist>
+<AwayLineupForwardist>Peter Pawlett</AwayLineupForwardist>
+<HomeLineup>
+  <Player>
+    <Name>Mark Brown</Name>
+    <Position>GK</Position>
+  </Player>
+  <Player>
+    <Name>Scott Boyd</Name>
+    <Position>D</Position>
+  </Player>
+  <Player>
+    <Name>Ben Gordon</Name>
+    <Position>D</Position>
+  </Player>
+  <Player>
+    <Name>Michael Kovacevic</Name>
+    <Position>D</Position>
+  </Player>
+  <Player>
+    <Name>Brian McLean</Name>
+    <Position>D</Position>
+  </Player>
+  <Player>
+    <Name>Richard Brittain</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Stuart Kettlewell</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Graham Carey</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Melvin de Leeuw</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Rocco Quinn</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Steven Ross</Name>
+    <Position>F</Position>
+  </Player>
+</HomeLineup>
+<AwayLineup>
+  <Player>
+    <Name>Jamie Langfield</Name>
+    <Position>GK</Position>
+  </Player>
+  <Player>
+    <Name>Mark Reynolds</Name>
+    <Position>D</Position>
+  </Player>
+  <Player>
+    <Name>Lawrence Shankland</Name>
+    <Position>D</Position>
+  </Player>
+  <Player>
+    <Name>Michael Hector</Name>
+    <Position>D</Position>
+  </Player>
+  <Player>
+    <Name>Andrew Considine</Name>
+    <Position>D</Position>
+  </Player>
+  <Player>
+    <Name>Scott Vernon</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Ryan Jack</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Cameron Smith</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Jonathan Hayes</Name>
+    <Position>M</Position>
+  </Player>
+  <Player>
+    <Name>Niall McGinn</Name>
+    <Position>F</Position>
+  </Player>
+  <Player>
+    <Name>Peter Pawlett</Name>
+    <Position>F</Position>
+  </Player>
+</AwayLineup>
+</Match>
+</Matches>

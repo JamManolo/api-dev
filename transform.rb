@@ -25,11 +25,11 @@ def transform
     next if node.xpath("Round").text.to_i < 9
 
     # Get substitution info from LiveScore data
-    tmp_sub_details = Array.new
     fixture_match_id = node.xpath("FixtureMatch_Id").text
     if live_score_match_ids.include? fixture_match_id
       node_2 = live_score_xml.at("Id:contains(#{fixture_match_id})").parent
       ["Home","Away"].each do |team|
+        tmp_sub_details = Array.new
         new_node = node.add_child("<#{team}SubDetails></#{team}SubDetails>")
         node_2.xpath("#{team}SubDetails").text.split(';').reverse_each do |sub|
           time, name = sub.split(':')
@@ -40,12 +40,12 @@ def transform
             dir = "in"
             name.sub!(/ in /, '')
           end
-          new_node.first.add_child("<#{team}SubDetail></#{team}SubDetail>")
+          new_node.first.add_child("<SubDetail></SubDetail>")
           tmp_sub_details << { name: name, dir: dir, time: time }
         end
 
         i = 0
-        node.xpath("//#{team}SubDetail").each do |detail|
+        node.xpath("//#{team}SubDetails/SubDetail").each do |detail|
           sub_detail_string = "<Time>#{tmp_sub_details[i][:time]}</Time>" +
                               "<Name>#{tmp_sub_details[i][:name]}</Name>" +
                               "<Direction>#{tmp_sub_details[i][:dir]}</Direction>"
@@ -75,10 +75,23 @@ def transform
 
     # Lineups
     ["Home","Away"].each do |team|
+      node.xpath("#{team}LineupDefense").text.split(';').each do |player|
+        node << ("<#{team}LineupDefender>#{player.strip}</#{team}LineupDefender>")
+      end
+      node.xpath("#{team}LineupMidfield").text.split(';').each do |player|
+        node << ("<#{team}LineupMidfielder>#{player.strip}</#{team}LineupMidfielder>")
+      end
+      node.xpath("#{team}LineupForward").text.split(';').each do |player|
+        node << ("<#{team}LineupForwardist>#{player.strip}</#{team}LineupForwardist>")
+      end
+    end
 
+    ["Home","Away"].each do |team|
       node.add_child("<#{team}Lineup />")
+      node.xpath("#{team}LineupGoalkeeper").first.content =
+        node.xpath("#{team}LineupGoalkeeper").text.strip
       tmp_str = "<Player>" +
-                "<Name>#{node.xpath("#{team}LineupGoalkeeper").text.strip}</Name>" + 
+                "<Name>#{node.xpath("#{team}LineupGoalkeeper").text}</Name>" + 
                 "<Position>GK</Position>" +
                 "</Player>"
       node.xpath("#{team}Lineup").first.add_child(tmp_str)
@@ -94,48 +107,39 @@ def transform
           node.xpath("#{team}Lineup").first.add_child(tmp_str)
           node.xpath("#{team}Lineup#{position}").first.add_child("<Name>#{player.strip}</Name>")
         end
-        
       end
     end
 
-    # ["Home","Away"].each do |team|
-    #   node.xpath("#{team}LineupDefense").text.split(';').each do |player|
-    #     node << ("<#{team}LineupDefender>#{player.strip}</#{team}LineupDefender>")
-    #   end
-    #   node.xpath("#{team}LineupMidfield").text.split(';').each do |player|
-    #     node << ("<#{team}LineupMidfielder>#{player.strip}</#{team}LineupMidfielder>")
-    #   end
-    #   node.xpath("#{team}LineupForward").text.split(';').each do |player|
-    #     node << ("<#{team}LineupForwardist>#{player.strip}</#{team}LineupForwardist>")
-    #   end
+    # Bookings: Yellow and Red Cards
+    ["Home","Away"].each do |team|
+      ["Yellow","Red"].each do |color|
+        tmp_card_details = Array.new
+        node.xpath("#{team}Team#{color}CardDetails").text.split(';').reverse_each do |offense|
+          time, name = offense.split(':')
+          tmp_card_details << { name: name.strip, time: time }
+        end
+        node.xpath("#{team}Team#{color}CardDetails").first.content = ''
 
-    #   node.xpath("#{team}LineupDefense").first.content = ''
-    #   node.xpath("#{team}LineupMidfield").first.content = ''
-    #   node.xpath("#{team}LineupForward").first.content = ''
-    # end
-
-    # Yellow Cards
-    node.xpath("HomeTeamYellowCardDetails").text.split(';').reverse_each do |offense|
-      time, offender = offense.split(':')
-    end
-    node.xpath("AwayTeamYellowCardDetails").text.split(';').reverse_each do |offense|
-      time, offender = offense.split(':')
+        tmp_card_details.each do |tcd|
+          tmp_str = "<CardDetail>" +
+                    "<Name>#{tcd[:name]}</Name>" +
+                    "<Time>#{tcd[:time]}</Time>" +
+                    "</CardDetail>"
+          node.xpath("#{team}Team#{color}CardDetails").first.add_child(tmp_str)
+        end
+      end
     end
 
-    # Red cards
-    node.xpath("HomeTeamRedCardDetails").text.split(';').reverse_each do |offense|
-      time, offender = offense.split(':')
+    # Save the XML file
+    f = File.open("./FILES/xmlsoccer-match-#{node.xpath("Id").text}.xml", "w")
+    f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+    f.puts "<Matches>"
+    f.puts "<#{node.name}>"
+    node.elements.each do |e|
+     f.puts "#{e}"
     end
-    node.xpath("AwayTeamRedCardDetails").text.split(';').reverse_each do |offense|
-      time, offender = offense.split(':')
-    end
-
-    f = File.open("./log.xform.xml", "w")
-    f.puts "------------- elements -------------"
-    f.puts node.elements
-    f.puts "------------- children -------------"
-    f.puts node.children
-    f.puts "------------------------------------"
+    f.puts "</#{node.name}>"
+    f.puts "</Matches>"
     f.close
 
     break if true

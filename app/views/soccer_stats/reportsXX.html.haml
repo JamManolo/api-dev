@@ -20,16 +20,10 @@
        .col-md-1= "#{report[:away_goals]}"
        .col-md-3.away-team= "#{report[:away_team]}"
       - if report[:max_goal_index] >= 0
-       - (0..report[:max_goal_index]).each do |idx|
+       - (0..report[:max_goal_index]).each do |i|
         .row
-         .col-md-5.col-md-offset-1.home-team
-          - if report[:home_goal_details].size > idx
-           - goal = report[:home_goal_details].fetch(idx)
-           = "(#{goal[:time]}) #{goal[:name]}"
-         .col-md-5.away-team
-          - if report[:away_goal_details].size > idx
-           - goal = report[:away_goal_details].fetch(idx)
-           = "#{goal[:name]} (#{goal[:time]})"
+         .col-md-5.col-md-offset-1.home-team= "#{report[:home_goal_details][i]}"
+         .col-md-5.away-team= "#{report[:away_goal_details][i]}"
      %li.list-group-item
       .row.list-group-item-heading
        .col-md-6.col-md-offset-3= "MATCH STATS"
@@ -73,20 +67,15 @@
        .col-md-6.col-md-offset-3= "TEAMS"
       .row.team-heading
        .col-md-5.col-md-offset-1.home-team= "#{report[:home_team]}"
+       / .col-md-5.away-team= "(#{report[:away_team_formation]}) #{report[:away_team]}"
        .col-md-5.away-team= "#{report[:away_team]}"
       .row.team-heading
        .col-md-5.col-md-offset-1.home-team= "(#{report[:home_team_formation]})"
        .col-md-5.away-team= "(#{report[:away_team_formation]})"
-      - (0..10).each do |idx|
+      - (0..10).each do |i|
        .row
-        .col-md-5.col-md-offset-1.home-team
-         - if report[:home_lineup].size > idx
-          - player = report[:home_lineup].fetch(idx)
-          = "(#{player[:position]}) #{player[:name]}"
-        .col-md-5.away-team
-         - if report[:away_lineup].size > idx
-          - player = report[:away_lineup].fetch(idx)
-          = "#{player[:name]} (#{player[:position]})" 
+        .col-md-5.col-md-offset-1.home-team= "#{report[:home_lineup][i]}"
+        .col-md-5.away-team= "#{report[:away_lineup][i]}"
       / .row.list-group-item-heading
       /  .col-md-4.col-md-offset-4= "Substitutes"
       .row.list-group-item-heading
@@ -107,31 +96,28 @@
           = " #{sub[:name]} (#{sub[:time]})"
       .row.list-group-item-heading
        .col-md-4.col-md-offset-4= "Yellow Cards"
-      - (0..report[:max_yellow_card_index]).each do |idx|
+      - (0..report[:max_yellow_card_index]).each do |i|
        .row
         .col-md-5.col-md-offset-1.home-team
-         - if report[:home_team_yellow_card_details].size > idx
-          - card = report[:home_team_yellow_card_details].fetch(idx)
-          = "(#{card[:time]}) #{card[:name]}"
+         - unless report[:home_team_yellow_card_details][i].nil?
+          = "#{report[:home_team_yellow_card_details][i]} "
           %span.yellow-card.glyphicon.glyphicon-book
         .col-md-5.away-team
-         - if report[:away_team_yellow_card_details].size > idx
+         - unless report[:away_team_yellow_card_details][i].nil?
           %span.yellow-card.glyphicon.glyphicon-book
-          - card = report[:away_team_yellow_card_details].fetch(idx)
-          = "#{card[:name]} (#{card[:time]})"
+          = "#{report[:away_team_yellow_card_details][i]}"
       .row.list-group-item-heading
        .col-md-4.col-md-offset-4= "Red Cards"
-      - (0..report[:max_red_card_index]).each do |idx|
+      - (0..report[:max_red_card_index]).each do |i|
        .row
         .col-md-5.col-md-offset-1.home-team
-         - if report[:home_team_red_card_details].size > idx
-          - card = report[:home_team_red_card_details].fetch(idx)
-          = "(#{card[:time]}) #{card[:name]}"
+         - unless report[:home_team_red_card_details][i].nil?
+          = "#{report[:home_team_red_card_details][i]} "
           %span.red-card.glyphicon.glyphicon-book
         .col-md-5.away-team
-         - if report[:away_team_red_card_details].size > idx
+         - unless report[:away_team_red_card_details][i].nil?
           %span.red-card.glyphicon.glyphicon-book
-          - card = report[:away_team_red_card_details].fetch(idx)
-          = "#{card[:name]} (#{card[:time]})"
+          = "#{report[:away_team_red_card_details][i]}"
+        
 
 / = @reports.paginate(page: params[:page], per_page: 6)

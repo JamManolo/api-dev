@@ -5,6 +5,7 @@ Xmlsoccer::Application.routes.draw do
   get "soccer_stats/teams"
   get "soccer_stats/scores"
   get "soccer_stats/reports"
+  get "soccer_stats/reportsXX"
   get "soccer_stats/earliest_match_dates"
   get  "dropbox/main"
   post "dropbox/upload"
