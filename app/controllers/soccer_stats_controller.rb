@@ -50,16 +50,21 @@ class SoccerStatsController < ApplicationController
   def reports
 
     reports = Array.new
-    match_xml = Nokogiri::XML(File.open("FILES/xmlsoccer-match-63414.xml"))
+    match_id = !params[:match_id].nil? ? params[:match_id] : '63414' 
+    # match_xml = Nokogiri::XML(File.open("FILES/xmlsoccer-match-63414.xml"))
+    match_xml = Nokogiri::XML(aws_data_fetch(
+      name: "xmlsoccer-match-#{match_id}.xml",
+      path: "soccer/matches"
+    ))
 
     match_xml.xpath("//Match").each do |node|
 
-      next if node.xpath("Round").text.to_i < 9
+      # next if node.xpath("Round").text.to_i < 9
 
       # Substitution info
+      detail = Hash.new
       home_sub_details = Array.new
       away_sub_details = Array.new
-      detail = Hash.new
       ["Home","Away"].each do |team|
         sub_details = team == "Home" ? home_sub_details : away_sub_details
         node.xpath("//#{team}SubDetails/SubDetail").each do |sub|
@@ -70,8 +75,8 @@ class SoccerStatsController < ApplicationController
                            dir:  detail['Direction'] }
         end
       end
-      max_sub_index = home_sub_details.size > away_sub_details.size ? home_sub_details.size - 1 :
-                                                                      away_sub_details.size - 1
+      max_sub_index = home_sub_details.size > away_sub_details.size ?
+                      home_sub_details.size - 1 : away_sub_details.size - 1
 
       # Goal scorers
       home_goal_details = Array.new
@@ -85,8 +90,8 @@ class SoccerStatsController < ApplicationController
           goal_details << { time: detail['Time'], name: detail['Name'] }
         end
       end
-      max_goal_index = home_goal_details.size > away_goal_details.size ? home_goal_details.size - 1 : 
-                                                                         away_goal_details.size - 1
+      max_goal_index = home_goal_details.size > away_goal_details.size ?
+                       home_goal_details.size - 1 : away_goal_details.size - 1
 
       # Lineups
       home_lineup = Array.new
@@ -171,7 +176,7 @@ class SoccerStatsController < ApplicationController
 
                   }
 
-      break if true
+      # break if true
     end
 
     @reports = WillPaginate::Collection.create(1, 0, reports.length) do |pager|

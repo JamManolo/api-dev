@@ -56,8 +56,9 @@ puts "------service.directories ------"
 aws_service.directories.each do |dir|
 	puts "KEY = #{dir.key}"
 	dir.files.each do |file|
-		puts "NAME = #{file.key}"
 		next if file.key =~ /^logs\//
+		puts "NAME = #{file.key}"
+		next if file.key =~ /^soccer\//
 		File.open("./downloads/aws-fog/#{file.key}", 'w') do |f|
 			dir.files.get(file.key) do | data, remaining, content_length |
 				f.syswrite data
@@ -70,10 +71,10 @@ end
 puts "------- directory.files.create -------"
 if !aws_service.directories.last.nil?
 	dir = aws_service.directories.last
-	puts dir
+	puts dir.key
 	['jmc.log', 'Gemfile'].each do |file|
 		tmpfile = dir.files.create(key: file, body: File.open(file))
-		puts tmpfile
+		puts tmpfile.key
 	end
 end
 

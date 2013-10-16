@@ -1,0 +1,19 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  team_id: 1
+  name: MyString
+  country: MyString
+  stadium: MyString
+  home_page_url: MyString
+  wiki_link: MyString
+  data_file_id: 1
+
+two:
+  team_id: 1
+  name: MyString
+  country: MyString
+  stadium: MyString
+  home_page_url: MyString
+  wiki_link: MyString
+  data_file_id: 1

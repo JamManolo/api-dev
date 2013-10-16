@@ -1,9 +1,10 @@
 source 'https://rubygems.org'
+ruby '2.0.0'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.0.0'
 
-# gem 'xmlsoccer',     path: '/Users/jimcar/Work-test/xmlsoccer'
+gem 'xmlsoccer',     path: '/Users/jimcar/Work-test/xmlsoccer'
 gem 'xmlsoccerhttp', path: '/Users/jimcar/rails_projects/api-dev/mygem/xmlsoccerhttp'
 
 gem 'nokogiri'

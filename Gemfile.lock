@@ -7,6 +7,13 @@ GIT
       sass (~> 3.2)
 
 PATH
+  remote: /Users/jimcar/Work-test/xmlsoccer
+  specs:
+    xmlsoccer (0.0.1)
+      savon
+      supermodel
+
+PATH
   remote: mygem/xmlsoccerhttp
   specs:
     xmlsoccerhttp (0.1.0)
@@ -39,6 +46,9 @@ GEM
       thread_safe (~> 0.1)
       tzinfo (~> 0.3.37)
     addressable (2.3.5)
+    akami (1.2.0)
+      gyoku (>= 0.4.0)
+      nokogiri (>= 1.4.0)
     arel (4.0.0)
     atomic (1.1.14)
     autoparse (0.3.3)
@@ -88,6 +98,8 @@ GEM
       multi_json (>= 1.0.0)
       signet (~> 0.4.5)
       uuidtools (>= 2.1.0)
+    gyoku (1.0.0)
+      builder (>= 2.1.2)
     haml (4.0.3)
       tilt
     haml-rails (0.4)
@@ -99,6 +111,8 @@ GEM
     httparty (0.12.0)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
+    httpi (2.0.2)
+      rack
     i18n (0.6.5)
     jbuilder (1.5.2)
       activesupport (>= 3.0.0)
@@ -125,6 +139,7 @@ GEM
     net-ssh (2.7.0)
     nokogiri (1.6.0)
       mini_portile (~> 0.5.0)
+    nori (2.1.0)
     polyglot (0.3.3)
     rack (1.5.2)
     rack-test (0.6.2)
@@ -151,6 +166,14 @@ GEM
       railties (>= 4.0.0.beta, < 5.0)
       sass (>= 3.1.10)
       sprockets-rails (~> 2.0.0)
+    savon (2.2.0)
+      akami (~> 1.2.0)
+      builder (>= 2.1.2)
+      gyoku (~> 1.0.0)
+      httpi (~> 2.0.2)
+      nokogiri (>= 1.4.0)
+      nori (~> 2.1.0)
+      wasabi (~> 3.1.0)
     sdoc (0.3.20)
       json (>= 1.1.3)
       rdoc (~> 3.10)
@@ -169,6 +192,8 @@ GEM
       activesupport (>= 3.0)
       sprockets (~> 2.8)
     sqlite3 (1.3.8)
+    supermodel (0.1.4)
+      activemodel (>= 3.0.0.beta)
     thor (0.18.1)
     thread_safe (0.1.3)
       atomic
@@ -183,6 +208,9 @@ GEM
       execjs (>= 0.3.0)
       multi_json (~> 1.0, >= 1.0.2)
     uuidtools (2.1.4)
+    wasabi (3.1.0)
+      httpi (~> 2.0)
+      nokogiri (>= 1.4.0)
     will_paginate (3.0.4)
 
 PLATFORMS
@@ -209,4 +237,5 @@ DEPENDENCIES
   turbolinks
   uglifier (>= 1.3.0)
   will_paginate (= 3.0.4)
+  xmlsoccer!
   xmlsoccerhttp!

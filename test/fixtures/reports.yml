@@ -1,0 +1,27 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  report_id: 1
+  fixture_match_id: 1
+  date: MyString
+  round: 1
+  league: MyString
+  league_id: 1
+  home_team: MyString
+  home_team_id: 1
+  away_team: MyString
+  away_team_id: 1
+  data_file_id: 1
+
+two:
+  report_id: 1
+  fixture_match_id: 1
+  date: MyString
+  round: 1
+  league: MyString
+  league_id: 1
+  home_team: MyString
+  home_team_id: 1
+  away_team: MyString
+  away_team_id: 1
+  data_file_id: 1

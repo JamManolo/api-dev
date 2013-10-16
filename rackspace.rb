@@ -27,14 +27,13 @@ puts response.status
 puts "------- rackspace_service.directories -------"
 directories = rackspace_service.directories
 directories.each do |d|
-	puts d
+	puts d.key
 end
 
 puts "------rackspace_service.directories.get ------"
 if !directories.first.nil?
-	puts directories.first 
+	puts directories.first.key
 	directories.first.files.each do |file|
-		puts file
 		puts file.public_url
 		puts file.key
 		File.open("./downloads/rackspace/#{file.key}", 'w') do |f|
@@ -47,10 +46,10 @@ end
 
 puts "------- directory.files.create -------"
 if !directories.first.nil?
-	puts directories.first 
+	puts directories.first.key
 	['jmc.log', 'Gemfile'].each do |file|
 		tmpfile = directories.first.files.create(key: file, body: File.open(file))
-		puts tmpfile
+		puts tmpfile.key
 	end
 end
 

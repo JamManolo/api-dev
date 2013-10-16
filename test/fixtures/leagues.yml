@@ -1,0 +1,23 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  league_id: 1
+  name: MyString
+  country: MyString
+  historical_data: false
+  fixtures: false
+  livescore: false
+  number_of_matches: 1
+  latest_match_date: MyString
+  data_file_id: 1
+
+two:
+  league_id: 1
+  name: MyString
+  country: MyString
+  historical_data: false
+  fixtures: false
+  livescore: false
+  number_of_matches: 1
+  latest_match_date: MyString
+  data_file_id: 1
