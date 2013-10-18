@@ -1,0 +1,19 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  name: MyString
+  path: MyString
+  has_corrections: false
+  format: MyString
+  data_store: MyString
+  data_store_id: 1
+  timestamp: MyString
+
+two:
+  name: MyString
+  path: MyString
+  has_corrections: false
+  format: MyString
+  data_store: MyString
+  data_store_id: 1
+  timestamp: MyString

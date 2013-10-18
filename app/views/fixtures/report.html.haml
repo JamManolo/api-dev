@@ -1,6 +1,4 @@
-%h3.center= "SoccerStats#reports"
-
-/ = @reports.paginate(page: params[:page], per_page: 6)
+%h3.center= "Fixtures#report"
 
 %ul.reports.list-group
  - @reports.each do |report|
@@ -134,5 +132,3 @@
           %span.red-card.glyphicon.glyphicon-book
           - card = report[:away_team_red_card_details].fetch(idx)
           = "#{card[:name]} (#{card[:time]})"
-
-/ = @reports.paginate(page: params[:page], per_page: 6)

@@ -9,10 +9,10 @@ require "Nokogiri"
 require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
 
 # ---------------------------------------------------
-#  Name: transform
+#  Name: transform_historic_matches 
 #  Desc: cleanup xmlsoccer.xml 
 # ---------------------------------------------------
-def transform(options={})
+def transform_historic_matches(options={})
 
   league = options[:league]
   season = options[:season]
@@ -149,7 +149,8 @@ def transform(options={})
     end
 
     # Save the XML file for this match
-    fixture_match_id = node.xpath("Id").text
+    report_id = node.xpath("Id").text
+    fixture_match_id = node.xpath("FixtureMatch_Id").text
     filename = "xmlsoccer-match-#{fixture_match_id}.xml"
     f = File.open("./FILES/#{filename}", "w")
     f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
@@ -209,5 +210,5 @@ def transform(options={})
 
 end
 
-transform({league: 3, season: '1314', localtest: true})
+transform_historic_matches({league: 3, season: '1314', localtest: true})
 

@@ -1,0 +1,21 @@
+%h2= "Fixtures#index"
+
+%ul
+ .row
+  %strong
+   .col-md-1= "ID"
+   .col-md-2= "Date"
+   .col-md-2= "League"
+   .col-md-1= "Round"
+   .col-md-2= "Home Team"
+   .col-md-2= "Away Team"
+   .col-md-2= "Location"
+ - @fixtures.each do |fixture|
+  .row
+   .col-md-1= link_to "#{fixture[:match_id]}", fixture_url(fixture.id)
+   .col-md-2= "#{fixture[:date].in_time_zone.strftime('%a %b %d, %Y at %H:%M')}"
+   .col-md-2= "#{fixture[:league]}"
+   .col-md-1= "#{fixture[:round]}"
+   .col-md-2= link_to "#{fixture[:home_team]}", team_url(Team.find_by(team_id: fixture.home_team_id))
+   .col-md-2= link_to "#{fixture[:away_team]}", team_url(Team.find_by(team_id: fixture.away_team_id))
+   .col-md-2= "#{fixture[:location]}"
