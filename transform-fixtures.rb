@@ -33,6 +33,7 @@ def transform_fixtures(options={})
     fixtures_xml = Nokogiri::XML(File.open("XML/Fixtures-league#{league}-#{season}.xml"))
   end
 
+  fixture_recs = Array.new
   data_file_recs = Array.new
   
   fixtures_xml.xpath("//Match").each do |node|
@@ -50,17 +51,22 @@ def transform_fixtures(options={})
     f.puts "</FreeFantasyFootball.Info>"
     f.close
 
-    data_file_recs << { match_id:     node.xpath("Id").text,
-                        date:         node.xpath("Date").text,
-                        league:       node.xpath("League").text,
-                        round:        node.xpath("Round").text,
-                        home_team:    node.xpath("HomeTeam").text,
-                        home_team_id: node.xpath("HomeTeam_Id").text,
-                        away_team:    node.xpath("AwayTeam").text,
-                        away_team_id: node.xpath("AwayTeam_Id").text,
-                        location:     node.xpath("Location").text,
-                        report_id:    0
-                      } 
+    fixture_recs << { match_id:     node.xpath("Id").text,
+                      date:         node.xpath("Date").text,
+                      league:       node.xpath("League").text,
+                      round:        node.xpath("Round").text,
+                      home_team:    node.xpath("HomeTeam").text,
+                      home_team_id: node.xpath("HomeTeam_Id").text,
+                      away_team:    node.xpath("AwayTeam").text,
+                      away_team_id: node.xpath("AwayTeam_Id").text,
+                      location:     node.xpath("Location").text,
+                      report_id:    0
+                    }
+
+    data_file_recs << { name:      filename,
+                        path:      'soccer/matches',
+                        timestamp: `date`.strip
+                      }
   end
 
   # Save as json file, for whatever purpose...
@@ -69,10 +75,25 @@ def transform_fixtures(options={})
   data_file_recs.each do |record|
     f.puts '{'
     record.each do |k,v|
-      my_comma = k == :report_id ? '' : ','
+      my_comma = k == :timestamp ? '' : ','
       f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
     end
     my_comma = record == data_file_recs.last ? '' : ','
+    f.puts "}#{my_comma}"
+  end
+  f.puts '] }'
+  f.close
+
+  # Save as json file, for whatever purpose...
+  f = File.open("./FILES/xmlsoccer-fixtures.json", "w")
+  f.puts '{ "items": ['
+  fixture_recs.each do |record|
+    f.puts '{'
+    record.each do |k,v|
+      my_comma = k == :report_id ? '' : ','
+      f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
+    end
+    my_comma = record == fixture_recs.last ? '' : ','
     f.puts "}#{my_comma}"
   end
   f.puts '] }'
@@ -83,7 +104,7 @@ def transform_fixtures(options={})
   f.puts 'namespace :db do'
   f.puts "\tdesc \"Fill database with file data\""
   f.puts "\ttask populate: :environment do"
-  data_file_recs.each do |record|
+  fixture_recs.each do |record|
     f.puts "\t\tFixture.create!("
     record.each do |k,v|
       f.puts "\t\t\t\"#{k}\" => \"#{v}\","

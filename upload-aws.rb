@@ -4,11 +4,12 @@
 require 'aws-sdk'
 require 'json'
 
-def aws_data_store(options={})
+def aws_data_store(options)
 
   aws_config = JSON.parse(File.open('aws_config.json').read)
   test_config = JSON.parse(File.open('test_config.json').read)
-  data_file_recs = JSON.parse(File.open('FILES/xmlsoccer-match-db-info.json').read)['items']
+  data_file_recs = 
+    JSON.parse(File.open("FILES/xmlsoccer-#{options[:data_type]}-db-info.json").read)['items']
 
   AWS.config(aws_config)
   s3 = AWS::S3.new
@@ -17,10 +18,12 @@ def aws_data_store(options={})
 
   data_file_recs.each do |record|
   	filename = "#{record['path']}/#{record['name']}"
+    puts "Attempting to upload: '#{filename}'"
   	retname = s3.buckets[bucket_name].objects[filename].write(file: filename)
   	puts "Uploaded #{filename} to #{bucket_name}/#{retname.key}."
   end
 
 end
 
-aws_data_store()
+# data_type can be 'match' or 'fixture'
+aws_data_store(data_type: 'fixture')
