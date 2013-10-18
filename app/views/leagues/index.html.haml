@@ -1,0 +1,19 @@
+%h2= "Leagues#index"
+
+%ul
+ .row
+  %strong
+   .col-md-1= "ID"
+   .col-md-2= "Country"
+   .col-md-3= "Name"
+   .col-md-1= "Matches"
+   .col-md-3= "Latest Match Date"
+ - @leagues.each do |league|
+  .row
+   .col-md-1= "#{league[:league_id]}"
+   .col-md-2= "#{league[:country]}"
+   .col-md-3= link_to "#{league[:name]}", league_url(league.id)
+   .col-md-1= "#{league[:number_of_matches]}"
+   .col-md-3
+    = "#{league[:latest_match_date].in_time_zone.strftime('%a %b %d, %Y at %H:%M')}"
+   

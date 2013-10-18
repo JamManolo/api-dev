@@ -1,0 +1,19 @@
+%h2= "teams#show #{@team.name}"
+
+%ul
+ .row
+  %strong
+   .col-md-1= "ID"
+   .col-md-2= "Country"
+   .col-md-3= "Club Page"
+   .col-md-3= "Stadium"
+   .col-md-3= "Wiki link"
+ - @teams.each do |team|
+  .row
+   .col-md-1= "#{@team[:team_id]}"
+   .col-md-2= "#{@team[:country]}"
+   - tmpstr = @team[:home_page_url] =~ /^http/ ? "" : "http://"
+   .col-md-3= link_to "#{@team[:home_page_url]}", "#{tmpstr}#{@team[:home_page_url]}"
+   .col-md-3= "#{@team[:stadium]}"
+   - wiki_link = @team[:wiki_link] =~ /^http\:\/\/en.wikipedia.org\/wiki\/(.*)$/ ? $1 : "no link"
+   .col-md-3= link_to wiki_link, @team[:wiki_link]

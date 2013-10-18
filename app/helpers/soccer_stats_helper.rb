@@ -11,6 +11,7 @@ module SoccerStatsHelper
     test_config = JSON.parse(File.open('test_config.json').read)
 	  bucket_name = test_config['test-bucket-name-aws']
   	filename = data_file_rec[:path].nil? ? data_file_rec[:name] : "#{data_file_rec[:path]}/#{data_file_rec[:name]}"
+    logger.debug "AWS download: '#{filename}'"
     s3.buckets[bucket_name].objects[filename].read 
 	end
 
@@ -58,16 +59,15 @@ module SoccerStatsHelper
   def gapi_data_fetch(data_file_rec)
 
     gapi_config = JSON.parse(File.open('gapi_config.json').read)
-    service_account_email = gapi_config['service_account_email']
-    key_file = gapi_config['key_file']
-    key_secret = gapi_config['key_secret']
     client = Google::APIClient.new(application_name: "Soccer App", application_version: "0.1")
-    key = Google::APIClient::KeyUtils.load_from_pkcs12(key_file, key_secret)
+    key = Google::APIClient::KeyUtils.load_from_pkcs12(
+      gapi_config['key_file'], gapi_config['key_secret']
+    )
     client.authorization = Signet::OAuth2::Client.new(
       token_credential_uri: 'https://accounts.google.com/o/oauth2/token',
       audience: 'https://accounts.google.com/o/oauth2/token',
       scope: 'https://www.googleapis.com/auth/devstorage.full_control',
-      issuer: service_account_email,
+      issuer: gapi_config['service_account_email'],
       signing_key: key)
     client.authorization.fetch_access_token!
     storage = client.discovered_api('storage', 'v1beta2')

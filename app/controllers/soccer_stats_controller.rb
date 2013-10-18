@@ -1,8 +1,5 @@
 class SoccerStatsController < ApplicationController
 
-  # require 'will_paginate/array'
-  # require 'will_paginate/collection'
-
   def home
   end
 
@@ -17,67 +14,66 @@ class SoccerStatsController < ApplicationController
   end
 
   def leagues
-  	xmlsoccer_client = 
-  	 Xmlsoccer::RequestManager.new({
-      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
-  	 	api_type: "Demo"
+  	xmlsoccer_client =
+      Xmlsoccer::RequestManager.new({
+        api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
+        api_type: "Demo"
       })
 
   	 @leagues = xmlsoccer_client.get_all_leagues
   end
 
+  # ----------------------------
+  #  soccer_stats/teams
+  # ----------------------------
   def teams
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
       api_type: "Demo"
     })
 
-    # response = xmlsoccer_client.get_all_teams
-    # f = open( "XML/JMC-GET-ALL-TEAMS.xml", "w" )
-    # f.puts( response.body )
-    # f.close
-
     @teams = Array.new
-    # Nokogiri::XML(File.open("XML/JMC-GET-ALL-TEAMS.xml").read).xpath("//Team").each do |node|
-    Nokogiri::XML(xmlsoccer_client.get_all_teams.body).xpath("//Team").each do |node|
-      @teams << { team_id: node.xpath("Team_Id").text, country: node.xpath("Country").text,
-                  name: node.xpath("Name").text, stadium: node.xpath("Stadium").text,
-                  home_page_url: node.xpath("HomePageURL").text,
-                  wiki_link: node.xpath("WIKILink").text }
+    if params[:league_id].nil?
+      xml_doc = Nokogiri::XML(xmlsoccer_client.get_all_teams.body)
+      # xml_doc = Nokogiri::XML(File.open("XML/AllTeams.xml").read)
+      namespace = ''
+    else
+      season = '1314'
+      xml_doc = Nokogiri::XML(
+        xmlsoccer_client.get_all_teams_by_league_and_season(params[:league_id], season).body)
+      # xml_doc = Nokogiri::XML(File.open("XML/Teams-league#{params[:league_id]}-#{season}.xml").read)
+      xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
+      namespace = 'xmlns:'
+    end
+
+    xml_doc.xpath("//#{namespace}Team").each do |node|
+      @teams << { team_id: node.xpath("#{namespace}Team_Id").text,
+                  country: node.xpath("#{namespace}Country").text,
+                  name: node.xpath("#{namespace}Name").text,
+                  stadium: node.xpath("#{namespace}Stadium").text,
+                  home_page_url: node.xpath("#{namespace}HomePageURL").text,
+                  wiki_link: node.xpath("#{namespace}WIKILink").text }
     end
   end
 
+  # ----------------------------
+  #  soccer_stats/reports
+  # ----------------------------
   def reports
 
     reports = Array.new
-    match_id = !params[:match_id].nil? ? params[:match_id] : '63414' 
-    # match_xml = Nokogiri::XML(File.open("FILES/xmlsoccer-match-63414.xml"))
-    match_xml = Nokogiri::XML(aws_data_fetch(
-      name: "xmlsoccer-match-#{match_id}.xml",
+    match_id = !params[:report_id].nil? ? params[:report_id] : '63414' 
+    # xml_doc = Nokogiri::XML(File.open("FILES/xmlsoccer-match-#{report_id}.xml"))
+    xml_doc = Nokogiri::XML(aws_data_fetch(
+      name: "xmlsoccer-match-#{report_id}.xml",
       path: "soccer/matches"
     ))
 
-    match_xml.xpath("//Match").each do |node|
+    xml_doc.xpath("//Match").each do |node|
 
       # next if node.xpath("Round").text.to_i < 9
-
-      # Substitution info
       detail = Hash.new
-      home_sub_details = Array.new
-      away_sub_details = Array.new
-      ["Home","Away"].each do |team|
-        sub_details = team == "Home" ? home_sub_details : away_sub_details
-        node.xpath("//#{team}SubDetails/SubDetail").each do |sub|
-          sub.element_children.each do |child|
-            detail[child.name] = child.text 
-          end
-          sub_details << { time: detail['Time'], name: detail['Name'],
-                           dir:  detail['Direction'] }
-        end
-      end
-      max_sub_index = home_sub_details.size > away_sub_details.size ?
-                      home_sub_details.size - 1 : away_sub_details.size - 1
-
+      
       # Goal scorers
       home_goal_details = Array.new
       away_goal_details = Array.new
@@ -105,6 +101,22 @@ class SoccerStatsController < ApplicationController
           lineup << { position: detail['Position'], name: detail['Name'] }
         end
       end
+
+      # Substitution info
+      home_sub_details = Array.new
+      away_sub_details = Array.new
+      ["Home","Away"].each do |team|
+        sub_details = team == "Home" ? home_sub_details : away_sub_details
+        node.xpath("//#{team}SubDetails/SubDetail").each do |sub|
+          sub.element_children.each do |child|
+            detail[child.name] = child.text 
+          end
+          sub_details << { time: detail['Time'], name: detail['Name'],
+                           dir:  detail['Direction'] }
+        end
+      end
+      max_sub_index = home_sub_details.size > away_sub_details.size ?
+                      home_sub_details.size - 1 : away_sub_details.size - 1
       
       # Bookings: Yellow/Red Cards
       home_team_yellow_card_details = Array.new
@@ -184,6 +196,10 @@ class SoccerStatsController < ApplicationController
     end
   end
 
+  # ----------------------------
+  #  soccer_stats/reports
+  #  original version did all the work here in the controller
+  # ----------------------------
   def reportsXX
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],

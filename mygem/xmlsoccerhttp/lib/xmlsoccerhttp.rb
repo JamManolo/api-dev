@@ -12,8 +12,6 @@ module XMLsoccerHTTP
 		@api_type = 'Demo'
 		@base_url = ''
 
-		attr_accessor :base_url, :api_type, :api_key
-
 		def initialize(options={})
 			@api_key = options[:api_key]
 			@api_type = options[:api_type]
@@ -50,17 +48,17 @@ module XMLsoccerHTTP
 
 		def get_all_teams_by_league_and_season(league, season)
 			make_the_call({ api_name: "GetAllTeamsByLeagueAndSeason",
-				              api_args: { league: league, "seasonDateString" => season } })
+				            	api_args: { league: league, "seasonDateString" => season } })
 		end
 
 		def get_earliest_match_date_per_league(league)
 			make_the_call({ api_name: "GetEarliestMatchDatePerLeague", 
-					            api_args: { league: league } })
+					        		api_args: { league: league } })
 		end
 
 		def get_fixtures_by_date_interval(start_date, end_date)
 			make_the_call({ api_name: "GetFixturesByDateInterval",
-						       	  api_args: { "startDateString" => start_date,
+						    			api_args: { "startDateString" => start_date,
 						                      "endDateString" => end_date } })
 		end
 
@@ -99,7 +97,7 @@ module XMLsoccerHTTP
 
 	 	def get_historic_matches_by_league_and_season(league, season)
 	  	make_the_call({ api_name: "GetHistoricMatchesByLeagueAndSeason", 
-				              api_args: { league: league, "seasonDateString" => season } })
+				        			api_args: { league: league, "seasonDateString" => season } })
 	 	end
 
 		def get_historic_matches_by_team_and_date_interval(team, start_date, end_date)
@@ -110,7 +108,7 @@ module XMLsoccerHTTP
 
     def get_leagues_standings_by_season(league, season)
     	make_the_call( { api_name: "GetLeagueStandingsBySeason",
-			                api_args: { league: league, "seasonDateString" => season  } })
+			             		 api_args: { league: league, "seasonDateString" => season  } })
     end
 
     def get_live_score
@@ -119,17 +117,17 @@ module XMLsoccerHTTP
 
  		def get_live_score_by_league(league)
     	make_the_call( { api_name: "GetLiveScoreByLeague", 
-			                api_args: { league: league, } })
+			             		 api_args: { league: league, } })
 		end
 
 		def get_odds_by_fixture_match_id(fixture_match_id)
 	  	make_the_call({ api_name: "GetOddsByFixtureMatchId",
-		                  api_args: { "fixtureMatch_Id" => fixture_match_id } })
+		                	api_args: { "fixtureMatch_Id" => fixture_match_id } })
 		end
 
 		def get_team(team)
-			make_the_call({api_name: "GetTeam",
-	                   api_args: { "teamName" => team } })
+			make_the_call({ api_name: "GetTeam",
+	                   	api_args: { "teamName" => team } })
 		end
 
 	end

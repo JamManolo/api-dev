@@ -1,0 +1,24 @@
+%h3.center= "Fixtures#show"
+
+%ul.reports.list-group
+ - @fixtures.each do |fixture|
+  .center
+   %li.list-group-item
+    %h3.list-group-item-heading
+     = "#{fixture[:league]} - Round #{fixture[:round]} - "
+     = "#{fixture[:date].in_time_zone.strftime('%a %b %d, %Y at %H:%M')}"
+    %ul.list-group
+     %li.list-group-item
+      .row.list-group-item-heading
+       .col-md-6.col-md-offset-3= "SCORING SUMMARY"
+      .row.team-heading
+       .col-md-3.col-md-offset-1.home-team
+        = link_to "#{fixture[:home_team]}", team_url(Team.find_by(team_id: fixture[:home_team_id]))
+       .col-md-1= "#{fixture[:home_goals]}"
+       - if fixture[:time] == "Finished"
+        .col-md-2= link_to "FT", report_fixture_url(Fixture.find_by(match_id: fixture[:match_id]))
+       - else
+        .col-md-2
+       .col-md-1= "#{fixture[:away_goals]}"
+       .col-md-3.away-team
+        = link_to "#{fixture[:away_team]}", team_url(Team.find_by(team_id: fixture[:away_team_id]))
