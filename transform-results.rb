@@ -7,6 +7,7 @@ require "json"
 require "uri"
 require "Nokogiri"
 require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
+require './xmlsoccer-league-map'
 
 # ---------------------------------------------------
 #  Name: transform_hresults
@@ -46,6 +47,8 @@ def transform_results(options={})
     # next if node.xpath("Round").text.to_i < 9
     next if localtest == false or node.xpath("Id").text == "62364"
 
+    puts "========= MATCH ID : '#{node.xpath("FixtureMatch_Id").text}' : LEAGUE : #{league} ========="
+
     # Get substitution info from LiveScore data
     fixture_match_id = node.xpath("FixtureMatch_Id").text
     if live_score_match_ids.include? fixture_match_id
@@ -79,19 +82,31 @@ def transform_results(options={})
 
     # Goal scorers
     ["Home","Away"].each do |team|
-      goal_details = Array.new
-      node.xpath("#{team}GoalDetails").text.split(';').reverse_each do |goal|
-        time, name = goal.split(':')
-        goal_details << { name: name.strip, time: time }
-      end
-      node.xpath("#{team}GoalDetails").first.content = ''
+      #
+      # JMC - skip Brasiliero 'GoalDetails' for now
+      #
+      unless league == 37 or node.xpath("#{team}GoalDetails").first.nil?
+        goal_details = Array.new
+        goal_detail_line = node.xpath("#{team}GoalDetails").text
+        puts "goal_detail_line 2: #{goal_detail_line}" if goal_detail_line =~ /nbsp/
+        while goal_detail_line =~ /nbsp\;/
+          goal_detail_line.sub!(/nbsp\;/, '') 
+        end
 
-      goal_details.each do |goal|
-        tmp_str = "<GoalDetail>" +
-                  "<Name>#{goal[:name]}</Name>" +
-                  "<Time>#{goal[:time]}</Time>" +
-                  "</GoalDetail>"
-        node.xpath("#{team}GoalDetails").first.add_child(tmp_str)
+        goal_detail_line.split(';').reverse_each do |goal|
+          time, name = goal.split(':')
+          goal_details << { name: name.strip, time: time }
+        end
+
+        node.xpath("#{team}GoalDetails").first.content = ''
+
+        goal_details.each do |goal|
+          tmp_str = "<GoalDetail>" +
+                    "<Name>#{goal[:name]}</Name>" +
+                    "<Time>#{goal[:time]}</Time>" +
+                    "</GoalDetail>"
+          node.xpath("#{team}GoalDetails").first.add_child(tmp_str)
+        end
       end
     end
 
@@ -133,29 +148,35 @@ def transform_results(options={})
     # Bookings: Yellow and Red Cards
     ["Home","Away"].each do |team|
       ["Yellow","Red"].each do |card|
-        tmp_card_details = Array.new
-        # node.xpath("#{team}Team#{card}CardDetails").text.split(';').reverse_each do |offense|
-        jmcline = node.xpath("#{team}Team#{card}CardDetails").text
-        # puts "jmcline 1: #{jmcline}"
-        puts "JMCLINE 2: #{jmcline}" if jmcline =~ /nbsp/
-        jmcline.sub!(/nbsp\;/, '') if jmcline =~ /nbsp\;/
-        
-        jmcline.split(';').reverse_each do |offense|
-          time, name = offense.split(':')
-          puts "NAME: '#{time}', '#{name}'"
-          tmp_card_details << { name: name.strip, time: time }
-        end
-        node.xpath("#{team}Team#{card}CardDetails").first.content = ''
+        # Skip when missing 'TeamCardDetails' element (identified in Serie B data)
+        unless node.xpath("#{team}Team#{card}CardDetails").first.nil?
+          tmp_card_details = Array.new
+          card_detail_line = node.xpath("#{team}Team#{card}CardDetails").text
+          # puts "card_detail_line 2: #{card_detail_line}" if card_detail_line =~ /nbsp/
+          while card_detail_line =~ /nbsp\;/
+            card_detail_line.sub!(/nbsp\;/, '') 
+          end
+          card_detail_line.split(';').reverse_each do |offense|
+            time, name = offense.split(':')
+            tmp_card_details << { name: name.strip, time: time }
+          end
+          node.xpath("#{team}Team#{card}CardDetails").first.content = ''
 
-        tmp_card_details.each do |tcd|
-          tmp_str = "<CardDetail>" +
-                    "<Name>#{tcd[:name]}</Name>" +
-                    "<Time>#{tcd[:time]}</Time>" +
-                    "</CardDetail>"
-          node.xpath("#{team}Team#{card}CardDetails").first.add_child(tmp_str)
+          tmp_card_details.each do |tcd|
+            tmp_str = "<CardDetail>" +
+                      "<Name>#{tcd[:name]}</Name>" +
+                      "<Time>#{tcd[:time]}</Time>" +
+                      "</CardDetail>"
+            node.xpath("#{team}Team#{card}CardDetails").first.add_child(tmp_str)
+          end
         end
       end
     end
+
+    # Add the league_id
+    league_name = node.xpath("League").text
+    league_id = @xmlsoccer_league_map[league_name]
+    node.add_child("<League_Id>#{league_id}</League_Id>")
 
     # Save the XML file for this match
     report_id = node.xpath("Id").text
@@ -211,7 +232,6 @@ def transform_results(options={})
   f.puts '] }'
   f.close
 
-
   # Or...just create the rake file now - DUH!
   f = File.open("./RAKE-FILES/file_data-#{league}.rake", "w")
   f.puts 'namespace :db do'
@@ -228,6 +248,27 @@ def transform_results(options={})
   f.puts "\t\tend\n\tend\nend"
   f.close
 
+  # Create rake file to update Fixture.report_id with the match report id.
+  # Yep, same as Fixture.match_id - essentially used as a 'has match report'
+  # boolean for now, but keeping since the report id is likely to change
+  fixture_match_ids = match_xml("//Match/FixtureMatch_Id").map{ |node| node.text }
+  File.open("./RAKE-FILES/update_2_fixture_data-#{league}.rake", "w") do |f|
+    f.puts 'namespace :db do'
+    f.puts "\tdesc \"Update database with fixture data\""
+    f.puts "\ttask populate: :environment do"
+    f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'fixture2'"
+    fixture_match_ids.each do |match_id|
+      f.puts "\t\t\tid = Fixture.find_by(match_id: #{match_id})"
+      f.puts "\t\t\tFixture.update("
+      f.puts "\t\t\t\tid,"
+      f.puts "\t\t\t\t{"
+      f.puts "\t\t\t\t\t\"report_id\" => \"#{match_id}\","
+      f.puts "\t\t\t\t}"
+      f.puts "\t\t\t)"
+    end
+    f.puts "\t\tend\n\tend\nend"
+  end
+
 end
 
 def transform_driver
@@ -237,12 +278,12 @@ def transform_driver
 
   league_ids.each do |league_id|
     puts "league_id = '#{league_id}'"
-    transform_results(league: league_id, season: '1314', localtest: true, update: false)
+    transform_results(league: league_id.to_i, season: '1314', localtest: true, update: false)
   end
 
 end
 
 transform_driver
 
-# transform_historic_matches({league: 3, season: '1314', localtest: true})
+# transform_results({league: 37, season: '1314', localtest: true})
 

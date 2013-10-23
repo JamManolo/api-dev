@@ -3,13 +3,22 @@
 
 require 'aws-sdk'
 require 'json'
+require 'nokogiri'
 
+# -------------------------------------------------
+#  Name: aws_data_store
+#  Desc: upload files to s3
+#        data_type can be 'match' or 'fixture'
+# -------------------------------------------------
 def aws_data_store(options)
+
+  data_type = options[:data_type]
+  league_id = options[:league_id]
 
   aws_config = JSON.parse(File.open('aws_config.json').read)
   test_config = JSON.parse(File.open('test_config.json').read)
   data_file_recs = 
-    JSON.parse(File.open("JSON-FILES/xmlsoccer-#{options[:data_type]}-data-files.json").read)['match-data-files']
+    JSON.parse(File.open("JSON-FILES/xmlsoccer-#{data_type}-data-files-#{league_id}.json").read)['match-data-files']
 
   AWS.config(aws_config)
   s3 = AWS::S3.new
@@ -27,5 +36,17 @@ def aws_data_store(options)
 
 end
 
-# data_type can be 'match' or 'fixture'
-aws_data_store(data_type: 'match')
+def upload_driver
+
+  xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
+  league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
+
+  league_ids.each do |league_id|
+    aws_data_store(data_type: 'match', league_id: league_id)
+  end
+
+end
+
+upload_driver
+
+

@@ -20,7 +20,8 @@
 #                      latest_match_date:string \
 #                      data_file_id:integer
 
-rails g migration add_latest_round_to_leagues latest_round:integer
+rails g migration add_columns_to_leagues latest_round:integer \
+                                         final_round:integer
 
 # rails g controller Teams --no-test-framework
 # rails g model Team   team_id:integer \
@@ -29,7 +30,10 @@ rails g migration add_latest_round_to_leagues latest_round:integer
 #                      stadium:string \
 #                      home_page_url:string \
 #                      wiki_link:string \
-#                      data_file_id:integer 
+#                      data_file_id:integer
+
+rails g migration add_columns_to_teams league:string \
+                                       league_id:integer
 
 # rails g controller Fixtures --no-test-framework
 # rails g model Fixture match_id:integer \

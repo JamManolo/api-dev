@@ -145,11 +145,11 @@ def transform_fixtures(options={})
     f.puts "\t\tend\n\tend\nend"
     f.close
   else
-    f = File.open("./RAKE-FILES/update_fixture_data-#{league}.rake", "w")
+    f = File.open("./RAKE-FILES/update_1_fixture_data-#{league}.rake", "w")
     f.puts 'namespace :db do'
     f.puts "\tdesc \"Update database with fixture data\""
     f.puts "\ttask populate: :environment do"
-    f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'fixture'"
+    f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'fixture1'"
     fixture_recs.each do |record|
       next if record[:time_x] == ""
       f.puts "\t\t\tid = Fixture.find_by(match_id: #{record[:match_id]})"

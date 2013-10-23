@@ -9,10 +9,10 @@ require "Nokogiri"
 require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
 
 # ---------------------------------------------------
-#  Name: transform_teams
+#  Name: transform_all_teams
 #  Desc: cleanup xmlsoccer.xml 
 # ---------------------------------------------------
-def transform_teams(options={})
+def transform_all_teams(options={})
 
   localtest = (options[:localtest].nil? or options[:localtest] != true) ? false : true
 
@@ -111,5 +111,5 @@ def transform_teams(options={})
 
 end
 
-transform_teams(localtest: true)
+transform_all_teams(localtest: true)
 

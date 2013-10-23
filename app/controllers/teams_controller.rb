@@ -9,13 +9,14 @@ class TeamsController < ApplicationController
 		@league = League.find_by(country: @team.country)
 
 		# Output completed fixtures
+		# JMC - usage of :all is apparently deprecated
     @fixturesX = Fixture.find(:all,
     	{
     		conditions:
     		[
-		    	"time_x != ? AND league = ? AND
+		    	"time_x != ? AND
 		    	 (home_team_id = ? OR away_team_id = ?)",
-		    	 '', @league.name, @team.team_id, @team.team_id
+		    	 '', @team.team_id, @team.team_id
 	    	]
 	    }
   	)
@@ -26,9 +27,9 @@ class TeamsController < ApplicationController
     	{
     		conditions:
     		[
-		    	"time_x = ? AND league = ? AND
+		    	"time_x = ? AND
 		    	 (home_team_id = ? OR away_team_id = ?)",
-		    	 '', @league.name, @team.team_id, @team.team_id
+		    	 '', @team.team_id, @team.team_id
 	    	]
 	    }
   	)

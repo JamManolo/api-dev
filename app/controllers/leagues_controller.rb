@@ -21,7 +21,7 @@ class LeaguesController < ApplicationController
     
     # Problem with team data for leagues 40 (Ukranian) and 41 (Russian)
     #
-    unless [40, 41].include?(@league.league_id)
+    unless false # [40, 41].include?(@league.league_id)
       # xml_doc = Nokogiri::XML(
       #   xmlsoccer_client.get_all_teams_by_league_and_season(params[:id], season).body)
       xml_doc = Nokogiri::XML(File.open("XML-NEW/Teams-league-#{@league.league_id}-#{season}.xml").read)

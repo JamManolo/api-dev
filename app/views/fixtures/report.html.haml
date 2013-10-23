@@ -16,11 +16,11 @@
       - if report[:max_goal_index] >= 0
        - (0..report[:max_goal_index]).each do |idx|
         .row
-         .col-md-5.col-md-offset-1.home-team
+         .col-md-6.home-team
           - if report[:home_goal_details].size > idx
            - goal = report[:home_goal_details].fetch(idx)
            = "(#{goal[:time]}) #{goal[:name]}"
-         .col-md-5.away-team
+         .col-md-6.away-team
           - if report[:away_goal_details].size > idx
            - goal = report[:away_goal_details].fetch(idx)
            = "#{goal[:name]} (#{goal[:time]})"
@@ -29,51 +29,51 @@
        .col-md-6.col-md-offset-3= "MATCH STATS"
       = render partial: 'report_teams', locals: { report: report, score: false }
       .row
-       .col-md-2.col-md-offset-1.home-team= "#{report[:home_shots]}(#{report[:home_shots_on_target]})"
+       .col-md-3.home-team= "#{report[:home_shots]}(#{report[:home_shots_on_target]})"
        .col-md-6= "Shots (on goal)"
-       .col-md-2.away-team= "#{report[:away_shots]}(#{report[:away_shots_on_target]})"
+       .col-md-3.away-team= "#{report[:away_shots]}(#{report[:away_shots_on_target]})"
       .row
-       .col-md-2.col-md-offset-1.home-team= "#{report[:home_fouls]}"
+       .col-md-3.home-team= "#{report[:home_fouls]}"
        .col-md-6= "Fouls"
-       .col-md-2.away-team= "#{report[:away_fouls]}"
+       .col-md-3.away-team= "#{report[:away_fouls]}"
       .row
-       .col-md-2.col-md-offset-1.home-team= "#{report[:home_corners]}"
+       .col-md-3.home-team= "#{report[:home_corners]}"
        .col-md-6= "Corner kicks"
-       .col-md-2.away-team= "#{report[:away_corners]}"
+       .col-md-3.away-team= "#{report[:away_corners]}"
       / .row
-      /  .col-md-2.col-md-offset-1.home-team= "-"
+      /  .col-md-3.home-team= "-"
       /  .col-md-6= "Offsides"
-      /  .col-md-2.away-team= "-"
+      /  .col-md-3.away-team= "-"
       / .row
-      /  .col-md-2.col-md-offset-1.home-team= "-"
+      /  .col-md-3.home-team= "-"
       /  .col-md-6= "Time of Possession"
-      /  .col-md-2.away-team= "-"
+      /  .col-md-3.away-team= "-"
       .row
-       .col-md-2.col-md-offset-1.home-team= "#{report[:home_yellow_cards]}"
+       .col-md-3.home-team= "#{report[:home_yellow_cards]}"
        .col-md-6= "Yellow Cards"
-       .col-md-2.away-team= "#{report[:away_yellow_cards]}"
+       .col-md-3.away-team= "#{report[:away_yellow_cards]}"
       .row
-       .col-md-2.col-md-offset-1.home-team= "#{report[:home_red_cards]}"
+       .col-md-3.home-team= "#{report[:home_red_cards]}"
        .col-md-6= "Red Cards"
-       .col-md-2.away-team= "#{report[:away_red_cards]}"
+       .col-md-3.away-team= "#{report[:away_red_cards]}"
       / .row
-      /  .col-md-2.col-md-offset-1.home-team= "-"
+      /  .col-md-3.home-team= "-"
       /  .col-md-6= "Saves"
-      /  .col-md-2.away-team= "-"
+      /  .col-md-3.away-team= "-"
      %li.list-group-item
       .row.list-group-item-heading
        .col-md-6.col-md-offset-3= "TEAMS"
       = render partial: 'report_teams', locals: { report: report, score: false }
       .row.list-group-item-heading
-       .col-md-5.col-md-offset-1.home-team= "(#{report[:home_team_formation]})"
-       .col-md-5.away-team= "(#{report[:away_team_formation]})"
+       .col-md-6.home-team= "(#{report[:home_team_formation]})"
+       .col-md-6.away-team= "(#{report[:away_team_formation]})"
       - (0..10).each do |idx|
        .row
-        .col-md-5.col-md-offset-1.home-team
+        .col-md-6.home-team
          - if report[:home_lineup].size > idx
           - player = report[:home_lineup].fetch(idx)
           = "(#{player[:position]}) #{player[:name]}"
-        .col-md-5.away-team
+        .col-md-6.away-team
          - if report[:away_lineup].size > idx
           - player = report[:away_lineup].fetch(idx)
           = "#{player[:name]} (#{player[:position]})" 
@@ -84,13 +84,13 @@
         .col-md-4.col-md-offset-4= "Substitutions"
       - (0..report[:max_sub_index]).each do |idx|
        .row
-        .col-md-5.col-md-offset-1.home-team
+        .col-md-6.home-team
          - if report[:home_sub_details].size > idx
           - sub = report[:home_sub_details].fetch(idx)
           = "(#{sub[:time]}) #{sub[:name]} "
           - glyph = (sub[:dir] == 'out') ? "chevron-down" : "chevron-up"
           %span{"class" => "sub-#{sub[:dir]} glyphicon glyphicon-#{glyph}"}
-        .col-md-5.away-team
+        .col-md-6.away-team
          - if report[:away_sub_details].size > idx
           - sub = report[:away_sub_details].fetch(idx)
           - glyph = (sub[:dir] == 'out') ? "chevron-down" : "chevron-up"
@@ -100,12 +100,12 @@
        .col-md-4.col-md-offset-4= "Yellow Cards"
       - (0..report[:max_yellow_card_index]).each do |idx|
        .row
-        .col-md-5.col-md-offset-1.home-team
+        .col-md-6.home-team
          - if report[:home_team_yellow_card_details].size > idx
           - card = report[:home_team_yellow_card_details].fetch(idx)
           = "(#{card[:time]}) #{card[:name]}"
           %span.yellow-card.glyphicon.glyphicon-book
-        .col-md-5.away-team
+        .col-md-6.away-team
          - if report[:away_team_yellow_card_details].size > idx
           %span.yellow-card.glyphicon.glyphicon-book
           - card = report[:away_team_yellow_card_details].fetch(idx)
@@ -114,12 +114,12 @@
        .col-md-4.col-md-offset-4= "Red Cards"
       - (0..report[:max_red_card_index]).each do |idx|
        .row
-        .col-md-5.col-md-offset-1.home-team
+        .col-md-6.home-team
          - if report[:home_team_red_card_details].size > idx
           - card = report[:home_team_red_card_details].fetch(idx)
           = "(#{card[:time]}) #{card[:name]}"
           %span.red-card.glyphicon.glyphicon-book
-        .col-md-5.away-team
+        .col-md-6.away-team
          - if report[:away_team_red_card_details].size > idx
           %span.red-card.glyphicon.glyphicon-book
           - card = report[:away_team_red_card_details].fetch(idx)
