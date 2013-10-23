@@ -30,13 +30,14 @@ def transform_leagues(options={})
     leagues_xml = Nokogiri::XML(File.open("XML/AllLeagues.xml"))
   end
 
+  league_recs = Array.new
   data_file_recs = Array.new
   
   leagues_xml.xpath("//League").each do |node|
 
     # Save the XML file for this league
     filename = "xmlsoccer-league-#{node.xpath("Id").text}.xml"
-    f = File.open("./FILES/#{filename}", "w")
+    f = File.open("./XML-FILES/leagues/#{filename}", "w")
     f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
     f.puts "<FreeFantasyFootball.Info>"
     f.puts "\t<#{node.name}>"
@@ -47,7 +48,7 @@ def transform_leagues(options={})
     f.puts "</FreeFantasyFootball.Info>"
     f.close
 
-    data_file_recs << { league_id:         node.xpath("Id").text,
+    league_recs <<    { league_id:         node.xpath("Id").text,
                         name:              node.xpath("Name").text,
                         country:           node.xpath("Country").text,
                         historical_data:   node.xpath("Historical_Data").text,
@@ -57,15 +58,21 @@ def transform_leagues(options={})
                         latest_match_date: node.xpath("LatestMatch").text,
                         data_file_id:      0
                       } 
+
+    data_file_recs << { name:      filename,
+                        path:      'soccer/leagues',
+                        timestamp: `date`.strip
+                      } 
   end
 
-  # Save as json file, for whatever purpose...
-  f = File.open("./FILES/xmlsoccer-league-db-info.json", "w")
-  f.puts '{ "items": ['
+
+  # Save json file for easy upload to data store...
+  f = File.open("./JSON-FILES/xmlsoccer-league-data-files.json", "w")
+  f.puts '{ "league-data-files": ['
   data_file_recs.each do |record|
     f.puts '{'
     record.each do |k,v|
-      my_comma = k == :data_file_id ? '' : ','
+      my_comma = k == :timestamp ? '' : ','
       f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
     end
     my_comma = record == data_file_recs.last ? '' : ','
@@ -74,22 +81,59 @@ def transform_leagues(options={})
   f.puts '] }'
   f.close
 
-  # Or...just create the rake file now - DUH!
-  f = File.open("./FILES/xxleague_data.rake", "w")
-  f.puts 'namespace :db do'
-  f.puts "\tdesc \"Fill database with file data\""
-  f.puts "\ttask populate: :environment do"
-  data_file_recs.each do |record|
-    f.puts "\t\tLeague.create!("
+  # Save as json file, for whatever purpose...
+  f = File.open("./JSON-FILES/xmlsoccer-leagues.json", "w")
+  f.puts '{ "leagues": ['
+  league_recs.each do |record|
+    f.puts '{'
     record.each do |k,v|
-      f.puts "\t\t\t\"#{k}\" => \"#{v}\","
+      my_comma = k == :data_file_id ? '' : ','
+      f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
     end
-    f.puts "\t\t)"
+    my_comma = record == league_recs.last ? '' : ','
+    f.puts "}#{my_comma}"
   end
-  f.puts "\tend\nend"
+  f.puts '] }'
   f.close
+
+  # Or...just create the rake file now - DUH!
+  if options[:update].nil? or options[:update] != true
+    f = File.open("./RAKE-FILES/league_data.rake", "w")
+    f.puts 'namespace :db do'
+    f.puts "\tdesc \"Fill database with league data\""
+    f.puts "\ttask populate: :environment do"
+    f.puts "\t\tif ENV['update'].nil?"
+    league_recs.each do |record|
+      f.puts "\t\t\tLeague.create!("
+      record.each do |k,v|
+        f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
+      end
+      f.puts "\t\t\t)"
+    end
+    f.puts "\t\tend\n\tend\nend"
+    f.close
+  else
+    f = File.open("./RAKE-FILES/update_league_data.rake", "w")
+    f.puts 'namespace :db do'
+    f.puts "\tdesc \"Update database with league data\""
+    f.puts "\ttask populate: :environment do"
+    f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'league'"
+    league_recs.each do |record|
+      f.puts "\t\t\tid = League.find_by(league_id: #{record[:league_id]})"
+      f.puts "\t\t\tLeague.update("
+      f.puts "\t\t\t\tid,"
+      record.each do |k,v|
+        next unless k == :latest_match_date
+        f.puts "\t\t\t\t#{k}: \"#{v}\","
+      end
+      f.puts "\t\t\t)"
+    end
+    f.puts "\t\tend\n\tend\nend"
+    f.close
+  end
 
 end
 
-transform_leagues(localtest: true)
+transform_leagues(localtest: true, update: false)
+transform_leagues(localtest: true, update: true)
 

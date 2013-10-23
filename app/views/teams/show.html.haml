@@ -1,19 +1,35 @@
-%h2= "teams#show #{@team.name}"
+%ul.reports.list-group
+ %li.list-group-item
+  %h3.list-group-item-heading= @team.name
+  %ul.list-group
+   %li.list-group-item
+    .row
+     .col-md-4.col-md-offset-2.team-heading= "Club"
+     .col-md-6= @team.name
+    .row
+     .col-md-4.col-md-offset-2.team-heading= "League"
+     .col-md-6= link_to @league.name, league_url(League.find_by(name: @league.name))
+    .row
+     .col-md-4.col-md-offset-2.team-heading= "Country"
+     .col-md-6= "#{@team[:country]}"
+    .row 
+     .col-md-4.col-md-offset-2.team-heading= "Stadium"
+     .col-md-6= "#{@team[:stadium]}"
+    .row
+     .col-md-4.col-md-offset-2.team-heading= "Club Page"
+     - tmpstr = @team[:home_page_url] =~ /^http/ ? "" : "http://"
+     .col-md-6= link_to "#{@team[:home_page_url]}", "#{tmpstr}#{@team[:home_page_url]}"
+    .row
+     .col-md-4.col-md-offset-2.team-heading= "Wiki Link"
+     - wiki_link = @team[:wiki_link] =~ /^http\:\/\/en.wikipedia.org\/wiki\/(.*)$/ ? $1 : "no link"
+     .col-md-6= link_to wiki_link, @team[:wiki_link]
+    .row
+     .col-md-4.col-md-offset-2.team-heading= "XMLSoccer Id"
+     .col-md-4= "#{@team[:team_id]}"
+  = render partial: 'shared/fixture_results', locals: { fixtures: @fixturesX, title: "Results through round #{@round}" }
+  = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fixturesY, title: "Remaining Fixtures" }
+  
+     
 
-%ul
- .row
-  %strong
-   .col-md-1= "ID"
-   .col-md-2= "Country"
-   .col-md-3= "Club Page"
-   .col-md-3= "Stadium"
-   .col-md-3= "Wiki link"
- - @teams.each do |team|
-  .row
-   .col-md-1= "#{@team[:team_id]}"
-   .col-md-2= "#{@team[:country]}"
-   - tmpstr = @team[:home_page_url] =~ /^http/ ? "" : "http://"
-   .col-md-3= link_to "#{@team[:home_page_url]}", "#{tmpstr}#{@team[:home_page_url]}"
-   .col-md-3= "#{@team[:stadium]}"
-   - wiki_link = @team[:wiki_link] =~ /^http\:\/\/en.wikipedia.org\/wiki\/(.*)$/ ? $1 : "no link"
-   .col-md-3= link_to wiki_link, @team[:wiki_link]
+
+

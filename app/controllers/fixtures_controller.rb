@@ -6,35 +6,14 @@ class FixturesController < ApplicationController
 
 	def show
 		fixture = Fixture.find(params[:id])
-    @fixtures = Array.new
-    # xml_doc = Nokogiri::XML(File.open("FILES/xmlsoccer-fixture-#{fixture.match_id}.xml"))
-    xml_doc = Nokogiri::XML(aws_data_fetch(
-      name: "xmlsoccer-fixture-#{fixture.match_id}.xml",
-      path: "soccer/matches"
-    ))
-
-    node = xml_doc.xpath("//Match").first
-
-  	# Add to the @fixtures array
-    @fixtures << { match_id: fixture.match_id,
-    							 league: fixture.league,
-                   round: fixture.round,
-                   date: fixture.date,
-                   time: node.xpath("Time").text,
-                   home_team: fixture.home_team,
-                   home_team_id: fixture.home_team_id,
-                   home_goals: node.xpath("HomeGoals").text,
-                   away_team: fixture.away_team,
-                   away_team_id: fixture.away_team_id,
-                   away_goals: node.xpath("AwayGoals").text,
-    }
+    @fixtures = [ fixture ]
   end
 
 	def report
 		fixture = Fixture.find(params[:id])
     @reports = Array.new
 
-    # xml_doc = Nokogiri::XML(File.open("FILES/xmlsoccer-match-#{fixture.match_id}.xml"))
+    # xml_doc = Nokogiri::XML(File.open("XML-FILES/matches/xmlsoccer-match-#{fixture.match_id}.xml"))
     xml_doc = Nokogiri::XML(aws_data_fetch(
       name: "xmlsoccer-match-#{fixture.match_id}.xml",
       path: "soccer/matches"
@@ -114,11 +93,12 @@ class FixturesController < ApplicationController
       max_red_card_index -= 1 if max_red_card_index > 0
 
       # Add to the @reports array
-      @reports << {  league: node.xpath("League").text,
+      @reports << { league: node.xpath("League").text,
                     round: node.xpath("Round").text,
                     date: node.xpath("Date").text,
                     
                     home_team: node.xpath("HomeTeam").text,
+                    home_team_id: node.xpath("HomeTeam_Id").text,
                     home_goals: node.xpath("HomeGoals").text,
                     half_time_home_goals: node.xpath("HalfTimeHomeGoals").text,
                     home_shots: node.xpath("HomeShots").text,
@@ -135,6 +115,7 @@ class FixturesController < ApplicationController
                     home_sub_details: home_sub_details,
 
                     away_team: node.xpath("AwayTeam").text,
+                    away_team_id: node.xpath("AwayTeam_Id").text,
                     away_goals: node.xpath("AwayGoals").text,
                     half_time_away_goals: node.xpath("HalfTimeAwayGoals").text,
                     away_shots: node.xpath("AwayShots").text,

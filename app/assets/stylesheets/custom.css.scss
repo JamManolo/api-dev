@@ -200,15 +200,20 @@ input {
   margin: 0 auto;
 }
 
+.leagues {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
 .team-heading {
   font-weight: bold;
 }
 
-.home-team {
+.home-team, .jmc-stat-l {
   text-align: left;
 }
 
-.away-team {
+.away-team, .jmc-stat {
   text-align: right;
 }
 

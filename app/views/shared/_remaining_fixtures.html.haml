@@ -1,0 +1,11 @@
+%h3.list-group-item-heading= title
+%ul.list-group
+ %li.list-group-item
+  = render partial: 'shared/home_away_line'
+  - fixtures.each do |fixture|
+   .row
+    .col-md-4.home-team
+     = link_to "#{fixture[:home_team]}", team_url(Team.find_by(team_id: fixture[:home_team_id]))
+    .col-md-4= fixture[:date].in_time_zone.strftime('%a %b %d, %H:%M')
+    .col-md-4.away-team 
+     = link_to "#{fixture[:away_team]}", team_url(Team.find_by(team_id: fixture[:away_team_id]))

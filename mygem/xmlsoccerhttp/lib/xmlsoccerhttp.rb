@@ -106,7 +106,7 @@ module XMLsoccerHTTP
                                                     "endDateString" => end_date } })
 		end
 
-    def get_leagues_standings_by_season(league, season)
+    def get_league_standings_by_season(league, season)
     	make_the_call( { api_name: "GetLeagueStandingsBySeason",
 			             		 api_args: { league: league, "seasonDateString" => season  } })
     end

@@ -56,13 +56,13 @@ def get_xml_file_name( jmc_args )
     appendage = ""
 	unless jmc_args[:api_args].nil?
 		unless jmc_args[:api_args]['league'].nil?
-			appendage += "-league-#{jmc_args[:api_args]['league']}"
+			appendage += "-league#{jmc_args[:api_args]['league']}"
 		end
 		unless jmc_args[:api_args]['seasonDateString'].nil?
 			appendage += "-#{jmc_args[:api_args]['seasonDateString']}"
 		end
 		unless jmc_args[:api_args]['teamId'].nil?
-			appendage += "-team-#{jmc_args[:api_args]['teamId']}"
+			appendage += "-team#{jmc_args[:api_args]['teamId']}"
 		end
 		unless jmc_args[:api_args]['team1Id'].nil? or jmc_args[:api_args]['team2Id'].nil?
 			appendage += "-#{jmc_args[:api_args]['team1Id']}-vs-#{jmc_args[:api_args]['team2Id']}"
@@ -78,6 +78,9 @@ def get_xml_file_name( jmc_args )
 		end
 		unless jmc_args[:api_args]['fixtureMatch_Id'].nil?
 			appendage += "-#{jmc_args[:api_args]['fixtureMatch_Id']}"
+		end
+		unless jmc_args[:rename_idx].nil?
+			appendage += "-#{jmc_args[:rename_idx]}"
 		end
 	end
 	xml_file_name = "./XML/" + @xml_root_names[jmc_args[:api_name]] + appendage + ".xml"
@@ -187,7 +190,7 @@ end
 def test_GetAllTeamsByLeagueAndSeason
 
 	api_name = "GetAllTeamsByLeagueAndSeason"
-	@league_ids = [ 1, 2, 3, 7, 8, 16 ]
+	@league_ids = [ 3, "Scottish Premier League" ]
 	@league_ids.each do |league|
 		sleep_time = (league == @league_ids.last) ? 0 : SLEEP
 		@xml_doc = get_xml_doc( { :api_name => api_name, :get_xml => true, :sleep => sleep_time,
@@ -271,7 +274,7 @@ def test_GetFixturesByLeagueAndSeason
 	
 	api_name = "GetFixturesByLeagueAndSeason"
 
-	@league_ids = [ 1, 2, 3, 7, 8, 16 ]
+	@league_ids = [ 3, "Scottish Premier League" ]
 	@league_ids.each do |league|
 		sleep_time = (league == @league_ids.last) ? 0 : SLEEP
 		@xml_doc = get_xml_doc( { :api_name => api_name, :get_xml => true, :sleep => sleep_time,
@@ -330,7 +333,7 @@ end
 def test_GetHistoricMatchesByLeagueAndSeason
 
 	api_name = "GetHistoricMatchesByLeagueAndSeason"
-	@league_ids = [ 1, 2, 3, 7, 8, 16 ]
+	@league_ids = [ 3 ]
 	@league_ids.each do |league|
 		
 		@xml_doc = get_xml_doc( { :api_name => api_name, :get_xml => true, 
@@ -381,7 +384,7 @@ end
 def test_GetLeagueStandingsBySeason
 
 	api_name = "GetLeagueStandingsBySeason"
-	@league_ids = [ 1, 2, 3, 7, 8, 16 ]
+	@league_ids = [ 3 ]
 	@league_ids.each do |league|
 		@xml_doc = get_xml_doc( { :api_name => api_name, :get_xml => true, 
 			                      :api_args => { "league" => league, "seasonDateString" => @current_season  } })
@@ -405,10 +408,16 @@ end
 def test_GetLiveScoreByLeague
 
 	api_name = "GetLiveScoreByLeague"
-	@league_ids = [ 3 ]
+	sleep_time = 300
+	rename_idx = 100
+
+	@league_ids = Array.new(13) { |i| 16}
 	@league_ids.each do |league|
+		rename_idx += 1
 		@xml_doc = get_xml_doc( { :api_name => api_name, :get_xml => true, 
-			                      :api_args => { "league" => league, } })
+			                      :api_args => { "league" => league, },
+			                      :sleep => sleep_time, :rename_idx => rename_idx,
+		 })
 	end
 end
 
@@ -443,7 +452,7 @@ def test_GetTeam
 end
 
 # ---------------------------------------------------------------------------
-#  Name: test_GetTeam
+#  Name: test_XMLSoccer
 #  Desc:
 # ---------------------------------------------------------------------------
 def test_XMLSoccer
@@ -472,5 +481,7 @@ def test_XMLSoccer
 
 end
 
-test_XMLSoccer
+test_GetLiveScoreByLeague
+
+# test_XMLSoccer
 

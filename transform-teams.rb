@@ -30,13 +30,14 @@ def transform_teams(options={})
     teams_xml = Nokogiri::XML(File.open("XML/AllTeams.xml"))
   end
 
+  team_recs = Array.new
   data_file_recs = Array.new
   
   teams_xml.xpath("//Team").each do |node|
 
     # Save the XML file for this team
     filename = "xmlsoccer-team-#{node.xpath("Team_Id").text}.xml"
-    f = File.open("./FILES/#{filename}", "w")
+    f = File.open("./XML-FILES/teams/#{filename}", "w")
     f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
     f.puts "<FreeFantasyFootball.Info>"
     f.puts "\t<#{node.name}>"
@@ -47,7 +48,7 @@ def transform_teams(options={})
     f.puts "</FreeFantasyFootball.Info>"
     f.close
 
-    data_file_recs << { team_id:       node.xpath("Team_Id").text,
+    team_recs <<      { team_id:       node.xpath("Team_Id").text,
                         name:          node.xpath("Name").text,
                         country:       node.xpath("Country").text,
                         stadium:       node.xpath("Stadium").text,
@@ -55,12 +56,32 @@ def transform_teams(options={})
                         wiki_link:     node.xpath("WIKILink").text,
                         data_file_id:  0
                       } 
+
+    data_file_recs << { name:      filename,
+                        path:      'soccer/teams',
+                        timestamp: `date`.strip
+                      } 
   end
 
-  # Save as json file, for whatever purpose...
-  f = File.open("./FILES/xmlsoccer-team-db-info.json", "w")
-  f.puts '{ "items": ['
+  # Save json file for easy upload to data store...
+  f = File.open("./JSON-FILES/xmlsoccer-team-data-files.json", "w")
+  f.puts '{ "team-data-files": ['
   data_file_recs.each do |record|
+    f.puts '{'
+    record.each do |k,v|
+      my_comma = k == :timestamp ? '' : ','
+      f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
+    end
+    my_comma = record == data_file_recs.last ? '' : ','
+    f.puts "}#{my_comma}"
+  end
+  f.puts '] }'
+  f.close
+
+  # Save as json file, for whatever purpose...
+  f = File.open("./JSON-FILES/xmlsoccer-teams.json", "w")
+  f.puts '{ "teams": ['
+  team_recs.each do |record|
     f.puts '{'
     record.each do |k,v|
       my_comma = k == :data_file_id ? '' : ','
@@ -73,18 +94,19 @@ def transform_teams(options={})
   f.close
 
   # Or...just create the rake file now - DUH!
-  f = File.open("./FILES/xxteam_data.rake", "w")
+  f = File.open("./RAKE-FILES/team_data.rake", "w")
   f.puts 'namespace :db do'
   f.puts "\tdesc \"Fill database with file data\""
   f.puts "\ttask populate: :environment do"
-  data_file_recs.each do |record|
-    f.puts "\t\tTeam.create!("
+  f.puts "\t\tif ENV['update'].nil?"
+  team_recs.each do |record|
+    f.puts "\t\t\tTeam.create!("
     record.each do |k,v|
-      f.puts "\t\t\t\"#{k}\" => \"#{v}\","
+      f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
     end
-    f.puts "\t\t)"
+    f.puts "\t\t\t)"
   end
-  f.puts "\tend\nend"
+  f.puts "\t\tend\n\tend\nend"
   f.close
 
 end

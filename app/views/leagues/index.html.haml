@@ -1,19 +1,30 @@
-%h2= "Leagues#index"
+%ul.leagues.list-group
+ %li.list-group-item
+  %h3.list-group-item-heading= "FREE FANTASY FOOTBALL . INFO"
+  %ul.list-group
+   %li.list-group-item
+    .row.list-group-item-heading
+     / .col-md-1.away-team= "ID"
+     .col-md-2.col-md-offset-1= "COUNTRY"
+     .col-md-4= "LEAGUE"
+     / .col-md-1= "COUNT"
+     .col-md-4= "LATEST MATCH DATE"
+    - @leagues.each do |league|
+     .row
+      / .col-md-1.away-team= "#{league[:league_id]}"
+      .col-md-2.col-md-offset-1= "#{league[:country]}"
+      .col-md-4= link_to "#{league[:name]}", league_url(league.id)
+      / .col-md-1= "#{league[:number_of_matches]}"
+      / = league[:latest_match_date].in_time_zone.strftime('%a %b %d, %Y at %H:%M')
+      - day = league[:latest_match_date].in_time_zone.strftime('%a')
+      - mon = league[:latest_match_date].in_time_zone.strftime('%b')
+      - date = league[:latest_match_date].in_time_zone.strftime('%d')
+      - year = league[:latest_match_date].in_time_zone.strftime('%Y')
+      - time = league[:latest_match_date].in_time_zone.strftime('%H:%M')
+      .col-md-4
+       .row
+        .col-md-2= day
+        .col-md-6.away-team= "#{mon} #{date}, #{year}"
+        .col-md-2.home-team= time
 
-%ul
- .row
-  %strong
-   .col-md-1= "ID"
-   .col-md-2= "Country"
-   .col-md-3= "Name"
-   .col-md-1= "Matches"
-   .col-md-3= "Latest Match Date"
- - @leagues.each do |league|
-  .row
-   .col-md-1= "#{league[:league_id]}"
-   .col-md-2= "#{league[:country]}"
-   .col-md-3= link_to "#{league[:name]}", league_url(league.id)
-   .col-md-1= "#{league[:number_of_matches]}"
-   .col-md-3
-    = "#{league[:latest_match_date].in_time_zone.strftime('%a %b %d, %Y at %H:%M')}"
    

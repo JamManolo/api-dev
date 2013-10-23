@@ -1,0 +1,11 @@
+.row.list-group-item-heading
+ .col-md-3.col-md-offset-1.home-team
+  = link_to "#{report[:home_team]}", team_url(Team.find_by(team_id: report[:home_team_id]))
+ - if score == true
+  .col-md-1= "#{report[:home_goals]}"
+  .col-md-2= "FT"
+  .col-md-1= "#{report[:away_goals]}"
+ - else
+  .col-md-4
+ .col-md-3.away-team
+  = link_to "#{report[:away_team]}", team_url(Team.find_by(team_id: report[:away_team_id]))
