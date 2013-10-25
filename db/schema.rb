@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131019214839) do
+ActiveRecord::Schema.define(version: 20131024161210) do
 
   create_table "data_files", force: true do |t|
     t.string   "name"
@@ -56,6 +56,8 @@ ActiveRecord::Schema.define(version: 20131019214839) do
     t.integer  "data_file_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "latest_round"
+    t.integer  "final_round"
   end
 
   create_table "reports", force: true do |t|
@@ -84,6 +86,8 @@ ActiveRecord::Schema.define(version: 20131019214839) do
     t.integer  "data_file_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "league"
+    t.integer  "league_id"
   end
 
 end

@@ -13,6 +13,8 @@ class FixturesController < ApplicationController
 		fixture = Fixture.find(params[:id])
     @reports = Array.new
 
+    if fixture.report_id == fixture.match_id
+
     # xml_doc = Nokogiri::XML(File.open("XML-FILES/matches/xmlsoccer-match-#{fixture.match_id}.xml"))
     xml_doc = Nokogiri::XML(aws_data_fetch(
       name: "xmlsoccer-match-#{fixture.match_id}.xml",
@@ -137,6 +139,8 @@ class FixturesController < ApplicationController
                     max_red_card_index: max_red_card_index,
       }
 	  end
+
+    end
 	end
 
 end

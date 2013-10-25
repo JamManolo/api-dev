@@ -39,10 +39,10 @@
   %h3.list-group-item-heading
    = "Latest match date: #{@league.latest_match_date.in_time_zone.strftime('%a %b %d, %Y at %H:%M')}"
  %li.list-group-item
-  - (1..@round).reverse_each do |round|
+  - (1..@latest_round).reverse_each do |round|
    = render partial: 'shared/fixture_results', locals: { fixtures: @fixturesX[round.to_s], title: "Round #{round} Results" }
  %li.list-group-item
-  - (@start_round..@last_round).each do |round|
+  - (@start_round..@end_round).each do |round|
    = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fixturesY[round.to_s], title: "Round #{round} Fixtures" }
 
 

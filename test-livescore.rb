@@ -411,7 +411,7 @@ def test_GetLiveScoreByLeague
 	sleep_time = 300
 	rename_idx = 100
 
-	@league_ids = Array.new(13) { |i| 16}
+	@league_ids = Array.new(13) { |i| 15}
 	@league_ids.each do |league|
 		rename_idx += 1
 		@xml_doc = get_xml_doc( { :api_name => api_name, :get_xml => true, 
@@ -481,7 +481,11 @@ def test_XMLSoccer
 
 end
 
+test_GetLiveScore
+
 test_GetLiveScoreByLeague
+
+
 
 # test_XMLSoccer
 

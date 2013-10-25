@@ -8,7 +8,10 @@
      = link_to "#{fixture[:home_team]}", team_url(Team.find_by(team_id: fixture[:home_team_id]))
     .col-md-1= "#{fixture[:home_goals]}"
     - if fixture[:time_x] == "Finished"
-     .col-md-2.center= link_to "FT", report_fixture_url(Fixture.find_by(match_id: fixture[:match_id]))
+     - if fixture[:report_id] == fixture[:match_id]
+      .col-md-2.center= link_to "FT", report_fixture_url(Fixture.find_by(match_id: fixture[:match_id]))
+     - else
+      .col-md-2.center= "FT"
     - elsif fixture[:time_x] =~ /\'$/
      .col-md-2.center
       = link_to fixture[:time_x], report_fixture_url(Fixture.find_by(match_id: fixture[:match_id]))

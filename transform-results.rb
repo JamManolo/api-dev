@@ -47,7 +47,7 @@ def transform_results(options={})
     # next if node.xpath("Round").text.to_i < 9
     next if localtest == false or node.xpath("Id").text == "62364"
 
-    puts "========= MATCH ID : '#{node.xpath("FixtureMatch_Id").text}' : LEAGUE : #{league} ========="
+    # puts "========= MATCH ID : '#{node.xpath("FixtureMatch_Id").text}' : LEAGUE : #{league} ========="
 
     # Get substitution info from LiveScore data
     fixture_match_id = node.xpath("FixtureMatch_Id").text
@@ -85,7 +85,7 @@ def transform_results(options={})
       #
       # JMC - skip Brasiliero 'GoalDetails' for now
       #
-      unless league == 37 or node.xpath("#{team}GoalDetails").first.nil?
+      unless league == "37" or node.xpath("#{team}GoalDetails").first.nil?
         goal_details = Array.new
         goal_detail_line = node.xpath("#{team}GoalDetails").text
         puts "goal_detail_line 2: #{goal_detail_line}" if goal_detail_line =~ /nbsp/
@@ -204,67 +204,70 @@ def transform_results(options={})
   end
 
   # Save as json file for uploading files to data store
-  f = File.open("./JSON-FILES/xmlsoccer-match-data-files-#{league}.json", "w")
-  f.puts '{ "match-data-files": ['
-  data_file_recs.each do |record|
-    f.puts '{'
-    f.puts "\"name\":\"#{record[:name]}\","
-    f.puts "\"path\":\"#{record[:path]}\","
-    f.puts "\"timestamp\":\"#{record[:timestamp]}\""
-    my_comma = record == data_file_recs.last ? '' : ','
-    f.puts "}#{my_comma}"
+  File.open("./JSON-FILES/xmlsoccer-match-data-files-#{league}.json", "w") do |f|
+    f.puts '{ "match-data-files": ['
+    data_file_recs.each do |record|
+      f.puts '{'
+      f.puts "\"name\":\"#{record[:name]}\","
+      f.puts "\"path\":\"#{record[:path]}\","
+      f.puts "\"timestamp\":\"#{record[:timestamp]}\""
+      my_comma = record == data_file_recs.last ? '' : ','
+      f.puts "}#{my_comma}"
+    end
+    f.puts '] }'
   end
-  f.puts '] }'
-  f.close
 
   # Save as json file, for whatever purpose
-  f = File.open("./JSON-FILES/xmlsoccer-data-files-#{league}.json", "w")
-  f.puts '{ "data-files": ['
-  data_file_recs.each do |record|
-    f.puts '{'
-    record.each do |k,v|
-      my_comma = k == :timestamp ? '' : ','
-      f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
+  File.open("./JSON-FILES/xmlsoccer-data-files-#{league}.json", "w") do |f|
+    f.puts '{ "data-files": ['
+    data_file_recs.each do |record|
+      f.puts '{'
+      record.each do |k,v|
+        my_comma = k == :timestamp ? '' : ','
+        f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
+      end
+      my_comma = record == data_file_recs.last ? '' : ','
+      f.puts "}#{my_comma}"
     end
-    my_comma = record == data_file_recs.last ? '' : ','
-    f.puts "}#{my_comma}"
+    f.puts '] }'
   end
-  f.puts '] }'
-  f.close
 
   # Or...just create the rake file now - DUH!
-  f = File.open("./RAKE-FILES/file_data-#{league}.rake", "w")
-  f.puts 'namespace :db do'
-  f.puts "\tdesc \"Fill database with file data\""
-  f.puts "\ttask populate: :environment do"
-  f.puts "\t\tif ENV['update'].nil?"
-  data_file_recs.each do |record|
-    f.puts "\t\t\tDataFile.create!("
-    record.each do |k,v|
-      f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
+  File.open("./RAKE-FILES/create_r1_file_data-#{league}.rake", "w") do |f|
+    f.puts 'namespace :db do'
+    f.puts "\tdesc \"Fill database with file data\""
+    f.puts "\ttask populate: :environment do"
+    f.puts "\t\tif !ENV['create'].nil? and ENV['create'] == 'file_data'"
+    data_file_recs.each do |record|
+      f.puts "\t\t\tDataFile.create!("
+      record.each do |k,v|
+        f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
+      end
+      f.puts "\t\t\t)"
     end
-    f.puts "\t\t\t)"
+    f.puts "\t\tend\n\tend\nend"
   end
-  f.puts "\t\tend\n\tend\nend"
-  f.close
 
   # Create rake file to update Fixture.report_id with the match report id.
   # Yep, same as Fixture.match_id - essentially used as a 'has match report'
   # boolean for now, but keeping since the report id is likely to change
-  fixture_match_ids = match_xml("//Match/FixtureMatch_Id").map{ |node| node.text }
-  File.open("./RAKE-FILES/update_2_fixture_data-#{league}.rake", "w") do |f|
+  fixture_match_ids = match_xml.xpath("//Match/FixtureMatch_Id").map{ |node| node.text }
+
+  File.open("./RAKE-FILES/update_r1_fixture_data-#{league}.rake", "w") do |f|
     f.puts 'namespace :db do'
-    f.puts "\tdesc \"Update database with fixture data\""
+    f.puts "\tdesc \"Update database with match report data\""
     f.puts "\ttask populate: :environment do"
-    f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'fixture2'"
+    f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'fixture'"
     fixture_match_ids.each do |match_id|
-      f.puts "\t\t\tid = Fixture.find_by(match_id: #{match_id})"
-      f.puts "\t\t\tFixture.update("
-      f.puts "\t\t\t\tid,"
-      f.puts "\t\t\t\t{"
-      f.puts "\t\t\t\t\t\"report_id\" => \"#{match_id}\","
-      f.puts "\t\t\t\t}"
-      f.puts "\t\t\t)"
+      f.puts "\t\t\tid = Fixture.find_by(match_id: \"#{match_id}\")"
+      f.puts "\t\t\tunless id.nil?"
+      f.puts "\t\t\t\tFixture.update("
+      f.puts "\t\t\t\t\tid,"
+      f.puts "\t\t\t\t\t{"
+      f.puts "\t\t\t\t\t\t\"report_id\" => \"#{match_id}\","
+      f.puts "\t\t\t\t\t}"
+      f.puts "\t\t\t\t)"
+      f.puts "\t\t\tend"
     end
     f.puts "\t\tend\n\tend\nend"
   end
@@ -283,7 +286,7 @@ def transform_driver
 
 end
 
-transform_driver
+# transform_driver
 
-# transform_results({league: 37, season: '1314', localtest: true})
+transform_results({league: "37", season: '1314', localtest: true})
 

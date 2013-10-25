@@ -56,6 +56,8 @@ def transform_leagues(options={})
                         livescore:         node.xpath("Livescore").text,
                         number_of_matches: node.xpath("NumberOfMatches").text,
                         latest_match_date: node.xpath("LatestMatch").text,
+                        latest_round:      0,
+                        final_round:       0,
                         data_file_id:      0
                       } 
 
@@ -98,38 +100,38 @@ def transform_leagues(options={})
 
   # Or...just create the rake file now - DUH!
   if options[:update].nil? or options[:update] != true
-    f = File.open("./RAKE-FILES/league_data.rake", "w")
-    f.puts 'namespace :db do'
-    f.puts "\tdesc \"Fill database with league data\""
-    f.puts "\ttask populate: :environment do"
-    f.puts "\t\tif ENV['update'].nil?"
-    league_recs.each do |record|
-      f.puts "\t\t\tLeague.create!("
-      record.each do |k,v|
-        f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
+    File.open("./RAKE-FILES/create_l1_league_data.rake", "w") do |f|
+      f.puts 'namespace :db do'
+      f.puts "\tdesc \"Fill database with league data\""
+      f.puts "\ttask populate: :environment do"
+      f.puts "\t\tif !ENV['create'].nil? and ENV['create'] == 'league'"
+      league_recs.each do |record|
+        f.puts "\t\t\tLeague.create!("
+        record.each do |k,v|
+          f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
+        end
+        f.puts "\t\t\t)"
       end
-      f.puts "\t\t\t)"
+      f.puts "\t\tend\n\tend\nend"
     end
-    f.puts "\t\tend\n\tend\nend"
-    f.close
   else
-    f = File.open("./RAKE-FILES/update_league_data.rake", "w")
-    f.puts 'namespace :db do'
-    f.puts "\tdesc \"Update database with league data\""
-    f.puts "\ttask populate: :environment do"
-    f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'league'"
-    league_recs.each do |record|
-      f.puts "\t\t\tid = League.find_by(league_id: #{record[:league_id]})"
-      f.puts "\t\t\tLeague.update("
-      f.puts "\t\t\t\tid,"
-      record.each do |k,v|
-        next unless k == :latest_match_date
-        f.puts "\t\t\t\t#{k}: \"#{v}\","
+    File.open("./RAKE-FILES/update_l1_league_data.rake", "w") do |f|
+      f.puts 'namespace :db do'
+      f.puts "\tdesc \"Update database with league data\""
+      f.puts "\ttask populate: :environment do"
+      f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'league'"
+      league_recs.each do |record|
+        f.puts "\t\t\tid = League.find_by(league_id: #{record[:league_id]})"
+        f.puts "\t\t\tLeague.update("
+        f.puts "\t\t\t\tid,"
+        record.each do |k,v|
+          next unless k == :latest_match_date
+          f.puts "\t\t\t\t#{k}: \"#{v}\","
+        end
+        f.puts "\t\t\t)"
       end
-      f.puts "\t\t\t)"
+      f.puts "\t\tend\n\tend\nend"
     end
-    f.puts "\t\tend\n\tend\nend"
-    f.close
   end
 
 end

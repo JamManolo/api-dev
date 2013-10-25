@@ -35,6 +35,11 @@ def transform_all_teams(options={})
   
   teams_xml.xpath("//Team").each do |node|
 
+    # Handle known bad data for Ukranian League stadium (league_id: 40)
+    if node.xpath("Stadium").text == '"Avanhard" Stadium'
+      node.xpath("Stadium").first.content = 'Avanhard Stadium'
+    end
+
     # Save the XML file for this team
     filename = "xmlsoccer-team-#{node.xpath("Team_Id").text}.xml"
     f = File.open("./XML-FILES/teams/#{filename}", "w")
@@ -98,7 +103,7 @@ def transform_all_teams(options={})
   f.puts 'namespace :db do'
   f.puts "\tdesc \"Fill database with file data\""
   f.puts "\ttask populate: :environment do"
-  f.puts "\t\tif ENV['update'].nil?"
+  f.puts "\t\tif !ENV['create'].nil? and ENV['create'] == 'team'"
   team_recs.each do |record|
     f.puts "\t\t\tTeam.create!("
     record.each do |k,v|

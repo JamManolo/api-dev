@@ -14,8 +14,12 @@
        - tmpstr = ''
        - if fixture[:time_x] == "Finished"
         - tmpstr = "FT"
-        .col-md-6.col-md-offset-3
-         = link_to "MATCH REPORT", report_fixture_url(Fixture.find_by(match_id: fixture[:match_id]))
+        - if fixture[:report_id] == fixture[:match_id]
+         .col-md-6.col-md-offset-3
+          = link_to "MATCH REPORT", report_fixture_url(Fixture.find_by(match_id: fixture[:match_id]))
+        - else
+         .col-md-6.col-md-offset-3
+          = "NO MATCH REPORT YET"
        - else
         .col-md-6.col-md-offset-3
       .row.team-heading

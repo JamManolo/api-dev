@@ -9,9 +9,8 @@ class LeaguesController < ApplicationController
     @standings = Array.new
     @fixtures = Array.new
     @teams = Array.new
-    @round = 0
     @start_round = 1
-    @last_round = 0
+    @end_round = 0
     season = '1314'
 
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
@@ -65,25 +64,35 @@ class LeaguesController < ApplicationController
 
     # Output results (completed fixtures)
     @fixturesX = Hash.new
-    @round = Fixture.where(time_x: 'Finished', league: @league.name).last[:round]
-    (1..@round).each do |round|
-      fixtures = @round > 1 ? Fixture.where(round: round, league: @league.name) :
-                              Fixture.where(league: @league.name, time_x: "Finished")
-      @fixturesX[round.to_s] = fixtures
+    @latest_round = @league.latest_round
+
+    if @latest_round > 1
+      (1..@latest_round).each do |round|
+        fixtures = Fixture.where(round: round, league_id: @league.league_id) 
+        @fixturesX[round.to_s] = fixtures
+      end
+    else
+      @fixturesX['1'] = Fixture.where(league_id: @league.league_id, time_x: "Finished")
     end
 
     # Output scheduled fixtures
     @fixturesY = Hash.new
-    if @round > 1
-      @start_round = @round + 1
-      @last_round = Fixture.where(league: @league.name).last[:round]
-      (@start_round..@last_round).each do |round|
-        fixtures = Fixture.where(round: round, league: @league.name)
+    @final_round = @league.final_round
+
+    if @final_round > 1
+      @start_round = @latest_round + 1
+      @end_round = @league.final_round
+      (@start_round..@end_round).each do |round|
+        fixtures = Fixture.where(round: round, league_id: @league.league_id)
         @fixturesY[round.to_s] = fixtures
       end
-    else
-      @start_round = @last_round = 1
-      @fixturesY['1'] = Fixture.where(round: 1, league: @league.name) - @fixturesX['1']
+    elsif @final_round == 1
+      @start_round = @end_round = 1
+      @fixturesY['1'] = Fixture.where(round: 1, league_id: @league.league_id) - @fixturesX['1']
+    else # @final_round == 0
+      @start_round = @end_round = 1
+      @fixturesY['1'] = Fixture.where(league_id: @league.league_id) - @fixturesX['1']
+      @latest_round = 1
     end
 
   end

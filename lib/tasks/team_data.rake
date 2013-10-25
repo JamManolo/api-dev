@@ -3904,7 +3904,7 @@ namespace :db do
 				"name" => "CSKA Kiev",
 				"country" => "Ukraine",
 				"stadium" => "Valeriy Lobanovskyi",
-				"home_page_url" => "http://www.fcarsenal.com.ua/index.php?option=com_lr&view=team&id=54&badges_ondisplay=yes&role_id=1&Itemid=124",
+				"home_page_url" => "http://www.fcarsenal.com.ua/",
 				"wiki_link" => "http://en.wikipedia.org/wiki/FC_Arsenal_Kyiv",
 				"data_file_id" => "0",
 			)
