@@ -1,12 +1,17 @@
 class TeamsController < ApplicationController
 
 	def index
-		@teams = Team.all
+		@teams = params[:country].nil? ? Team.all : Team.find_by(country: params[:country])
 	end
 
 	def show
 		@team = Team.find(params[:id])
-		@league = League.find_by(country: @team.country)
+
+		@league = League.find_by(league_id: @team.league_id) unless @team.league_id == "0"
+		@league = "unknown" if @league.nil?
+		
+		@competitions = League.find_by(league_id: @team.competitions) unless @team.competitions == "0"
+		@competitions = "unknown" if @competitions.nil?
 
 		# Output completed fixtures
 		# JMC - usage of :all is apparently deprecated

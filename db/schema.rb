@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131024161210) do
+ActiveRecord::Schema.define(version: 20131025190509) do
 
   create_table "data_files", force: true do |t|
     t.string   "name"
@@ -88,6 +88,7 @@ ActiveRecord::Schema.define(version: 20131024161210) do
     t.datetime "updated_at"
     t.string   "league"
     t.integer  "league_id"
+    t.text     "competitions"
   end
 
 end

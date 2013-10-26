@@ -8,13 +8,20 @@
      .col-md-6= @team.name
     .row
      .col-md-4.col-md-offset-2.team-heading= "League"
-     .col-md-6= link_to @league.name, league_url(League.find_by(name: @league.name))
+     - if @league == "unknown"
+      .col-md-6= "- ? -"
+     - else
+      .col-md-6= link_to @league.name, league_url(@league)
     .row
      .col-md-4.col-md-offset-2.team-heading= "Country"
      .col-md-6= "#{@team[:country]}"
     .row 
      .col-md-4.col-md-offset-2.team-heading= "Stadium"
      .col-md-6= "#{@team[:stadium]}"
+    .row
+     - unless @competitions == "unknown"
+      .col-md-4.col-md-offset-2.team-heading= "Competitions"
+      .col-md-6= link_to @competitions.name, league_url(@competitions)
     .row
      .col-md-4.col-md-offset-2.team-heading= "Club Page"
      - tmpstr = @team[:home_page_url] =~ /^http/ ? "" : "http://"

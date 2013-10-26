@@ -1,4 +1,6 @@
 Xmlsoccer::Application.routes.draw do
+  get "countries/index"
+  get "countries/show"
   get "soccer_stats/home"
   get "soccer_stats/index"
   get "soccer_stats/leagues"
@@ -10,6 +12,7 @@ Xmlsoccer::Application.routes.draw do
       get :reports
     end
   end
+  resources :countries
   get "soccer_stats/reportsXX"
   get "soccer_stats/earliest_match_dates"
   root to: 'leagues#index'
@@ -20,6 +23,7 @@ Xmlsoccer::Application.routes.draw do
       get :report
     end
   end
+  
   get  "dropbox/main"
   post "dropbox/upload"
   get  "dropbox/auth_start"

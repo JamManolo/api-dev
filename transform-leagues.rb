@@ -100,7 +100,7 @@ def transform_leagues(options={})
 
   # Or...just create the rake file now - DUH!
   if options[:update].nil? or options[:update] != true
-    File.open("./RAKE-FILES/create_l1_league_data.rake", "w") do |f|
+    File.open("./RAKE-FILES/create_a1_league_data.rake", "w") do |f|
       f.puts 'namespace :db do'
       f.puts "\tdesc \"Fill database with league data\""
       f.puts "\ttask populate: :environment do"
@@ -115,7 +115,7 @@ def transform_leagues(options={})
       f.puts "\t\tend\n\tend\nend"
     end
   else
-    File.open("./RAKE-FILES/update_l1_league_data.rake", "w") do |f|
+    File.open("./RAKE-FILES/update_a1_league_data.rake", "w") do |f|
       f.puts 'namespace :db do'
       f.puts "\tdesc \"Update database with league data\""
       f.puts "\ttask populate: :environment do"

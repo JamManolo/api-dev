@@ -13,28 +13,24 @@ class LeaguesController < ApplicationController
     @end_round = 0
     season = '1314'
 
-    xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
-      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
-      api_type: "Demo"
-    })
+    # xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
+    #   api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
+    #   api_type: "Demo"
+    # })
     
-    # Problem with team data for leagues 40 (Ukranian) and 41 (Russian)
-    #
-    unless false # [40, 41].include?(@league.league_id)
-      # xml_doc = Nokogiri::XML(
-      #   xmlsoccer_client.get_all_teams_by_league_and_season(params[:id], season).body)
-      xml_doc = Nokogiri::XML(File.open("XML-NEW/Teams-league-#{@league.league_id}-#{season}.xml").read)
-      xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
-      namespace = 'xmlns:'
+    # xml_doc = Nokogiri::XML(
+    #   xmlsoccer_client.get_all_teams_by_league_and_season(params[:id], season).body)
+    xml_doc = Nokogiri::XML(File.open("XML-NEW/Teams-league-#{@league.league_id}-#{season}.xml").read)
+    xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
+    namespace = 'xmlns:'
 
-      xml_doc.xpath("//#{namespace}Team").each do |node|
-        @teams << { team_id:       node.xpath("#{namespace}Team_Id").text,
-                    country:       node.xpath("#{namespace}Country").text,
-                    name:          node.xpath("#{namespace}Name").text,
-                    stadium:       node.xpath("#{namespace}Stadium").text,
-                    home_page_url: node.xpath("#{namespace}HomePageURL").text,
-                    wiki_link:     node.xpath("#{namespace}WIKILink").text }
-      end
+    xml_doc.xpath("//#{namespace}Team").each do |node|
+      @teams << { team_id:       node.xpath("#{namespace}Team_Id").text,
+                  country:       node.xpath("#{namespace}Country").text,
+                  name:          node.xpath("#{namespace}Name").text,
+                  stadium:       node.xpath("#{namespace}Stadium").text,
+                  home_page_url: node.xpath("#{namespace}HomePageURL").text,
+                  wiki_link:     node.xpath("#{namespace}WIKILink").text }
     end
 
     # League standings
@@ -65,7 +61,6 @@ class LeaguesController < ApplicationController
     # Output results (completed fixtures)
     @fixturesX = Hash.new
     @latest_round = @league.latest_round
-
     if @latest_round > 1
       (1..@latest_round).each do |round|
         fixtures = Fixture.where(round: round, league_id: @league.league_id) 
@@ -78,7 +73,6 @@ class LeaguesController < ApplicationController
     # Output scheduled fixtures
     @fixturesY = Hash.new
     @final_round = @league.final_round
-
     if @final_round > 1
       @start_round = @latest_round + 1
       @end_round = @league.final_round
