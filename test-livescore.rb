@@ -408,16 +408,18 @@ end
 def test_GetLiveScoreByLeague
 
 	api_name = "GetLiveScoreByLeague"
-	sleep_time = 300
+	sleep_time = 15
 	rename_idx = 100
 
-	@league_ids = Array.new(13) { |i| 15}
-	@league_ids.each do |league|
-		rename_idx += 1
-		@xml_doc = get_xml_doc( { :api_name => api_name, :get_xml => true, 
-			                      :api_args => { "league" => league, },
-			                      :sleep => sleep_time, :rename_idx => rename_idx,
-		 })
+	@league_ids = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 4, 16, 17, 18, 19, 20, 33, 45, 36, 37, 38, 39, 40, 41 ]
+	(101..120).each do |rename_idx|
+		@league_ids.each do |league|
+			rename_idx_name = "#{league}-#{rename_idx}"
+			@xml_doc = get_xml_doc( { :api_name => api_name, :get_xml => true, 
+				                      :api_args => { "league" => league, },
+				                      :sleep => sleep_time, :rename_idx => rename_idx_name,
+			 })
+		end
 	end
 end
 

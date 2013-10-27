@@ -47,6 +47,7 @@ def transform_all_teams_by_league(options={})
     team_recs = Array.new
     data_file_recs = Array.new
     update_recs = Array.new
+    jmc_hashish = Hash.new
     
     teams_xml.xpath("//#{namespace}Team").each do |node|
 
@@ -61,14 +62,19 @@ def transform_all_teams_by_league(options={})
       if is_competition == true
         node.add_child("<Competition>#{@xmlsoccer_league_map[league_id]}</Competition>")
         node.add_child("<Competition_Id>#{league_id}</Competition_Id>")
-        # update_recs << {
-        #   team_id:      node.xpath("#{namespace}Team_Id").text,
-        #   competitions: node.xpath("#{namespace}Competition_Id").text,
-        # }
+
+        team_id = node.xpath("#{namespace}Team_Id").text
+        competitions = node.xpath("#{namespace}Competition_Id").text
         comp_recs << {
           team_id:      node.xpath("#{namespace}Team_Id").text,
           competitions: node.xpath("#{namespace}Competition_Id").text,
         }
+        if jmc_hashish[team_id].nil?
+          jmc_hashish[team_id] = Array.new()
+          jmc_hashish[team_id] << competitions
+        else
+          jmc_hashish[team_id] << competitions
+        end
       else
         node.add_child("<League>#{@xmlsoccer_league_map[league_id]}</League>")
         node.add_child("<League_Id>#{league_id}</League_Id>")
