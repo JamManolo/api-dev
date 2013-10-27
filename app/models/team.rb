@@ -6,7 +6,8 @@ class Team < ActiveRecord::Base
 	# # validates :competitions, inclusion: { in: [15, 16, 17, 34, 35] }
 	# validate :competition_check
 	# # attr_accessible :competitions
-	# serialize :competitions
+	
+	serialize :competitions, Array
 
 	# protected
 

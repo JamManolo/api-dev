@@ -19,22 +19,26 @@ def transform_all_teams_by_league(options={})
     puts "Setting up client"
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
-      api_type: "Demo"
+      api_type: "Full"
     })
   end
 
   xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
   league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
+  # Testing for 'competitions leagues'
+  # league_ids = [ "16", "17", "35" ]
+
+  comp_recs = Array.new
 
   league_ids.each do |league_id|
 
     unless localtest == true
-      puts "Requesting data for team #{league_id} ..."
+      puts "Requesting data for league #{league_id} ..."
       STDOUT.flush
       team_xml = 
         Nokogiri::XML(xmlsoccer_client.get_all_teams_by_league_and_season(league_id, season).body)
     else
-      puts "Reading local data for team #{league_id} ..."
+      puts "Reading local data for league #{league_id} ..."
       teams_xml = Nokogiri::XML(File.open("XML-NEW/Teams-league-#{league_id}-#{season}.xml"))
     end
     teams_xml.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
@@ -57,7 +61,11 @@ def transform_all_teams_by_league(options={})
       if is_competition == true
         node.add_child("<Competition>#{@xmlsoccer_league_map[league_id]}</Competition>")
         node.add_child("<Competition_Id>#{league_id}</Competition_Id>")
-        update_recs << {
+        # update_recs << {
+        #   team_id:      node.xpath("#{namespace}Team_Id").text,
+        #   competitions: node.xpath("#{namespace}Competition_Id").text,
+        # }
+        comp_recs << {
           team_id:      node.xpath("#{namespace}Team_Id").text,
           competitions: node.xpath("#{namespace}Competition_Id").text,
         }
@@ -127,6 +135,38 @@ def transform_all_teams_by_league(options={})
     })
 
   end # league_ids.each
+
+  # Output the competitions rake file
+  jmc_hash = Hash.new
+  comp_recs.each do |rec|
+    puts "REC: '#{rec}'"
+    STDOUT.flush
+    team_id = rec[:team_id]
+    if jmc_hash[team_id].nil?
+      jmc_hash[team_id] = Array.new()
+      jmc_hash[rec[:team_id]] << rec[:competitions]
+    else
+      jmc_hash[rec[:team_id]] << rec[:competitions]
+    end
+    puts "     '#{jmc_hash[team_id]}'"
+  end
+
+  competitions_recs = Array.new
+  jmc_hash.each do |k,v|
+    competitions_recs << { team_id: k, competitions: v }
+  end
+
+  puts "Writing write_update_records_rake_file"
+  STDOUT.flush
+  write_update_records_rake_file({
+    rec_class: 'Team',
+    rec_type: 'team',
+    rec_key: 'team_id',
+    desc: 'Update database with team competitions data',
+    recs: competitions_recs,
+    jmc: 't2',
+    ext: 'all',
+  })
 
 end
 
@@ -213,7 +253,7 @@ def transform_all_teams(options={})
 
 end
 
-transform_all_teams(localtest: true)
-# transform_all_teams_by_league(localtest: true)
+# transform_all_teams(localtest: true)
+transform_all_teams_by_league(localtest: true)
 
 

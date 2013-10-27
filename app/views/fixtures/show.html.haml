@@ -22,11 +22,11 @@
           = "NO MATCH REPORT YET"
        - else
         .col-md-6.col-md-offset-3
-      .row.team-heading
-       .col-md-3.col-md-offset-1.home-team
+      .row
+       .col-md-4.home-team
         = link_to "#{fixture[:home_team]}", team_url(Team.find_by(team_id: fixture[:home_team_id]))
        .col-md-1= "#{fixture[:home_goals]}"
        .col-md-2= tmpstr
        .col-md-1= "#{fixture[:away_goals]}"
-       .col-md-3.away-team
+       .col-md-4.away-team
         = link_to "#{fixture[:away_team]}", team_url(Team.find_by(team_id: fixture[:away_team_id]))

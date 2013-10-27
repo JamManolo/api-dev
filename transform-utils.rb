@@ -81,7 +81,11 @@ def write_update_records_rake_file(args)
       f.puts "\t\t\t\t{"
       rec.each do |k,v|
         next if ( "#{k}" == rec_key )
-        f.puts "\t\t\t\t\t\"#{k}\" => \"#{v}\","
+        unless v.kind_of? Array
+          f.puts "\t\t\t\t\t\"#{k}\" => \"#{v}\","
+        else
+          f.puts "\t\t\t\t\t\"#{k}\" => #{v},"
+        end
       end
       f.puts "\t\t\t\t},"
       f.puts "\t\t\t)"

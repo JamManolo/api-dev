@@ -14,6 +14,7 @@ class TeamsController < ApplicationController
 		@competitions = "unknown" if @competitions.nil?
 
 		# Output completed fixtures
+		# Sort out domestic fixtures vs competitions
 		# JMC - usage of :all is apparently deprecated
     @fixturesX = Fixture.find(:all,
     	{
@@ -26,8 +27,25 @@ class TeamsController < ApplicationController
 	    }
   	)
   	@round = @fixturesX.last.nil? ? 0 : @fixturesX.last[:round]
+  	
+  	@fix_leagueX = Array.new
+  	@fix_compX   = Array.new
+  	@fix_otherX  = Array.new
+  	@fixturesX.each do |fix|
+  		logger.debug "f_id:, '#{fix.league_id}', l_id: '#{@team.league_id}', comps: '#{@team.competitions}'"
+  		if fix.league_id == @team.league_id
+  			@fix_leagueX << fix
+  		elsif @team.competitions.include? fix.league_id.to_s
+  			@fix_compX << fix
+  		else
+  			logger.debug "comps = '#{@competitions}', fid = '#{fix.league_id}'"
+  			@fix_otherX << fix
+  		end
+  	end
 
   	# Output remaining fixtures
+  	# Sort out domestic fixtures vs competitions
+  	# JMC - usage of :all is apparently deprecated
     @fixturesY = Fixture.find(:all,
     	{
     		conditions:
@@ -38,6 +56,20 @@ class TeamsController < ApplicationController
 	    	]
 	    }
   	)
-	end
+
+  	@fix_leagueY = Array.new
+  	@fix_compY   = Array.new
+  	@fix_otherY  = Array.new
+  	@fixturesY.each do |fix|
+  		if fix.league_id.to_i == @team.league_id.to_i
+  			@fix_leagueY << fix
+  		elsif @team.competitions.include? fix.league_id.to_s
+  			@fix_compY << fix
+  		else
+  			@fix_otherY << fix
+  		end
+  	end
+
+  end
 
 end
