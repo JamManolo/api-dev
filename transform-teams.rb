@@ -28,15 +28,22 @@ def transform_all_teams_by_league(options={})
   # Testing for 'competitions leagues'
   # league_ids = [ "16", "17", "35" ]
 
-  comp_recs = Array.new
+  # comp_recs = Array.new
+  comp_hash = Hash.new
 
   league_ids.each do |league_id|
 
-    unless localtest == true
-      puts "Requesting data for league #{league_id} ..."
-      STDOUT.flush
-      team_xml = 
-        Nokogiri::XML(xmlsoccer_client.get_all_teams_by_league_and_season(league_id, season).body)
+    if localtest == false
+      if true
+        puts "Requesting data for league #{league_id} ..."
+        STDOUT.flush
+        team_xml = 
+          Nokogiri::XML(xmlsoccer_client.get_all_teams_by_league_and_season(league_id, season).body)
+      else # JMC - soon-to-be default behavior
+        puts "Fetching data for league #{league_id} ..."
+        STDOUT.flush
+        # team_xml = gapi_data_fetch(name: "Teams-league-#{league_id}-#{season}.xml", path: "xmlsoccer/raw")
+      end
     else
       puts "Reading local data for league #{league_id} ..."
       teams_xml = Nokogiri::XML(File.open("XML-NEW/Teams-league-#{league_id}-#{season}.xml"))
@@ -47,7 +54,6 @@ def transform_all_teams_by_league(options={})
     team_recs = Array.new
     data_file_recs = Array.new
     update_recs = Array.new
-    jmc_hashish = Hash.new
     
     teams_xml.xpath("//#{namespace}Team").each do |node|
 
@@ -62,18 +68,17 @@ def transform_all_teams_by_league(options={})
       if is_competition == true
         node.add_child("<Competition>#{@xmlsoccer_league_map[league_id]}</Competition>")
         node.add_child("<Competition_Id>#{league_id}</Competition_Id>")
-
+        # comp_recs << {
+        #   team_id:      node.xpath("#{namespace}Team_Id").text,
+        #   competitions: node.xpath("#{namespace}Competition_Id").text,
+        # }
         team_id = node.xpath("#{namespace}Team_Id").text
-        competitions = node.xpath("#{namespace}Competition_Id").text
-        comp_recs << {
-          team_id:      node.xpath("#{namespace}Team_Id").text,
-          competitions: node.xpath("#{namespace}Competition_Id").text,
-        }
-        if jmc_hashish[team_id].nil?
-          jmc_hashish[team_id] = Array.new()
-          jmc_hashish[team_id] << competitions
+        competition_id = node.xpath("#{namespace}Competition_Id").text
+        if comp_hash[team_id].nil?
+          comp_hash[team_id] = Array.new()
+          comp_hash[team_id] << competition_id
         else
-          jmc_hashish[team_id] << competitions
+          comp_hash[team_id] << competition_id
         end
       else
         node.add_child("<League>#{@xmlsoccer_league_map[league_id]}</League>")
@@ -142,23 +147,24 @@ def transform_all_teams_by_league(options={})
 
   end # league_ids.each
 
-  # Output the competitions rake file
-  jmc_hash = Hash.new
-  comp_recs.each do |rec|
-    puts "REC: '#{rec}'"
-    STDOUT.flush
-    team_id = rec[:team_id]
-    if jmc_hash[team_id].nil?
-      jmc_hash[team_id] = Array.new()
-      jmc_hash[rec[:team_id]] << rec[:competitions]
-    else
-      jmc_hash[rec[:team_id]] << rec[:competitions]
-    end
-    puts "     '#{jmc_hash[team_id]}'"
-  end
+  # # Output the competitions rake file
+  # jmc_hash = Hash.new
+  # comp_recs.each do |rec|
+  #   puts "REC: '#{rec}'"
+  #   STDOUT.flush
+  #   team_id = rec[:team_id]
+  #   if jmc_hash[team_id].nil?
+  #     jmc_hash[team_id] = Array.new()
+  #     jmc_hash[rec[:team_id]] << rec[:competitions]
+  #   else
+  #     jmc_hash[rec[:team_id]] << rec[:competitions]
+  #   end
+  #   puts "     '#{jmc_hash[team_id]}'"
+  # end
 
   competitions_recs = Array.new
-  jmc_hash.each do |k,v|
+  # jmc_hash.each do |k,v|
+  comp_hash.each do |k,v|
     competitions_recs << { team_id: k, competitions: v }
   end
 

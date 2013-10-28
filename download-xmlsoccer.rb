@@ -29,34 +29,34 @@ def download_league_and_season_files(options={})
   league = options[:league]
   season = options[:season]
   xmlsoccer_client = options[:client]
-
+  target_dir = options[:target_dir]
   
   puts "Initiating download for league #{league}, season #{season} ..."
   STDOUT.flush
   
   # GetAllTeamsByLeagueAndSeason
-  xml_file = "./XML-NEW/Teams-league-#{league}-#{season}.xml"
+  xml_file = "#{target_dir}/Teams-league-#{league}-#{season}.xml"
   unless File.exist?(xml_file)
     xml_data = xmlsoccer_client.get_all_teams_by_league_and_season(league, season).body
     save_xml_data(xml_file, xml_data)
   end
 
   # GetFixturesByLeagueAndSeason
-  xml_file = "./XML-NEW/Fixtures-league-#{league}-#{season}.xml"
+  xml_file = "#{target_dir}/Fixtures-league-#{league}-#{season}.xml"
   unless File.exist?(xml_file)
     xml_data = xmlsoccer_client.get_fixtures_by_league_and_season(league, season).body 
     save_xml_data(xml_file, xml_data)
   end
 
   # GetHistoricMatchesByLeagueAndSeason
-  xml_file = "./XML-NEW/HistoricMatches-league-#{league}-#{season}.xml"
+  xml_file = "#{target_dir}/HistoricMatches-league-#{league}-#{season}.xml"
   unless File.exist?(xml_file)
     xml_data = xmlsoccer_client.get_historic_matches_by_league_and_season(league, season).body 
     save_xml_data(xml_file, xml_data)
   end
 
   # GetLeagueStandingsBySeason
-  xml_file = "./XML-NEW/Standings-league-#{league}-#{season}.xml"
+  xml_file = "#{target_dir}/Standings-league-#{league}-#{season}.xml"
   unless File.exist?(xml_file)
     xml_data = xmlsoccer_client.get_league_standings_by_season(league, season).body 
     save_xml_data(xml_file, xml_data)
@@ -77,7 +77,7 @@ def download_xmlsoccer_files
   })
 
   # GetAllLeagues
-  if false
+  if true
     xml_file = "./XML/AllLeagues.xml"
     xml_doc = Nokogiri::XML(open(xml_file))
     league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
@@ -87,8 +87,9 @@ def download_xmlsoccer_files
   end
 
   league_ids.each do |league_id|
+    next if ["15", "34"].include? league_id.to_s
     download_league_and_season_files({
-      client: xmlsoccer_client, league: league_id, season: '1314'
+      client: xmlsoccer_client, league: league_id, season: '1314', target_dir: './XML-TEST',  
     })
     sleep 15
   end
