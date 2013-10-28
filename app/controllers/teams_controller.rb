@@ -8,15 +8,21 @@ class TeamsController < ApplicationController
 		@team = Team.find(params[:id])
 
 		@league = League.find_by(league_id: @team.league_id) unless @team.league_id == "0"
-		@league = "unknown" if @league.nil?
-		
-		@competitions = League.find_by(league_id: @team.competitions) unless @team.competitions == "0"
-		@competitions = "unknown" if @competitions.nil?
+    @round = @league.nil? ? 0 : @league.latest_round
+    @fix_leagueX = Array.new
+    @fix_leagueY = Array.new
+    @fix_compX = Hash.new
+    @fix_compY   = Hash.new
+    @competitions = Array.new
+    @team.competitions.each do |comp|
+      @fix_compX[comp] = Array.new
+      @fix_compY[comp] = Array.new
+      @competitions << League.find_by(league_id: comp) 
+    end
 
-		# Output completed fixtures
-		# Sort out domestic fixtures vs competitions
+		# Get completed fixtures, sorting out domestic fixtures vs competitions
 		# JMC - usage of :all is apparently deprecated
-    @fixturesX = Fixture.find(:all,
+    Fixture.find(:all,
     	{
     		conditions:
     		[
@@ -25,28 +31,16 @@ class TeamsController < ApplicationController
 		    	 '', @team.team_id, @team.team_id
 	    	]
 	    }
-  	)
-  	@round = @fixturesX.last.nil? ? 0 : @fixturesX.last[:round]
-  	
-  	@fix_leagueX = Array.new
-  	@fix_compX   = Array.new
-  	@fix_otherX  = Array.new
-  	@fixturesX.each do |fix|
-  		logger.debug "f_id:, '#{fix.league_id}', l_id: '#{@team.league_id}', comps: '#{@team.competitions}'"
-  		if fix.league_id == @team.league_id
+  	).each do |fix|
+  		if @team.league_id.to_i == fix.league_id.to_i
   			@fix_leagueX << fix
   		elsif @team.competitions.include? fix.league_id.to_s
-  			@fix_compX << fix
-  		else
-  			logger.debug "comps = '#{@competitions}', fid = '#{fix.league_id}'"
-  			@fix_otherX << fix
+  			@fix_compX[fix.league_id.to_s] << fix
   		end
   	end
 
-  	# Output remaining fixtures
-  	# Sort out domestic fixtures vs competitions
-  	# JMC - usage of :all is apparently deprecated
-    @fixturesY = Fixture.find(:all,
+  	# Get remaining fixtures, sorting out domestic fixtures vs competitions
+    Fixture.find(:all,
     	{
     		conditions:
     		[
@@ -55,18 +49,11 @@ class TeamsController < ApplicationController
 		    	 '', @team.team_id, @team.team_id
 	    	]
 	    }
-  	)
-
-  	@fix_leagueY = Array.new
-  	@fix_compY   = Array.new
-  	@fix_otherY  = Array.new
-  	@fixturesY.each do |fix|
-  		if fix.league_id.to_i == @team.league_id.to_i
+  	).each do |fix|
+      if @team.league_id.to_i == fix.league_id.to_i
   			@fix_leagueY << fix
   		elsif @team.competitions.include? fix.league_id.to_s
-  			@fix_compY << fix
-  		else
-  			@fix_otherY << fix
+  			@fix_compY[fix.league_id.to_s] << fix
   		end
   	end
 

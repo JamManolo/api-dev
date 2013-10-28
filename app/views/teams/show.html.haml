@@ -8,7 +8,7 @@
      .col-md-6= @team.name
     .row
      .col-md-4.col-md-offset-2.team-heading= "League"
-     - if @league == "unknown"
+     - if @league.nil? or @league == "unknown"
       .col-md-6= "- ? -"
      - else
       .col-md-6= link_to @league.name, league_url(@league)
@@ -18,10 +18,10 @@
     .row 
      .col-md-4.col-md-offset-2.team-heading= "Stadium"
      .col-md-6= "#{@team[:stadium]}"
-    .row
-     - unless @competitions == "unknown"
-      .col-md-4.col-md-offset-2.team-heading= "Competitions"
-      .col-md-6= link_to @competitions.name, league_url(@competitions)
+    - @competitions.each do |competition|
+     .row
+      .col-md-4.col-md-offset-2.team-heading= "Competition"
+      .col-md-6= link_to competition.name, league_url(competition)
     .row
      .col-md-4.col-md-offset-2.team-heading= "Club Page"
      - tmpstr = @team[:home_page_url] =~ /^http/ ? "" : "http://"
@@ -33,21 +33,20 @@
     .row
      .col-md-4.col-md-offset-2.team-heading= "XMLSoccer Id"
      .col-md-4= "#{@team[:team_id]}"
-  / = render partial: 'shared/fixture_results', locals: { fixtures: @fixturesX, title: "Results through round #{@round}" }
-  / = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fixturesY, title: "Remaining Fixtures" }
-  
-  - if @fix_compX.size > 0
-   = render partial: 'shared/fixture_results', locals: { fixtures: @fix_compX, title: "#{@competitions.name} results" }
-  - if @fix_otherX.size > 0
-   = render partial: 'shared/fixture_results', locals: { fixtures: @fix_otherX, title: "Other competition results" }
+  - @fix_compX.each do |l_id, fixtures|
+   = render partial: 'shared/fixture_results', locals: { fixtures: fixtures, title: "#{fixtures.first.league} results" }
   - if @fix_leagueX.size > 0
    = render partial: 'shared/fixture_results', locals: { fixtures: @fix_leagueX, title: "#{@team.league} results through round #{@round}" }
-
-  - if @fix_compY.size > 0
-   = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fix_compY, title: "#{@competitions.name} fixtures" }
-  - if @fix_otherY.size > 0
-   = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fix_otherY, title: "Other competition fixtures" }
+  - @fix_compY.each do |l_id, fixtures|
+   = render partial: 'shared/remaining_fixtures', locals: { fixtures: fixtures, title: "#{fixtures.first.league} fixtures" }
   - if @fix_leagueY.size > 0
    = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fix_leagueY, title: "#{@team.league} fixtures" }
+
+
+
+
+
+
+
 
 

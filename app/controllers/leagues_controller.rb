@@ -25,13 +25,24 @@ class LeaguesController < ApplicationController
     namespace = 'xmlns:'
 
     xml_doc.xpath("//#{namespace}Team").each do |node|
+
+      domestic_league_name = ''
+      if ["15", "16", "17", "34", "35"].include?(@league.league_id.to_s) 
+        team = Team.find_by(team_id: node.xpath("#{namespace}Team_Id").text)
+        domestic_league_name = team.league == "Unknown" ? "(#{team.country})" : team.league
+      end
+
       @teams << { team_id:       node.xpath("#{namespace}Team_Id").text,
                   country:       node.xpath("#{namespace}Country").text,
                   name:          node.xpath("#{namespace}Name").text,
                   stadium:       node.xpath("#{namespace}Stadium").text,
                   home_page_url: node.xpath("#{namespace}HomePageURL").text,
-                  wiki_link:     node.xpath("#{namespace}WIKILink").text }
+                  wiki_link:     node.xpath("#{namespace}WIKILink").text,
+                  league:        domestic_league_name,
+                }
     end
+
+    
 
     # League standings
     # xml_doc = Nokogiri::XML(
