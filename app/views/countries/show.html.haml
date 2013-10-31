@@ -1,0 +1,21 @@
+%ul.teams.list-group
+ %li.list-group-item
+  %h3.list-group-item-heading= @teams.first.country.upcase
+  %ul.list-group
+   %li.list-group-item
+    .row.list-group-item-heading
+     / .col-md-1.away-team= "ID"
+     .col-md-3= "CLUB"
+     .col-md-3= "STADIUM"
+     .col-md-4= "LEAGUE"
+     .col-md-2= "COMPETITIONS"
+    - @teams.each do |team|
+     .row
+      .col-md-3= link_to "#{team[:name]}", team_url(team.id)
+      .col-md-3= team.stadium
+      - tmpstr = team.league == "Unknown" ? '-- ? --' : team.league
+      .col-md-4= tmpstr
+      - league = League.find_by(league_id: team.competitions)
+      - tmpstr = league.nil? ? '' : league.name
+      .col-md-2= tmpstr
+

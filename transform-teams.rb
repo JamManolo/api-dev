@@ -244,12 +244,14 @@ def transform_all_teams(options={})
   # Save json file for easy upload to data store...
   write_data_file_json_file({
     rec_type: 'team',
+    rec_info: 'all',
     recs: data_file_recs
   })
   
   # Save as json file, for whatever purpose...
   write_records_json_file({
     rec_type: 'teams',
+    rec_info: 'all',
     recs: team_recs
   })
 
@@ -265,7 +267,7 @@ def transform_all_teams(options={})
 
 end
 
-# transform_all_teams(localtest: true)
+transform_all_teams(localtest: true)
 transform_all_teams_by_league(localtest: true)
 
 

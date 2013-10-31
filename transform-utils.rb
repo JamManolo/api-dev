@@ -18,7 +18,7 @@ def write_xml_file(args)
 end
 
 def write_data_file_json_file(args)
-  File.open("./JSON-FILES/xmlsoccer-#{args[:rec_type]}-#{args[:rec_info]}-data-files.json", "w") do |f|
+  File.open("./JSON-FILES/xmlsoccer-#{args[:rec_type]}s-#{args[:rec_info]}-data-files.json", "w") do |f|
     f.puts "{ \"#{args[:rec_type]}-data-files\": ["
     args[:recs].each do |rec|
       f.puts '{'
@@ -34,7 +34,7 @@ def write_data_file_json_file(args)
 end
 
 def write_records_json_file(args)
-  File.open("./JSON-FILES/xmlsoccer-#{args[:rec_type]}-#{args[:rec_info]}.json", "w") do |f|
+  File.open("./JSON-FILES/xmlsoccer-#{args[:rec_type]}-#{args[:rec_info]}-records.json", "w") do |f|
     f.puts "{ \"#{args[:rec_type]}\" : ["
     args[:recs].each do |rec|
       f.puts '{'

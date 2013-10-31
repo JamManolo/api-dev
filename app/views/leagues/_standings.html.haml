@@ -1,0 +1,24 @@
+%h3.list-group-item-heading= title
+%ul.list-group
+ %li.list-group-item
+  .row.list-group-item-heading
+   .col-md-4= "TEAM"
+   .col-md-1.jmc-stat="P"
+   .col-md-1.jmc-stat="W"
+   .col-md-1.jmc-stat="D"
+   .col-md-1.jmc-stat="L"
+   .col-md-1.jmc-stat="GF"
+   .col-md-1.jmc-stat="GA"
+   .col-md-1.jmc-stat="GD"
+   .col-md-1.jmc-stat="PTS"
+  - standings.each do |s|
+   .row
+    .col-md-4= link_to s[:team], team_url(Team.find_by(team_id: s[:team_id]))
+    .col-md-1.jmc-stat= s[:played]
+    .col-md-1.jmc-stat= s[:won]
+    .col-md-1.jmc-stat= s[:draw]
+    .col-md-1.jmc-stat= s[:lost]
+    .col-md-1.jmc-stat= s[:goals_for]
+    .col-md-1.jmc-stat= s[:goals_against]
+    .col-md-1.jmc-stat= s[:goal_difference]
+    .col-md-1.jmc-stat= s[:points]

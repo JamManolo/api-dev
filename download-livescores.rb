@@ -36,7 +36,7 @@ def download_livescore_file(options={})
   STDOUT.flush
   
   # GetLiveScoreByLeague
-  xml_file = "./XML-NEW/Teams-league-#{league}-#{season}.xml"
+  xml_file = "./XML-NEW/LiveScore-league-#{league}-#{season}.xml"
   unless File.exist?(xml_file)
     xml_data = xmlsoccer_client.get_live_score_by_league(league).body
     save_xml_data(xml_file, xml_data)
@@ -63,15 +63,16 @@ def download_xmlsoccer_files
     league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
   else
     # Hard-wire for today's testing
-    league_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,14, 17, 18, 19, 20, 33, 36, 37, 38, 39, 40, 41]
+    # league_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,14, 17, 18, 19, 20, 33, 36, 37, 38, 39, 40, 41]
+    league_ids = [ 16 ]
   end
 
-  (301..320).each do |idx|
+  (1020..1020).each do |idx|
     league_ids.each do |league_id|
       download_livescore_file({
         client: xmlsoccer_client, league: league_id, season: idx,
       })
-      sleep 15
+      # sleep 60
     end
   end
 

@@ -151,11 +151,18 @@ def transform_results(options={})
         # Skip when missing 'TeamCardDetails' element (identified in Serie B data)
         unless node.xpath("#{team}Team#{card}CardDetails").first.nil?
           tmp_card_details = Array.new
+          
           card_detail_line = node.xpath("#{team}Team#{card}CardDetails").text
-          # puts "card_detail_line 2: #{card_detail_line}" if card_detail_line =~ /nbsp/
           while card_detail_line =~ /nbsp\;/
             card_detail_line.sub!(/nbsp\;/, '') 
           end
+          while card_detail_line =~ /\&/
+            card_detail_line.sub!(/\&/, '') 
+          end
+          while card_detail_line =~ /amp;/
+            card_detail_line.sub!(/amp;/, '') 
+          end
+
           card_detail_line.split(';').reverse_each do |offense|
             time, name = offense.split(':')
             tmp_card_details << { name: name.strip, time: time }
@@ -288,5 +295,5 @@ end
 
 # transform_driver
 
-transform_results({league: "37", season: '1314', localtest: true})
+transform_results({league: "4", season: '1314', localtest: true})
 

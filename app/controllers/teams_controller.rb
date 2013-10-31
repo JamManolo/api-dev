@@ -50,6 +50,7 @@ class TeamsController < ApplicationController
 	    	]
 	    }
   	).each do |fix|
+      logger.debug "FIX: #{fix.match_id}"
       if @team.league_id.to_i == fix.league_id.to_i
   			@fix_leagueY << fix
   		elsif @team.competitions.include? fix.league_id.to_s

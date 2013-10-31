@@ -7,6 +7,8 @@
      = "#{report[:date].in_time_zone.strftime('%a %b %d, %Y at %H:%M')}"
     %ul.list-group
      %li.list-group-item
+      .row.list-group-item-heading
+       .col-md-6.col-md-offset-3= "MATCH # #{report[:match_id]}"
       = render partial: 'shared/home_away_line'
       = render partial: 'report_teams', locals: { report: report, score: true }
      %li.list-group-item

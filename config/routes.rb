@@ -16,7 +16,12 @@ Xmlsoccer::Application.routes.draw do
   get "soccer_stats/reportsXX"
   get "soccer_stats/earliest_match_dates"
   root to: 'leagues#index'
-  resources :leagues
+  # get "leagues/groups"
+  resources :leagues do
+    member do
+      get :groups
+    end
+  end
   resources :teams
   resources :fixtures do
     member do

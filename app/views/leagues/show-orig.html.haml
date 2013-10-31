@@ -1,0 +1,106 @@
+%ul.leagues.list-group
+ %li.list-group-item
+  %h3.list-group-item-heading= "#{@league.name} - #{@league.country}"
+  %ul.list-group
+   %hr
+    - if ["15", "16", "17", "34", "35"].include?(@league.league_id.to_s)
+     - @group_names.each do |group_name|
+      %h3.list-group-item-heading= "Group #{group_name}"
+      %ul.list-group
+       %li.list-group-item
+        .row.list-group-item-heading
+         .col-md-4= "CLUB"
+         .col-md-4= "STADIUM"
+         .col-md-4= "LEAGUE"
+        - @teamsX[group_name].each do |team|
+         .row
+          .col-md-4= link_to "#{team[:name]}", team_url(Team.find_by(team_id: team[:team_id]))
+          .col-md-4= "#{team[:stadium]}"
+          .col-md-4= link_to "#{team[:league]}", team[:league_link]
+    - else
+     .row.list-group-item-heading
+      .col-md-4.col-md-offset-2= "CLUB"
+      .col-md-6= "STADIUM"
+     - @teamsX['domestic_league'].each do |team|
+      .row
+       .col-md-4.col-md-offset-2
+        = link_to "#{team[:name]}", team_url(Team.find_by(team_id: team[:team_id]))
+       .col-md-6= "#{team[:stadium]}"
+ %li.list-group-item
+  - if ["15", "16", "17", "34", "35"].include?(@league.league_id.to_s)
+   - @group_names.each do |group_name|
+    %h3.list-group-item-heading= "Group #{group_name} Standings"
+    %ul.list-group
+     %li.list-group-item
+      .row.list-group-item-heading
+       .col-md-4= "TEAM"
+       .col-md-1.jmc-stat="P"
+       .col-md-1.jmc-stat="W"
+       .col-md-1.jmc-stat="D"
+       .col-md-1.jmc-stat="L"
+       .col-md-1.jmc-stat="GF"
+       .col-md-1.jmc-stat="GA"
+       .col-md-1.jmc-stat="GD"
+       .col-md-1.jmc-stat="PTS"
+      - @standingsX[group_name].each do |s|
+       .row
+        .col-md-4= link_to s[:team], team_url(Team.find_by(team_id: s[:team_id]))
+        .col-md-1.jmc-stat= s[:played]
+        .col-md-1.jmc-stat= s[:won]
+        .col-md-1.jmc-stat= s[:draw]
+        .col-md-1.jmc-stat= s[:lost]
+        .col-md-1.jmc-stat= s[:goals_for]
+        .col-md-1.jmc-stat= s[:goals_against]
+        .col-md-1.jmc-stat= s[:goal_difference]
+        .col-md-1.jmc-stat= s[:points]
+  - else
+   %h3.list-group-item-heading= "League Standings"
+   %ul.list-group
+    %li.list-group-item
+     .row.list-group-item-heading
+      .col-md-4= "TEAM"
+      .col-md-1.jmc-stat="P"
+      .col-md-1.jmc-stat="W"
+      .col-md-1.jmc-stat="D"
+      .col-md-1.jmc-stat="L"
+      .col-md-1.jmc-stat="GF"
+      .col-md-1.jmc-stat="GA"
+      .col-md-1.jmc-stat="GD"
+      .col-md-1.jmc-stat="PTS"
+     - @standingsX['domestic_league'].each do |s|
+      .row
+       .col-md-4= link_to s[:team], team_url(Team.find_by(team_id: s[:team_id]))
+       .col-md-1.jmc-stat= s[:played]
+       .col-md-1.jmc-stat= s[:won]
+       .col-md-1.jmc-stat= s[:draw]
+       .col-md-1.jmc-stat= s[:lost]
+       .col-md-1.jmc-stat= s[:goals_for]
+       .col-md-1.jmc-stat= s[:goals_against]
+       .col-md-1.jmc-stat= s[:goal_difference]
+       .col-md-1.jmc-stat= s[:points]
+  %h3.list-group-item-heading
+   = "Latest match date: #{@league.latest_match_date.in_time_zone.strftime('%a %b %d, %Y at %H:%M')}"
+ %li.list-group-item
+  - if ["15", "16", "17", "34", "35"].include?(@league.league_id.to_s)
+   - @group_names.each do |group_name|
+    = render partial: 'shared/fixture_results', locals: { fixtures: @fixturesX[group_name], title: "Group #{group_name} Results" }
+  - else
+   - (1..@latest_round).reverse_each do |round|
+    = render partial: 'shared/fixture_results', locals: { fixtures: @fixturesX[round.to_s], title: "Round #{round} Results" }
+ %li.list-group-item
+  - if ["15", "16", "17", "34", "35"].include?(@league.league_id.to_s)
+   - @group_names.each do |group_name|
+    = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fixturesY[group_name], title: "Group #{group_name} Fixtures" }
+  - else
+   - (@start_round..@end_round).each do |round|
+    = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fixturesY[round.to_s], title: "Round #{round} Fixtures" }
+
+
+
+
+
+
+
+
+
+      

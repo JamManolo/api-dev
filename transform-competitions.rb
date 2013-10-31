@@ -8,6 +8,7 @@ require "uri"
 require "Nokogiri"
 require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
 require './xmlsoccer-league-map'
+require './transform-groups'
 
 # ---------------------------------------------------
 #  Name: transform_fixtures
@@ -39,8 +40,11 @@ def transform_fixtures(options={})
   league_create_recs = Array.new
   league_update_recs = Array.new
 
+  # Competitions groups
+  group_map = create_group_map(league_id: league_id, xml: fixtures_xml) if [16, 17].include? league_id
+  puts group_map
   latest_round = final_round = 0
-  
+
   fixtures_xml.xpath("//Match").each do |node|
 
     # puts "========= MATCH ID : '#{node.xpath("Id").text}' : LEAGUE : #{league_id} ========="
@@ -70,6 +74,19 @@ def transform_fixtures(options={})
     final_round = round if final_round.to_i < round.to_i
     latest_round = round if latest_round.to_i < round.to_i and time_x == "Finished"
 
+    # For competition leagues, use the (unused) 'Round' column for 'Group' name
+    home_team_id = node.xpath("HomeTeam_Id").text
+    node.add_child("<Round>#{group_map[home_team_id.to_s]}</Round>") if [16, 17].include? league_id
+
+    # Handle shittle situation
+    if league_id == 20
+      if home_team_id == "579"
+        node.xpath("HomeTeam").first.content = 'Shittle Sounders FC'
+      elsif node.xpath("AwayTeam_Id").text == "579"
+        node.xpath("AwayTeam").first.content = 'Shittle Sounders FC'
+      end
+    end 
+
     # Save the XML file for this fixture
     filename = "xmlsoccer-fixture-#{node.xpath("Id").text}.xml"
     File.open("./XML-FILES/fixtures/#{filename}", "w") do |f|
@@ -94,7 +111,7 @@ def transform_fixtures(options={})
                       date:         node.xpath("Date").text,
                       league:       node.xpath("League").text,
                       league_id:    league_id,
-                      round:        round,
+                      round:        node.xpath("Round").text,
                       home_team:    node.xpath("HomeTeam").text,
                       home_team_id: node.xpath("HomeTeam_Id").text,
                       home_goals:   node.xpath("HomeGoals").text,
@@ -105,7 +122,7 @@ def transform_fixtures(options={})
                       time_x:       time_x,
                       report_id:    0
                     }
-  end
+  end # end fixtures.each
 
   # Save as json file for easy upload to data store...
   File.open("./JSON-FILES/xmlsoccer-fixture-data-files-#{league_id}.json", "w") do |f|
@@ -214,8 +231,9 @@ end
 
 def transform_driver
 
-  xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
-  league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
+  # xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
+  # league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
+  league_ids = [20]
 
   league_ids.each do |league_id|
     transform_fixtures(league_id: league_id, season: '1314', localtest: true, update: false)
