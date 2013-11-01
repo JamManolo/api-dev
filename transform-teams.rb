@@ -62,6 +62,11 @@ def transform_all_teams_by_league(options={})
         node.xpath("#{namespace}Stadium").first.content = 'Avanhard Stadium'
       end
 
+      # Handle shittle situation
+      if league_id == "20" and node.xpath("#{namespace}Team_Id").text == "579"
+        node.xpath("#{namespace}Name").first.content = "Shittle Sounders FC"
+      end
+
       # Add league information, separating competitions from domestic leagues
       # Collect records for writing rake update files
       is_competition = ["15", "16", "17", "34", "35"].include?(league_id) ? true : false
@@ -214,6 +219,11 @@ def transform_all_teams(options={})
     # Handle known bad data for Ukranian League stadium (league_id: 40)
     if node.xpath("Stadium").text == '"Avanhard" Stadium'
       node.xpath("Stadium").first.content = 'Avanhard Stadium'
+    end
+
+    # Handle shittle situation
+    if node.xpath("Team_Id").text == "579"
+      node.xpath("Name").first.content = "Shittle Sounders FC"
     end
 
     # Save updated XML file for this team (node)

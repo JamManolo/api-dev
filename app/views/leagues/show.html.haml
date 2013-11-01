@@ -1,7 +1,7 @@
 %ul.leagues.list-group
  %li.list-group-item
   %h3.list-group-item-heading= "#{@league.name} - #{@league.country}"
-  - if ["15", "16", "17", "34", "35",].include?(@league.league_id.to_s)
+  - if ["16", "17",].include?(@league.league_id.to_s)
    %ul.list-group
     - @group_names.each do |group_name|
      %li.list-group-item

@@ -65,7 +65,7 @@ class LeaguesController < ApplicationController
 
     xml_doc.xpath("//#{namespace}Team").each do |node|
       
-      if ["15", "16", "17", "34", "35"].include?(@league.league_id.to_s) 
+      if ["16", "17",].include?(@league.league_id.to_s) 
         team = Team.find_by(team_id: node.xpath("#{namespace}Team_Id").text)
         if team.league.downcase == "unknown"
           domestic_league_name = "(#{team.country})"
@@ -97,14 +97,18 @@ class LeaguesController < ApplicationController
     namespace = 'xmlns:'
     xml_doc.xpath("//#{namespace}TeamLeagueStanding").each do |node|
 
-      if ["15", "16", "17", "34", "35", "20"].include?(@league.league_id.to_s)
-        team_id = node.xpath("#{namespace}Team_Id").text
-        competition_group_name = @team_group_map[team_id.to_s]
+      if ["16", "17", "20"].include?(@league.league_id.to_s)
+        competition_group_name = @team_group_map[node.xpath("#{namespace}Team_Id").text]
       else
         competition_group_name = 'domestic_league'
       end
 
-      logger.debug "TEAM ID : '#{team_id}', GROUP NAME: '#{competition_group_name}'"
+      # Handle shittle situation
+      if node.xpath("#{namespace}Team_Id").text == "579"
+        node.xpath("#{namespace}Team").first.content = "Shittle Sounders FC"
+      end
+
+      # logger.debug "TEAM ID : '#{node.xpath("#{namespace}Team_Id").text}', GROUP NAME: '#{competition_group_name}'"
 
       @standingsX[competition_group_name] << {
         team:            node.xpath("#{namespace}Team").text,
@@ -143,7 +147,7 @@ class LeaguesController < ApplicationController
         @fixturesX[month] = Array.new unless @fixturesX[month]
         @fixturesX[month] << fixture
       end
-    else # @latest_round == 0
+    elsif @group_names # @latest_round == 0
       @group_names.each do |group_name|
         @fixturesX[group_name] = Array.new
       end
@@ -172,7 +176,7 @@ class LeaguesController < ApplicationController
         @fixturesY[month] = Array.new unless @fixturesY[month]
         @fixturesY[month] << fixture
       end
-    else # @final_round == 0
+    elsif @group_names # @final_round == 0
       @group_names.each do |group_name|
         @fixturesY[group_name] = Array.new
       end

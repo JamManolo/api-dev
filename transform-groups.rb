@@ -10,7 +10,7 @@ def create_group_map(options={})
 	group_hash = Hash.new
 
 	fixtures_xml.xpath("//Match").each do |node|
-		if [16, 17].include? league_id
+    if [16, 17].include? league_id
       home_team_id = node.xpath("HomeTeam_Id").text
       away_team_id = node.xpath("AwayTeam_Id").text
       if group_hash[home_team_id].nil?

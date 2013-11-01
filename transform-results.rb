@@ -40,7 +40,7 @@ def transform_results(options={})
   
   live_score_xml = Nokogiri::XML(File.open("XML/LiveScore-league3-latest.xml"))
   live_score_match_ids = live_score_xml.xpath("//Match/Id").map{ |node| node.text }
-  puts "live_score_match_ids #{live_score_match_ids}"
+  # puts "live_score_match_ids #{live_score_match_ids}"
 
   match_xml.xpath("//Match").each do |node|
 
@@ -185,6 +185,15 @@ def transform_results(options={})
     league_id = @xmlsoccer_league_map[league_name]
     node.add_child("<League_Id>#{league_id}</League_Id>")
 
+    # Handle shittle situation
+    if league_id == "20"
+      if node.xpath("HomeTeam_Id").text == "579"
+        node.xpath("HomeTeam").first.content = 'Shittle Sounders FC'
+      elsif node.xpath("AwayTeam_Id").text == "579"
+        node.xpath("AwayTeam").first.content = 'Shittle Sounders FC'
+      end
+    end 
+
     # Save the XML file for this match
     report_id = node.xpath("Id").text
     fixture_match_id = node.xpath("FixtureMatch_Id").text
@@ -295,5 +304,5 @@ end
 
 # transform_driver
 
-transform_results({league: "4", season: '1314', localtest: true})
+transform_results({league: "20", season: '1314', localtest: true})
 
