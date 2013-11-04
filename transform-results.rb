@@ -8,19 +8,33 @@ require "uri"
 require "Nokogiri"
 require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
 require './xmlsoccer-league-map'
+require './transform-utils'
 
 # ---------------------------------------------------
-#  Name: transform_hresults
+#  Name: transform_results
 #  Desc: cleanup xmlsoccer.xml 
 # ---------------------------------------------------
 def transform_results(options={})
 
-  league = options[:league]
-  season = options[:season]
+  use_ds    = options[:use_ds]    ? options[:use_ds]    : false
+  localtest = options[:localtest] ? options[:localtest] : false
+  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
+  season    = options[:season]    ? options[:season]    : '1314'
+  league_id = league_id_str = league = options[:league]
 
-  localtest = (options[:localtest].nil? or options[:localtest] != true) ? false : true
+  league_id_str = "0#{league_id_str}" if league_id.to_i < 10
 
-  unless localtest == true
+  if use_ds == true
+      puts "Fetching 'Results by League' info from production data store ..."
+      match_xml = Nokogiri::XML(aws_data_fetch({
+        name: "HistoricMatches-league-#{league_id_str}-#{season}.xml",
+        path: 'soccer/raw-data',
+      }))
+  elsif localtest == true
+    puts "Reading local data for league #{league_id_str}, season #{season} " +
+         "from #{src_dir}/HistoricMatches-league-#{league_id_str}-#{season}.xml..."
+    match_xml = Nokogiri::XML(File.open("#{src_dir}/HistoricMatches-league-#{league_id_str}-#{season}.xml"))
+  else
     puts "Setting up client"
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
@@ -30,10 +44,6 @@ def transform_results(options={})
     STDOUT.flush
     match_xml = Nokogiri::XML(
       xmlsoccer_client.get_historic_matches_by_league_and_season(league, season).body)
-  else
-    puts "Reading local data for league #{league}, season #{season} " +
-         "from XML-NEW/HistoricMatches-league-#{league}-#{season}.xml..."
-    match_xml = Nokogiri::XML(File.open("XML-NEW/HistoricMatches-league-#{league}-#{season}.xml"))
   end
 
   data_file_recs = Array.new
@@ -82,15 +92,22 @@ def transform_results(options={})
 
     # Goal scorers
     ["Home","Away"].each do |team|
-      #
       # JMC - skip Brasiliero 'GoalDetails' for now
-      #
-      unless league == "37" or node.xpath("#{team}GoalDetails").first.nil?
+      unless league_id == "37" or node.xpath("#{team}GoalDetails").first.nil?
         goal_details = Array.new
         goal_detail_line = node.xpath("#{team}GoalDetails").text
-        puts "goal_detail_line 2: #{goal_detail_line}" if goal_detail_line =~ /nbsp/
+        # puts "goal_detail_line 2: #{goal_detail_line}" if goal_detail_line =~ /nbsp/
+        # while goal_detail_line =~ /nbsp\;/
+        #   goal_detail_line.sub!(/nbsp\;/, '') 
+        # end
         while goal_detail_line =~ /nbsp\;/
           goal_detail_line.sub!(/nbsp\;/, '') 
+        end
+        while goal_detail_line =~ /\&/
+          goal_detail_line.sub!(/\&/, '') 
+        end
+        while goal_detail_line =~ /amp;/
+          goal_detail_line.sub!(/amp;/, '') 
         end
 
         goal_detail_line.split(';').reverse_each do |goal|
@@ -185,124 +202,143 @@ def transform_results(options={})
     league_id = @xmlsoccer_league_map[league_name]
     node.add_child("<League_Id>#{league_id}</League_Id>")
 
-    # Handle shittle situation
+    # Handle the shittle situation
     if league_id == "20"
       if node.xpath("HomeTeam_Id").text == "579"
-        node.xpath("HomeTeam").first.content = 'Shittle Sounders FC'
+        node.xpath("HomeTeam").first.content = 'Shittle Flounders FC'
       elsif node.xpath("AwayTeam_Id").text == "579"
-        node.xpath("AwayTeam").first.content = 'Shittle Sounders FC'
+        node.xpath("AwayTeam").first.content = 'Shittle Flounders FC'
       end
     end 
 
     # Save the XML file for this match
-    report_id = node.xpath("Id").text
-    fixture_match_id = node.xpath("FixtureMatch_Id").text
-    filename = "xmlsoccer-match-#{fixture_match_id}.xml"
-    f = File.open("./XML-FILES/matches/#{filename}", "w")
-    f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    f.puts "<FreeFantasyFootball.Info>"
-    f.puts "<#{node.name}>"
-    node.elements.each do |e|
-     f.puts "#{e}"
-    end
-    f.puts "</#{node.name}>"
-    f.puts "</FreeFantasyFootball.Info>"
-    f.close
+    # report_id = node.xpath("Id").text
+    # fixture_match_id = node.xpath("FixtureMatch_Id").text
+    # filename = "xmlsoccer-match-#{fixture_match_id}.xml"
+    # f = File.open("./XML-FILES/matches/#{filename}", "w")
+    # f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+    # f.puts "<FreeFantasyFootball.Info>"
+    # f.puts "<#{node.name}>"
+    # node.elements.each do |e|
+    #  f.puts "#{e}"
+    # end
+    # f.puts "</#{node.name}>"
+    # f.puts "</FreeFantasyFootball.Info>"
+    # f.close
+
+    filename = write_xml_file({
+      group: 'match',
+      group_info: node.xpath("FixtureMatch_Id").text,
+      node: node,
+    })
 
     # Save record for generating json and rake files
     data_file_recs << { name:            filename, 
                         path:            'soccer/matches',
-                        has_corrections: false,
-                        format:          'xml',
-                        data_store:      'aws',
-                        data_store_id:   1,
+                        # has_corrections: false,
+                        # format:          'xml',
+                        # data_store:      'aws',
+                        # data_store_id:   1,
                         timestamp:       `date`.strip } 
   end
 
-  # Save as json file for uploading files to data store
-  File.open("./JSON-FILES/xmlsoccer-match-data-files-#{league}.json", "w") do |f|
-    f.puts '{ "match-data-files": ['
-    data_file_recs.each do |record|
-      f.puts '{'
-      f.puts "\"name\":\"#{record[:name]}\","
-      f.puts "\"path\":\"#{record[:path]}\","
-      f.puts "\"timestamp\":\"#{record[:timestamp]}\""
-      my_comma = record == data_file_recs.last ? '' : ','
-      f.puts "}#{my_comma}"
-    end
-    f.puts '] }'
-  end
+  # Save as json file for uploading xml files to data store
+  write_data_file_json_file({
+    rec_type: 'result',
+    rec_info: league_id_str,
+    rec_data: 'xml',
+    recs: data_file_recs,
+  })
 
   # Save as json file, for whatever purpose
-  File.open("./JSON-FILES/xmlsoccer-data-files-#{league}.json", "w") do |f|
-    f.puts '{ "data-files": ['
-    data_file_recs.each do |record|
-      f.puts '{'
-      record.each do |k,v|
-        my_comma = k == :timestamp ? '' : ','
-        f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
-      end
-      my_comma = record == data_file_recs.last ? '' : ','
-      f.puts "}#{my_comma}"
-    end
-    f.puts '] }'
-  end
+  # File.open("./JSON-FILES/xmlsoccer-data-files-#{league}.json", "w") do |f|
+  #   f.puts '{ "data-files": ['
+  #   data_file_recs.each do |record|
+  #     f.puts '{'
+  #     record.each do |k,v|
+  #       my_comma = k == :timestamp ? '' : ','
+  #       f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
+  #     end
+  #     my_comma = record == data_file_recs.last ? '' : ','
+  #     f.puts "}#{my_comma}"
+  #   end
+  #   f.puts '] }'
+  # end
 
   # Or...just create the rake file now - DUH!
-  File.open("./RAKE-FILES/create_r1_file_data-#{league}.rake", "w") do |f|
-    f.puts 'namespace :db do'
-    f.puts "\tdesc \"Fill database with file data\""
-    f.puts "\ttask populate: :environment do"
-    f.puts "\t\tif !ENV['create'].nil? and ENV['create'] == 'file_data'"
-    data_file_recs.each do |record|
-      f.puts "\t\t\tDataFile.create!("
-      record.each do |k,v|
-        f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
-      end
-      f.puts "\t\t\t)"
-    end
-    f.puts "\t\tend\n\tend\nend"
-  end
+  write_create_records_rake_file({
+    rec_class: 'DataFile',
+    rec_type: 'file',
+    desc: 'Fill database with file data',
+    recs: data_file_recs,
+    jmc: 'r1',
+    ext: league_id_str,
+  })
+
 
   # Create rake file to update Fixture.report_id with the match report id.
   # Yep, same as Fixture.match_id - essentially used as a 'has match report'
   # boolean for now, but keeping since the report id is likely to change
-  fixture_match_ids = match_xml.xpath("//Match/FixtureMatch_Id").map{ |node| node.text }
-
-  File.open("./RAKE-FILES/update_r1_fixture_data-#{league}.rake", "w") do |f|
-    f.puts 'namespace :db do'
-    f.puts "\tdesc \"Update database with match report data\""
-    f.puts "\ttask populate: :environment do"
-    f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'fixture'"
-    fixture_match_ids.each do |match_id|
-      f.puts "\t\t\tid = Fixture.find_by(match_id: \"#{match_id}\")"
-      f.puts "\t\t\tunless id.nil?"
-      f.puts "\t\t\t\tFixture.update("
-      f.puts "\t\t\t\t\tid,"
-      f.puts "\t\t\t\t\t{"
-      f.puts "\t\t\t\t\t\t\"report_id\" => \"#{match_id}\","
-      f.puts "\t\t\t\t\t}"
-      f.puts "\t\t\t\t)"
-      f.puts "\t\t\tend"
+  # fixture_match_ids = match_xml.xpath("//Match/FixtureMatch_Id").map{ |node| node.text }
+  update_recs = Array.new
+  missing_recs = Array.new
+  fixture_xml = Nokogiri::XML(File.open("#{src_dir}/Fixtures-league-#{league_id_str}-#{season}.xml"))
+  fixture_ids = fixture_xml.xpath("//Match/Id").map{ |node| node.text }
+  match_xml.xpath("//Match/FixtureMatch_Id").map{ |node| node.text }.each do |match_id|
+    next if match_id == "0"
+    if fixture_ids.include? match_id
+      update_recs << { match_id: match_id, report_id: match_id }
+    else
+      missing_recs << { match_id: match_id }
     end
-    f.puts "\t\tend\n\tend\nend"
   end
+  puts missing_recs
+
+  write_update_records_rake_file({
+    rec_class: 'Fixture',
+    rec_type: 'fixture',
+    rec_key: 'match_id',
+    desc: 'Update database with match report data',
+    recs: update_recs,
+    jmc: 'r1',
+    ext: league_id_str,
+  })
+
+  # Create json file for easy upload of json update records
+  filename = write_records_json_file({
+    rec_type: 'fixtures',
+    rec_info: "#{league_id_str}-update-r1",
+    recs: update_recs,
+  })
+  @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
 end
 
 def transform_driver
 
+  @nodb_file_recs = Array.new
+
   xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
   league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
 
   league_ids.each do |league_id|
+    next if ["15","34"].include? league_id
     puts "league_id = '#{league_id}'"
-    transform_results(league: league_id.to_i, season: '1314', localtest: true, update: false)
+    transform_results(league: league_id.to_i, season: '1314', localtest: true,
+                      use_ds: true, src_dir: 'XML-RAW')
   end
+
+  # Save json file for easy upload to noDB data store...
+  write_data_file_json_file({
+    rec_type: "result",
+    rec_info: 'all',
+    rec_data: 'nodb',
+    recs: @nodb_file_recs
+  })
 
 end
 
-# transform_driver
+transform_driver
 
-transform_results({league: "20", season: '1314', localtest: true})
+# transform_results({ league: 19, season: '1314', localtest: true, src_dir: 'XML-RAW' })
 

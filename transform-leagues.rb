@@ -17,15 +17,17 @@ def transform_leagues(options={})
 
   localtest = options[:localtest] ? options[:localtest] : false
   use_ds    = options[:use_ds]    ? options[:use_ds]    : false
+  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
 
-  if localtest == true
-    puts "Reading local data for all leagues ..."
-    leagues_xml = Nokogiri::XML(File.open("XML/AllLeagues.xml"))
-  elsif use_ds == true
-    leagues_xml = Nokogiri::XML(open(aws_data_fetch({
+  if use_ds == true
+    puts "Fetching 'All Leagues' info from production data store ..."
+    leagues_xml = Nokogiri::XML(aws_data_fetch({
       name: 'AllLeagues.xml',
       path: 'soccer/raw-data',
-    })))
+    }))
+  elsif localtest == true
+    puts "Reading local data for all leagues ..."
+    leagues_xml = Nokogiri::XML(File.open("#{src_dir}/AllLeagues.xml"))
   else
     puts "Setting up client"
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
@@ -47,20 +49,21 @@ def transform_leagues(options={})
       node.xpath(key).first.content = node.xpath(key).text == 'false' ? false : true
     end
 
-    # Save the XML file for this league
-    filename = "xmlsoccer-league-#{node.xpath("Id").text}.xml"
-    f = File.open("./XML-FILES/leagues/#{filename}", "w")
-    f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    f.puts "<FreeFantasyFootball.Info>"
-    f.puts "\t<#{node.name}>"
-    node.elements.each do |e|
-     f.puts "\t\t#{e}"
-    end
-    f.puts "\t</#{node.name}>"
-    f.puts "</FreeFantasyFootball.Info>"
-    f.close
+    league_id = node.xpath("Id").text
+    league_id_str = league_id.to_i < 10 ? "0#{league_id}" : league_id
 
-    league_recs <<    { league_id:         node.xpath("Id").text,
+    filename = write_xml_file({
+      group: 'league',
+      group_info: league_id_str,
+      node: node,
+    })
+
+    data_file_recs << { name:      filename,
+                        path:      'soccer/leagues',
+                        timestamp: `date`.strip
+                      } 
+
+    league_recs <<    { league_id:         league_id,
                         name:              node.xpath("Name").text,
                         country:           node.xpath("Country").text,
                         historical_data:   node.xpath("Historical_Data").text,
@@ -77,26 +80,51 @@ def transform_leagues(options={})
                         latest_match_date: node.xpath("LatestMatch").text,
                       }                 
 
-    data_file_recs << { name:      filename,
-                        path:      'soccer/leagues',
-                        timestamp: `date`.strip
-                      } 
+    
   end # leagues.each
 
+  # Save json file for easy upload of xml files to data store...
   write_data_file_json_file({
     rec_type: 'league',
     rec_info: 'all',
+    rec_data: 'xml',
     recs: data_file_recs,
   })
 
-  write_records_json_file({
+  # Save as json file, for noDB
+  filename = write_records_json_file({
     rec_type: 'leagues',
-    rec_info: 'all',
+    rec_info: 'create-a1',
     recs: league_recs,
+  })
+  jmc_recs = [ { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, } ]
+
+  # # Save json file for easy upload of noDB json files to data store...
+  # write_data_file_json_file({
+  #   rec_type: "league",
+  #   rec_info: 'all',
+  #   rec_data: 'nodb',
+  #   recs: [ { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, } ]
+  # })
+
+  # Save as json file, for noDB
+  filename = write_records_json_file({
+    rec_type: 'leagues',
+    rec_info: 'update-a1',
+    recs: update_recs,
+  })
+  jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
+
+  # Save json file for easy upload of noDB json files to data store...
+  write_data_file_json_file({
+    rec_type: "league",
+    rec_info: 'all',
+    rec_data: 'nodb',
+    recs: jmc_recs
   })
 
   # Or...just create the rake file now - DUH!
-  if options[:update] and options[:update] == true
+  # if options[:update] and options[:update] == true
     write_update_records_rake_file({
       rec_class: 'League',
       rec_type: 'league',
@@ -106,7 +134,7 @@ def transform_leagues(options={})
       jmc: 'a1',
       ext: 'all',
     })
-  else
+  # else
     write_create_records_rake_file({
       rec_class: 'League',
       rec_type: 'league',
@@ -115,10 +143,10 @@ def transform_leagues(options={})
       jmc: 'a1',
       ext: 'all',
     })
-  end
+  # end
 
 end
 
-transform_leagues(localtest: true, update: false)
-transform_leagues(localtest: true, update: true)
+transform_leagues(localtest: true, update: false, use_ds: true, src_dir: './XML-RAW')
+# transform_leagues(localtest: true, update: true, src_dir: './XML-RAW')
 

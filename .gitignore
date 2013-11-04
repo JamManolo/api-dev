@@ -22,17 +22,23 @@
 /jmc.aws.objects/
 /JMC.JMC
 /jmc.log
+/jmc_errorlog.txt
 
 /downloads/
 /lib/tasks/
 /FILES/
 /JSON-FILES/
+/JSON-FILES-ORIG/
 /RAKE-FILES/
+/RAKE-FILES-ORIG/
 /soccer
 /XML/
 /XML-FILES/
 /XML-NEW/
+/XML-RAW/
+/XML-RAW-*/
 /XML-TEST/
+/XML-TEST.pass-1/
 
 
 /bogus.txt

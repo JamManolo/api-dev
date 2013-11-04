@@ -12,10 +12,12 @@ require "./xmlsoccer-league-map"
 
 def transform_all_teams_by_league(options={})
 
-  localtest = (options[:localtest].nil? or options[:localtest] != true) ? false : true
+  use_ds    = options[:use_ds]    ? options[:use_ds]    : false
+  localtest = options[:localtest] ? options[:localtest] : false
+  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
   season = '1314'
 
-  unless localtest == true
+  unless localtest == true or use_ds == true
     puts "Setting up client"
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
@@ -23,30 +25,31 @@ def transform_all_teams_by_league(options={})
     })
   end
 
-  xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
+  xml_doc = Nokogiri::XML(open("#{src_dir}/AllLeagues.xml"))
   league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
-  # Testing for 'competitions leagues'
-  # league_ids = [ "16", "17", "35" ]
 
-  # comp_recs = Array.new
   comp_hash = Hash.new
+  nodb_file_recs = Array.new
 
   league_ids.each do |league_id|
 
-    if localtest == false
-      if true
-        puts "Requesting data for league #{league_id} ..."
-        STDOUT.flush
-        team_xml = 
-          Nokogiri::XML(xmlsoccer_client.get_all_teams_by_league_and_season(league_id, season).body)
-      else # JMC - soon-to-be default behavior
-        puts "Fetching data for league #{league_id} ..."
-        STDOUT.flush
-        # team_xml = gapi_data_fetch(name: "Teams-league-#{league_id}-#{season}.xml", path: "xmlsoccer/raw")
-      end
+    next if ["15", "34"].include? league_id
+    league_id_str = league_id.to_i < 10 ? "0#{league_id}" : league_id
+
+    if use_ds == true
+      puts "Fetching 'Teams by League' info from production data store ..."
+      teams_xml = Nokogiri::XML(aws_data_fetch({
+        name: "Teams-league-#{league_id_str}-#{season}.xml",
+        path: 'soccer/raw-data',
+      }))
+    elsif localtest == true
+      filename = "#{src_dir}/Teams-league-#{league_id_str}-#{season}.xml"
+      puts "Reading local data for league #{league_id_str} from #{filename} ..."
+      teams_xml = Nokogiri::XML(File.open(filename))
     else
-      puts "Reading local data for league #{league_id} ..."
-      teams_xml = Nokogiri::XML(File.open("XML-NEW/Teams-league-#{league_id}-#{season}.xml"))
+      puts "Requesting data for league #{league_id} ..."
+      STDOUT.flush
+      teams_xml = Nokogiri::XML(xmlsoccer_client.get_all_teams_by_league_and_season(league_id, season).body)
     end
     teams_xml.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
     namespace = 'xmlns:'
@@ -64,7 +67,7 @@ def transform_all_teams_by_league(options={})
 
       # Handle shittle situation
       if league_id == "20" and node.xpath("#{namespace}Team_Id").text == "579"
-        node.xpath("#{namespace}Name").first.content = "Shittle Sounders FC"
+        node.xpath("#{namespace}Name").first.content = "Shittle Flounders FC"
       end
 
       # Add league information, separating competitions from domestic leagues
@@ -73,10 +76,6 @@ def transform_all_teams_by_league(options={})
       if is_competition == true
         node.add_child("<Competition>#{@xmlsoccer_league_map[league_id]}</Competition>")
         node.add_child("<Competition_Id>#{league_id}</Competition_Id>")
-        # comp_recs << {
-        #   team_id:      node.xpath("#{namespace}Team_Id").text,
-        #   competitions: node.xpath("#{namespace}Competition_Id").text,
-        # }
         team_id = node.xpath("#{namespace}Team_Id").text
         competition_id = node.xpath("#{namespace}Competition_Id").text
         if comp_hash[team_id].nil?
@@ -96,9 +95,12 @@ def transform_all_teams_by_league(options={})
       end
 
       # Save updated XML file for this team (node)
+      team_id_str = node.xpath("#{namespace}Team_Id").text
+      team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
+      team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
       filename = write_xml_file({
         group: 'team',
-        group_info: node.xpath("#{namespace}Team_Id").text,
+        group_info: team_id_str,
         node: node,
       })
 
@@ -111,6 +113,7 @@ def transform_all_teams_by_league(options={})
 
       # Collect for writing json record file
       team_recs << {
+        name:           node.xpath("#{namespace}Name").text,
         team_id:        node.xpath("#{namespace}Team_Id").text,
         league:         node.xpath("#{namespace}League").text,
         league_id:      node.xpath("#{namespace}League_Id").text,
@@ -125,19 +128,21 @@ def transform_all_teams_by_league(options={})
       
     end # team_nodes.each
 
-    # Save json file for easy upload to data store...
+    # Save json file for easy upload of xml files to data store...
     write_data_file_json_file({
       rec_type: "team",
-      rec_info: "#{league_id}",
+      rec_data: 'xml',
+      rec_info: league_id_str,
       recs: data_file_recs
     })
     
-    # Save as json file, for whatever purpose...
-    write_records_json_file({
+    # Save as team records json file, for ... noDB
+    filename = write_records_json_file({
       rec_type: "teams",
-      rec_info: "#{league_id}",
+      rec_info: "#{league_id_str}-create-t1",
       recs: team_recs
     })
+    nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
     # Or...just create the rake file now - DUH!
     write_update_records_rake_file({
@@ -147,28 +152,20 @@ def transform_all_teams_by_league(options={})
       desc: 'Update database with team data',
       recs: update_recs,
       jmc: 't1',
-      ext: league_id,
+      ext: league_id_str,
     })
+
+    # Save as json file, for ... noDB
+    filename = write_records_json_file({
+      rec_type: "teams",
+      rec_info: "#{league_id_str}-update-t1",
+      recs: update_recs
+    })
+    nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
   end # league_ids.each
 
-  # # Output the competitions rake file
-  # jmc_hash = Hash.new
-  # comp_recs.each do |rec|
-  #   puts "REC: '#{rec}'"
-  #   STDOUT.flush
-  #   team_id = rec[:team_id]
-  #   if jmc_hash[team_id].nil?
-  #     jmc_hash[team_id] = Array.new()
-  #     jmc_hash[rec[:team_id]] << rec[:competitions]
-  #   else
-  #     jmc_hash[rec[:team_id]] << rec[:competitions]
-  #   end
-  #   puts "     '#{jmc_hash[team_id]}'"
-  # end
-
   competitions_recs = Array.new
-  # jmc_hash.each do |k,v|
   comp_hash.each do |k,v|
     competitions_recs << { team_id: k, competitions: v }
   end
@@ -185,9 +182,24 @@ def transform_all_teams_by_league(options={})
     ext: 'all',
   })
 
+  # Save as json file, for ... noDB
+  filename = write_records_json_file({
+    rec_type: "teams",
+    rec_info: "all-update-t2",
+    recs: competitions_recs
+  })
+  nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
+
+  # Save json file for easy upload to noDB data store...
+  write_data_file_json_file({
+    rec_type: "team",
+    rec_info: 'league',
+    rec_data: 'nodb',
+    recs: nodb_file_recs
+  })
+
 end
 
-# transform_teams_by_league(localtest: true)
 
 # ---------------------------------------------------
 #  Name: transform_all_teams
@@ -195,9 +207,20 @@ end
 # ---------------------------------------------------
 def transform_all_teams(options={})
 
-  localtest = (options[:localtest].nil? or options[:localtest] != true) ? false : true
+  use_ds    = options[:use_ds]    ? options[:use_ds]    : false
+  localtest = options[:localtest] ? options[:localtest] : false
+  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
 
-  unless localtest == true
+  if use_ds == true
+      puts "Fetching 'All Teams' info from production data store ..."
+      teams_xml = Nokogiri::XML(aws_data_fetch({
+        name: "AllTeams.xml",
+        path: 'soccer/raw-data',
+      }))
+  elsif localtest == true
+    puts "Reading local data for all teams ..."
+    teams_xml = Nokogiri::XML(File.open("#{src_dir}/AllTeams.xml"))
+  else
     puts "Setting up client"
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
@@ -206,11 +229,8 @@ def transform_all_teams(options={})
     puts "Requesting data for all teams ..."
     STDOUT.flush
     teams_xml = Nokogiri::XML(xmlsoccer_client.get_all_teams.body)
-  else
-    puts "Reading local data for all teams ..."
-    teams_xml = Nokogiri::XML(File.open("XML/AllTeams.xml"))
   end
-
+    
   team_recs = Array.new
   data_file_recs = Array.new
   
@@ -221,15 +241,24 @@ def transform_all_teams(options={})
       node.xpath("Stadium").first.content = 'Avanhard Stadium'
     end
 
+    # Handle known bad data for Bundesliga (Leverkusen)
+    if node.xpath("HomePageURL").text == 'BayArena'
+      node.xpath("HomePageURL").first.content = node.xpath("Stadium").text
+      node.xpath("Stadium").first.content = 'BayArena'
+    end
+
     # Handle shittle situation
     if node.xpath("Team_Id").text == "579"
-      node.xpath("Name").first.content = "Shittle Sounders FC"
+      node.xpath("Name").first.content = "Shittle Flounders FC"
     end
 
     # Save updated XML file for this team (node)
+    team_id_str = node.xpath("Team_Id").text
+    team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
+    team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
     filename = write_xml_file({
       group: 'team',
-      group_info: node.xpath("Team_Id").text,
+      group_info: team_id_str,
       node: node,
     })
 
@@ -251,18 +280,27 @@ def transform_all_teams(options={})
                       } 
   end
 
-  # Save json file for easy upload to data store...
+  # Save json file for easy upload of xml files to data store...
   write_data_file_json_file({
     rec_type: 'team',
+    rec_data: 'xml',
     rec_info: 'all',
     recs: data_file_recs
   })
   
-  # Save as json file, for whatever purpose...
-  write_records_json_file({
+  # Save as json file, for noDB
+  filename = write_records_json_file({
     rec_type: 'teams',
-    rec_info: 'all',
+    rec_info: 'all-create-t1',
     recs: team_recs
+  })
+
+  # Save json file for easy upload of json noDB files to data store...
+  write_data_file_json_file({
+    rec_type: "team",
+    rec_info: 'all',
+    rec_data: 'nodb',
+    recs: [ { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, } ]
   })
 
   # Or...just create the rake file now - DUH!
@@ -277,7 +315,7 @@ def transform_all_teams(options={})
 
 end
 
-transform_all_teams(localtest: true)
-transform_all_teams_by_league(localtest: true)
+transform_all_teams(localtest: true, use_ds: true, src_dir: 'XML-RAW')
+transform_all_teams_by_league(localtest: true, use_ds: true, src_dir: 'XML-RAW')
 
 

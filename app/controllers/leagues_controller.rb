@@ -59,7 +59,16 @@ class LeaguesController < ApplicationController
     domestic_league_name = domestic_league_link = ''
     competition_group_name = 'domestic_league'
 
-    xml_doc = Nokogiri::XML(File.open("XML-NEW/Teams-league-#{@league.league_id}-#{season}.xml").read)
+    league_id_str = @league.league_id.to_i < 10 ? "0#{@league.league_id}" : @league.league_id
+    filename = "Teams-league-#{league_id_str}-#{season}.xml"
+    if true
+      xml_doc = Nokogiri::XML(aws_data_fetch({
+        name: filename,
+        path: 'soccer/raw-data',
+      }))
+    else
+      xml_doc = Nokogiri::XML(File.open("XML-RAW/#{filename}").read)
+    end
     xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
     namespace = 'xmlns:'
 
@@ -77,6 +86,9 @@ class LeaguesController < ApplicationController
         competition_group_name = @team_group_map[team.team_id.to_s]
       elsif @league.league_id == 20
         competition_group_name = @team_group_map[node.xpath("#{namespace}Team_Id").text]
+        if node.xpath("#{namespace}Name").text =~ /Seattle/
+          node.xpath("#{namespace}Name").first.content = "Shittle Flounders FC"
+        end
       end
 
       @teamsX[competition_group_name] << {
@@ -92,7 +104,15 @@ class LeaguesController < ApplicationController
     end
 
     # League standings
-    xml_doc = Nokogiri::XML(File.open("XML-NEW/Standings-league-#{@league.league_id}-#{season}.xml").read)
+    filename = "Standings-league-#{league_id_str}-#{season}.xml"
+    if true
+      xml_doc = Nokogiri::XML(aws_data_fetch({
+        name: filename,
+        path: 'soccer/raw-data',
+      }))
+    else
+      xml_doc = Nokogiri::XML(File.open("XML-RAW/#{filename}").read)
+    end
     xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/LeagueStanding")
     namespace = 'xmlns:'
     xml_doc.xpath("//#{namespace}TeamLeagueStanding").each do |node|
@@ -105,7 +125,7 @@ class LeaguesController < ApplicationController
 
       # Handle shittle situation
       if node.xpath("#{namespace}Team_Id").text == "579"
-        node.xpath("#{namespace}Team").first.content = "Shittle Sounders FC"
+        node.xpath("#{namespace}Team").first.content = "Shittle Flounders FC"
       end
 
       # logger.debug "TEAM ID : '#{node.xpath("#{namespace}Team_Id").text}', GROUP NAME: '#{competition_group_name}'"

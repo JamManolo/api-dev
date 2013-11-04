@@ -17,15 +17,23 @@ require './transform-groups'
 # ---------------------------------------------------
 def transform_fixtures(options={})
 
-  localtest = (options[:localtest].nil? or options[:localtest] != true) ? false : true
-  league_id = league_id_str = options[:league_id].nil? ? 3 : options[:league_id]
-  season = options[:season].nil? ? '1314' : options[:season]
+  use_ds    = options[:use_ds]    ? options[:use_ds]    : false
+  localtest = options[:localtest] ? options[:localtest] : false
+  season    = options[:season]    ? options[:season]    : '1314' 
+  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
+  league_id = league_id_str = options[:league_id] ? options[:league_id] :3
 
-  league_id_str = "0#{league_id_str}" if league_id_str < 10
+  league_id_str = "0#{league_id_str}" if league_id.to_i < 10
 
-  if localtest == true
-    puts "Reading local data for all fixtures from 'XML-NEW/Fixtures-league-#{league_id}-#{season}.xml'..."
-    fixtures_xml = Nokogiri::XML(File.open("XML-NEW/Fixtures-league-#{league_id}-#{season}.xml"))
+  if use_ds == true
+      puts "Fetching 'Fixtures by League' info from production data store ..."
+      fixtures_xml = Nokogiri::XML(aws_data_fetch({
+        name: "Fixtures-league-#{league_id_str}-#{season}.xml",
+        path: 'soccer/raw-data',
+      }))
+  elsif localtest == true
+    puts "Reading local data for all fixtures from '#{src_dir}/Fixtures-league-#{league_id_str}-#{season}.xml'..."
+    fixtures_xml = Nokogiri::XML(File.open("#{src_dir}/Fixtures-league-#{league_id_str}-#{season}.xml"))
   else
     puts "Setting up client"
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
@@ -41,7 +49,7 @@ def transform_fixtures(options={})
   fixture_recs = Array.new
   data_file_recs = Array.new
   league_create_recs = Array.new
-  league_update_recs = Array.new
+  # league_update_recs = Array.new
   fixture_update_recs = Array.new
 
   # Competitions groups
@@ -83,27 +91,15 @@ def transform_fixtures(options={})
     node.add_child("<Round>#{group_map[home_team_id.to_s]}</Round>") if [16, 17].include? league_id
 
     # Handle shittle situation
-    if league_id == 20
+    if league_id == "20"
       if home_team_id == "579"
-        node.xpath("HomeTeam").first.content = 'Shittle Sounders FC'
+        node.xpath("HomeTeam").first.content = 'Shittle Flounders FC'
       elsif node.xpath("AwayTeam_Id").text == "579"
-        node.xpath("AwayTeam").first.content = 'Shittle Sounders FC'
+        node.xpath("AwayTeam").first.content = 'Shittle Flounders FC'
       end
     end 
 
     # Save the XML file for this fixture
-    # filename = "xmlsoccer-fixture-#{node.xpath("Id").text}.xml"
-    # File.open("./XML-FILES/fixtures/#{filename}", "w") do |f|
-    #   f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    #   f.puts "<FreeFantasyFootball.Info>"
-    #   f.puts "\t<#{node.name}>"
-    #   node.elements.each do |e|
-    #    f.puts "\t\t#{e}"
-    #   end
-    #   f.puts "\t</#{node.name}>"
-    #   f.puts "</FreeFantasyFootball.Info>"
-    # end
-
     filename = write_xml_file({
       group: 'fixture',
       group_info: node.xpath("Id").text,
@@ -145,70 +141,47 @@ def transform_fixtures(options={})
       final_round: final_round,
     }
 
-    
-
   end # end fixtures.each
 
-  # Save as json file for easy upload to data store...
-  # File.open("./JSON-FILES/xmlsoccer-fixture-data-files-#{league_id}.json", "w") do |f|
-  #   f.puts '{ "fixture-data-files": ['
-  #   data_file_recs.each do |record|
-  #     f.puts '{'
-  #     record.each do |k,v|
-  #       my_comma = k == :timestamp ? '' : ','
-  #       f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
-  #     end
-  #     my_comma = record == data_file_recs.last ? '' : ','
-  #     f.puts "}#{my_comma}"
-  #   end
-  #   f.puts '] }'
-  # end
-
-  # Save as json file for easy upload to data store...
+  # Save json file for easy upload of xml files to data store...
   write_data_file_json_file({
     rec_type: 'fixture',
+    rec_data: 'xml',
     rec_info: league_id_str,
     recs: data_file_recs,
   })
 
-  # Save as json file, for whatever purpose...
-  # File.open("./JSON-FILES/xmlsoccer-fixtures-#{league_id}.json", "w") do |f|
-  #   f.puts '{ "fixtures": ['
-  #   fixture_recs.each do |record|
-  #     f.puts '{'
-  #     record.each do |k,v|
-  #       my_comma = k == :report_id ? '' : ','
-  #       f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
-  #     end
-  #     my_comma = record == fixture_recs.last ? '' : ','
-  #     f.puts "}#{my_comma}"
-  #   end
-  #   f.puts '] }'
-  # end
-
-  write_records_json_file({
+  # Save as json file, for ... noDB
+  filename = write_records_json_file({
     rec_type: 'fixtures',
-    rec_info: league_id_str,
+    rec_info: "#{league_id_str}-create-f1",
     recs: fixture_recs,
   })
+  @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-  # Or...just create the rake file now - DUH!
-  if options[:update].nil? or options[:update] != true
+  filename = write_records_json_file({
+    rec_type: 'leagues',
+    rec_info: "#{league_id_str}-create-f1",
+    recs: [ league_id: league_id, final_round: final_round ]
+  })
+  @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-    # File.open("./RAKE-FILES/create_f1_fixture_data-#{league_id}.rake", "w") do |f|
-    #   f.puts 'namespace :db do'
-    #   f.puts "\tdesc \"Fill database with fixture data\""
-    #   f.puts "\ttask populate: :environment do"
-    #   f.puts "\t\tif !ENV['create'].nil? and ENV['create'] == 'fixture'"
-    #   fixture_recs.each do |record|
-    #     f.puts "\t\t\tFixture.create!("
-    #     record.each do |k,v|
-    #       f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
-    #     end
-    #     f.puts "\t\t\t)"
-    #   end
-    #   f.puts "\t\tend\n\tend\nend"
-    # end
+  filename = write_records_json_file({
+    rec_type: 'fixtures',
+    rec_info: "#{league_id_str}-update-f1",
+    recs: fixture_update_recs,
+  })
+  @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
+
+  filename = write_records_json_file({
+    rec_type: 'leagues',
+    rec_info: "#{league_id_str}-update-f1",
+    recs: [ league_id: league_id, latest_round: latest_round ]
+  })
+  @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
+
+  # # Or...just create the rake file now - DUH!
+  # if options[:update].nil? or options[:update] != true
 
     write_create_records_rake_file({
       rec_class: 'Fixture',
@@ -235,29 +208,7 @@ def transform_fixtures(options={})
       f.puts "\t\t\t)"
       f.puts "\t\tend\n\tend\nend"
     end
-
-  else
-
-    # File.open("./RAKE-FILES/update_f1_fixture_data-#{league_id_str}.rake", "w") do |f|
-    #   f.puts 'namespace :db do'
-    #   f.puts "\tdesc \"Update database with fixture data\""
-    #   f.puts "\ttask populate: :environment do"
-    #   f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'fixture'"
-    #   fixture_recs.each do |record|
-    #     next if record[:time_x] == ""
-    #     f.puts "\t\t\tid = Fixture.find_by(match_id: #{record[:match_id]})"
-    #     f.puts "\t\t\tFixture.update("
-    #     f.puts "\t\t\t\tid,"
-    #     f.puts "\t\t\t\t{"
-    #     f.puts "\t\t\t\t\t\"home_goals\" => \"#{record[:home_goals]}\","
-    #     f.puts "\t\t\t\t\t\"away_goals\" => \"#{record[:away_goals]}\","
-    #     f.puts "\t\t\t\t\t\"time_x\" => \"#{record[:time_x]}\","
-    #     f.puts "\t\t\t\t}"
-    #     f.puts "\t\t\t)"
-    #   end
-    #   f.puts "\t\tend\n\tend\nend"
-    # end
-
+  # else
     write_update_records_rake_file({
       rec_class: 'Fixture',
       rec_type: 'fixture',
@@ -268,22 +219,6 @@ def transform_fixtures(options={})
       ext: league_id_str,
     })
 
-    # File.open("./RAKE-FILES/update_f1_league_data-#{league_id_str}.rake", "w") do |f|
-    #   f.puts 'namespace :db do'
-    #   f.puts "\tdesc \"Update database with additional league data\""
-    #   f.puts "\ttask populate: :environment do"
-    #   f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'league'"
-    #   f.puts "\t\t\tid = League.find_by(league_id: #{league_id})"
-    #   f.puts "\t\t\tLeague.update("
-    #   f.puts "\t\t\t\tid,"
-    #   f.puts "\t\t\t\t{"
-    #   f.puts "\t\t\t\t\t\"latest_round\" => \"#{latest_round}\","
-    #   # f.puts "\t\t\t\t\t\"final_round\" => \"#{final_round}\","
-    #   f.puts "\t\t\t\t},"
-    #   f.puts "\t\t\t)"
-    #   f.puts "\t\tend\n\tend\nend"
-    # end
-
     write_update_records_rake_file({
       rec_class: 'League',
       rec_type: 'league',
@@ -293,28 +228,36 @@ def transform_fixtures(options={})
       jmc: 'f1',
       ext: league_id_str,
     })
-
-  end
+  # end
 
 end
 
 def transform_driver
 
-  # xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
-  # league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
-  league_ids = [20, ]
+  @nodb_file_recs = Array.new
+
+  xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
+  league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
 
   league_ids.each do |league_id|
-    transform_fixtures(league_id: league_id, season: '1314', localtest: true, update: false)
-    transform_fixtures(league_id: league_id, season: '1314', localtest: true, update: true)
+    next if ["15","34"].include? league_id
+    transform_fixtures(league_id: league_id, season: '1314',
+                       localtest: true, use_ds: true,
+                       update: false, src_dir: 'XML-RAW')
+    # transform_fixtures(league_id: league_id, season: '1314', localtest: true, update: true, src_dir: 'XML-RAW')
   end
+
+  # Save json file for easy upload to noDB data store...
+  write_data_file_json_file({
+    rec_type: "fixture",
+    rec_info: 'all',
+    rec_data: 'nodb',
+    recs: @nodb_file_recs
+  })
 
 end
 
 transform_driver
-# transform_fixtures(league_id: 20, season: '1314', localtest: true, update: false)
 
-# # options { :league_id, :season, :localtest, :update }
-# transform_fixtures(localtest: true, update: false)
-# transform_fixtures(localtest: true, update: true)
+
 
