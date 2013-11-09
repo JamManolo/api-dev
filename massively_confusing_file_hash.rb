@@ -29,8 +29,13 @@
 
   # ----- noDB DATA ------------------------------------------------------------------------------------
   # File: xmlsoccer-leagues-all-nodb-files.json
-  # Desc:  'league-nodb-files', xmlsoccer-leagues-create-a1-records.json, 'soccer/nodb'
-  #        'league-nodb-files', xmlsoccer-leagues-update-a1-records.json, 'soccer/nodb'
+  # Desc:  'league-nodb-files', xmlsoccer-leagues-all-create-a1-records.json, 'soccer/nodb'
+  #        'league-nodb-files', xmlsoccer-leagues-all-update-a1-records.json, 'soccer/nodb'
+  'league-all-nodb' => { data_type: 'league', name_str: 'leagues', group: 'all', file_type: 'nodb', },
+
+  # File: xmlsoccer-leagues-00-nodb-files.json
+  # Desc:  'league-nodb-files', xmlsoccer-leagues-all-create-a1-records.json, 'soccer/nodb'
+  #        'league-nodb-files', xmlsoccer-leagues-all-update-a1-records.json, 'soccer/nodb'
   'league-nodb' => { data_type: 'league', name_str: 'leagues', group: 'all', file_type: 'nodb', },
 
   # File: xmlsoccer-teams-all-nodb-files.json

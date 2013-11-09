@@ -34,11 +34,13 @@
      .col-md-4.col-md-offset-2.team-heading= "XMLSoccer Id"
      .col-md-4= "#{@team[:team_id]}"
   - @fix_compX.each do |l_id, fixtures|
-   = render partial: 'shared/fixture_results', locals: { fixtures: fixtures, title: "#{fixtures.first.league} results" }
+   - if fixtures.size > 0
+    = render partial: 'shared/fixture_results', locals: { fixtures: fixtures, title: "#{fixtures.first.league} results" }
+  - @fix_compY.each do |l_id, fixtures|
+   - if fixtures.size > 0
+    = render partial: 'shared/remaining_fixtures', locals: { fixtures: fixtures, title: "#{fixtures.first.league} fixtures" }
   - if @fix_leagueX.size > 0
    = render partial: 'shared/fixture_results', locals: { fixtures: @fix_leagueX, title: "#{@team.league} results through round #{@round}" }
-  - @fix_compY.each do |l_id, fixtures|
-   = render partial: 'shared/remaining_fixtures', locals: { fixtures: fixtures, title: "#{fixtures.first.league} fixtures" }
   - if @fix_leagueY.size > 0
    = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fix_leagueY, title: "#{@team.league} fixtures" }
 

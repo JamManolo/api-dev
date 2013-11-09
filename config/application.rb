@@ -21,6 +21,6 @@ module Xmlsoccer
     # config.i18n.default_locale = :de
 
     # JMC - Set up logging
-    config.logger = Logger.new("jmc.log") if !Rails.env.production?
+    # config.logger = Logger.new("jmc.log") if !Rails.env.production?
   end
 end

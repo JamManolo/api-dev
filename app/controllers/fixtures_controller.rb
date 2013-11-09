@@ -18,11 +18,11 @@ class FixturesController < ApplicationController
     #
     if fixture.report_id == fixture.match_id
 
-      xml_doc = Nokogiri::XML(File.open("XML-FILES/matches/xmlsoccer-match-#{fixture.match_id}.xml"))
-      # xml_doc = Nokogiri::XML(aws_data_fetch(
-      #   name: "xmlsoccer-match-#{fixture.match_id}.xml",
-      #   path: "soccer/matches"
-      # ))
+      # xml_doc = Nokogiri::XML(File.open("XML-FILES/matches/xmlsoccer-match-#{fixture.match_id}.xml"))
+      xml_doc = Nokogiri::XML(aws_data_fetch(
+        name: "xmlsoccer-match-#{fixture.match_id}.xml",
+        path: "soccer/matches"
+      ))
 
       xml_doc.xpath("//Match").each do |node|
         detail = Hash.new

@@ -42,7 +42,8 @@ def transform_leagues(options={})
   league_recs = Array.new
   update_recs = Array.new
   data_file_recs = Array.new
-  
+  jmc_recs = Array.new
+
   leagues_xml.xpath("//League").each do |node|
 
     ["Historical_Data", "Fixtures", "Livescore"].each do |key|
@@ -74,13 +75,28 @@ def transform_leagues(options={})
                         latest_round:      0,
                         final_round:       0,
                         data_file_id:      0
-                      } 
+                      }
+
+    # Save this record as json file, for noDB
+    filename = write_nodb_record_json_file({
+      rec_type: 'leagues',
+      rec_info: "#{league_id_str}-create-a1",
+      rec: league_recs.last,
+    })
+    jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
     update_recs <<    { league_id:         node.xpath("Id").text,
                         latest_match_date: node.xpath("LatestMatch").text,
-                      }                 
+                      }
 
-    
+    # Save this record as json file, for noDB
+    filename = write_nodb_record_json_file({
+      rec_type: 'leagues',
+      rec_info: "#{league_id_str}-update-a1",
+      rec: update_recs.last,
+    })
+    jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
+
   end # leagues.each
 
   # Save json file for easy upload of xml files to data store...
@@ -94,10 +110,10 @@ def transform_leagues(options={})
   # Save as json file, for noDB
   filename = write_records_json_file({
     rec_type: 'leagues',
-    rec_info: 'create-a1',
+    rec_info: 'all-create-a1',
     recs: league_recs,
   })
-  jmc_recs = [ { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, } ]
+  jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
   # # Save json file for easy upload of noDB json files to data store...
   # write_data_file_json_file({
@@ -110,7 +126,7 @@ def transform_leagues(options={})
   # Save as json file, for noDB
   filename = write_records_json_file({
     rec_type: 'leagues',
-    rec_info: 'update-a1',
+    rec_info: 'all-update-a1',
     recs: update_recs,
   })
   jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }

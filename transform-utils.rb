@@ -38,6 +38,37 @@ def write_data_file_json_file(args)
   filename
 end
 
+def write_nodb_relation_json_file(args)
+  rel_type = args[:rel_type] ? args[:rel_type] : 'relation'
+  target_dir = "./JSON-NODB"
+  filename = "xmlsoccer-#{args[:rel_A]}-#{args[:rel_key_A]}-#{args[:rel_B]}-#{args[:jmc]}-#{rel_type}.json"
+  puts "writing #{filename}"
+  File.open("#{target_dir}/#{filename}", "w") do |f|
+    f.puts "{  \"#{args[:rel_info]}\": ["
+    args[:rel_keys_B].each do |v|
+      my_comma = v == args[:rel_keys_B].last ? '' : ','
+      f.puts "\"#{v}\"#{my_comma}"
+    end
+    f.puts "]}"
+  end
+  filename
+end
+
+def write_nodb_record_json_file(args)
+  target_dir = "./JSON-NODB"
+  filename = "xmlsoccer-#{args[:rec_type]}-#{args[:rec_info]}-record.json"
+  puts "writing #{filename}"
+  File.open("#{target_dir}/#{filename}", "w") do |f|
+    f.puts '{'
+    args[:rec].each do |k,v|
+      my_comma = k == args[:rec].keys.last ? '' : ','
+      f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
+    end
+    f.puts "}"
+  end
+  filename
+end
+
 def write_records_json_file(args)
   target_dir = "./JSON-FILES"
   filename = "xmlsoccer-#{args[:rec_type]}-#{args[:rec_info]}-records.json"
@@ -47,7 +78,7 @@ def write_records_json_file(args)
     args[:recs].each do |rec|
       f.puts '{'
       rec.each do |k,v|
-        my_comma = k == :data_file_id ? '' : ','
+        my_comma = k == rec.keys.last ? '' : ','
         f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
       end
       my_comma = rec == args[:recs].last ? '' : ','
@@ -59,7 +90,10 @@ def write_records_json_file(args)
 end
 
 def write_create_records_rake_file(args)
-  File.open("./RAKE-FILES/create_#{args[:jmc]}_#{args[:rec_type]}_data-#{args[:ext]}.rake", "w") do |f|
+  target_dir = "./RAKE-FILES"
+  filename = "create_#{args[:jmc]}_#{args[:rec_type]}_data-#{args[:ext]}.rake"
+  puts "writing #{filename}"
+  File.open("#{target_dir}/#{filename}", "w") do |f|
     f.puts 'namespace :db do'
     f.puts "\tdesc \"#{args[:desc]}\""
     f.puts "\ttask populate: :environment do"
@@ -77,8 +111,10 @@ end
 
 def write_update_records_rake_file(args)
   rec_key = args[:rec_key]
-
-  File.open("./RAKE-FILES/update_#{args[:jmc]}_#{args[:rec_type]}_data-#{args[:ext]}.rake", "w") do |f|
+  target_dir = "./RAKE-FILES"
+  filename = "update_#{args[:jmc]}_#{args[:rec_type]}_data-#{args[:ext]}.rake"
+  puts "writing #{filename}"
+  File.open("#{target_dir}/#{filename}", "w") do |f|
     f.puts 'namespace :db do'
     f.puts "\tdesc \"#{args[:desc]}\""
     f.puts "\ttask populate: :environment do"
@@ -118,14 +154,13 @@ require 'aws-sdk'
 
 def aws_data_fetch(data_file_rec)
   AWS.config(JSON.parse(File.open('aws_config.json').read))
-  s3 = AWS::S3.new
-
+  @s3 = AWS::S3.new
   test_config = JSON.parse(File.open('test_config.json').read)
   bucket_name = test_config['test-bucket-name-aws']
   filename = data_file_rec[:path].nil? ? data_file_rec[:name] : "#{data_file_rec[:path]}/#{data_file_rec[:name]}"
   puts "AWS download: '#{filename}'"
-  STDOUT.flush
-  s3.buckets[bucket_name].objects[filename].read 
+  $stdout.flush
+  @s3.buckets[bucket_name].objects[filename].read 
 end
 
 

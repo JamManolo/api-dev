@@ -12,9 +12,6 @@
   - elsif @league.league_id == 20
    %li.list-group-item
     - @group_names.each do |group_name|
-     = render partial: 'league_teams', locals: { teams: @teamsX[group_name], title: "#{group_name} Conference" }
-   %li.list-group-item
-    - @group_names.each do |group_name|
      = render partial: 'standings', locals: { standings: @standingsX[group_name], title: "#{group_name } Conference Standings", }
    %li.list-group-item
     - @month_names.each do |month|
@@ -23,9 +20,10 @@
     - @month_names.each do |month|
      - if @fixturesY[month]
       = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fixturesY[month], title: "#{month} Fixtures" }
-  - else
    %li.list-group-item
-    = render partial: 'league_teams', locals: { teams: @teamsX['domestic_league'], title: '' }
+    - @group_names.each do |group_name|
+     = render partial: 'league_teams', locals: { teams: @teamsX[group_name], title: "#{group_name} Conference" }
+  - else
    %li.list-group-item
     = render partial: 'standings', locals: { standings: @standingsX['domestic_league'], title: 'League Standings', }
     %h3.list-group-item-heading
@@ -36,6 +34,8 @@
    %li.list-group-item
     - (@start_round..@end_round).each do |round|
      = render partial: 'shared/remaining_fixtures', locals: { fixtures: @fixturesY[round.to_s], title: "Round #{round} Fixtures" }
+   %li.list-group-item
+    = render partial: 'league_teams', locals: { teams: @teamsX['domestic_league'], title: '' }
 
 
 

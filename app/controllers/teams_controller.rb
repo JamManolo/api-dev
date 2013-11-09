@@ -6,9 +6,10 @@ class TeamsController < ApplicationController
 
 	def show
 		@team = Team.find(params[:id])
-
 		@league = League.find_by(league_id: @team.league_id) unless @team.league_id == "0"
     @round = @league.nil? ? 0 : @league.latest_round
+
+    # Initialize view data structures
     @fix_leagueX = Array.new
     @fix_leagueY = Array.new
     @fix_compX = Hash.new
@@ -20,43 +21,18 @@ class TeamsController < ApplicationController
       @competitions << League.find_by(league_id: comp) 
     end
 
-		# Get completed fixtures, sorting out domestic fixtures vs competitions
-		# JMC - usage of :all is apparently deprecated
-    Fixture.find(:all,
-    	{
-    		conditions:
-    		[
-		    	"time_x != ? AND
-		    	 (home_team_id = ? OR away_team_id = ?)",
-		    	 '', @team.team_id, @team.team_id
-	    	]
-	    }
-  	).each do |fix|
-  		if @team.league_id.to_i == fix.league_id.to_i
-  			@fix_leagueX << fix
-  		elsif @team.competitions.include? fix.league_id.to_s
-  			@fix_compX[fix.league_id.to_s] << fix
-  		end
-  	end
-
-  	# Get remaining fixtures, sorting out domestic fixtures vs competitions
-    Fixture.find(:all,
-    	{
-    		conditions:
-    		[
-		    	"time_x = ? AND
-		    	 (home_team_id = ? OR away_team_id = ?)",
-		    	 '', @team.team_id, @team.team_id
-	    	]
-	    }
-  	).each do |fix|
-      logger.debug "FIX: #{fix.match_id}"
-      if @team.league_id.to_i == fix.league_id.to_i
-  			@fix_leagueY << fix
-  		elsif @team.competitions.include? fix.league_id.to_s
-  			@fix_compY[fix.league_id.to_s] << fix
-  		end
-  	end
+    # Get completed and remaining fixtures, sorting out domestic league vs competitions
+    Fixture.all.each do |fix|
+      if [fix.home_team_id, fix.away_team_id].include? @team.team_id
+        fix_league = fix.time_x != '' ? @fix_leagueX : @fix_leagueY
+        fix_comp   = fix.time_x != '' ? @fix_compX   : @fix_compY
+        if @team.league_id.to_i == fix.league_id.to_i
+          fix_league << fix
+        elsif @team.competitions.include? fix.league_id.to_s
+          fix_comp[fix.league_id.to_s] << fix
+        end
+      end
+    end
 
   end
 

@@ -77,7 +77,12 @@ def download_league_and_season_files(options={})
   xml_file_name = "Teams-league-#{league_id_str}-#{season}.xml"
   xml_file = "#{target_dir}/#{xml_file_name}"
   unless File.exist?(xml_file)
-    xml_data = xmlsoccer_client.get_all_teams_by_league_and_season(league, season).body
+    if ["40","41"].include? league_id_str
+      # Handle known bad data - get 'corrected' xml data from production data-store
+      xml_data = aws_data_fetch(path: 'soccer/raw-data', name: xml_file_name)
+    else
+      xml_data = xmlsoccer_client.get_all_teams_by_league_and_season(league, season).body
+    end
     save_xml_data(xml_file, xml_data)
   end
   data_file_recs << { name: xml_file_name, path: 'soccer/raw-data', timestamp: `date`.strip }

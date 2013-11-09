@@ -12,6 +12,7 @@ class LeaguesController < ApplicationController
     @start_round = 1
     @end_round = 0
     season = '1314'
+    league_id_str = @league.league_id.to_i < 10 ? "0#{@league.league_id}" : @league.league_id
 
     # Handle 'competition' leagues (16, 17) and 'conference' leagues (20)
     if @league.league_id == 16
@@ -44,6 +45,7 @@ class LeaguesController < ApplicationController
       }
     end
 
+    # Initalize data structures for league teams and standings
     @teamsX = Hash.new
     @standingsX = Hash.new
     if [16, 17, 20].include? @league.league_id
@@ -56,11 +58,11 @@ class LeaguesController < ApplicationController
       @standingsX['domestic_league'] = Array.new
     end
 
-    domestic_league_name = domestic_league_link = ''
-    competition_group_name = 'domestic_league'
+    # Namespace needed to read teams and standings XML raw data
+    namespace = 'xmlns:'
 
-    league_id_str = @league.league_id.to_i < 10 ? "0#{@league.league_id}" : @league.league_id
-    filename = "Teams-league-#{league_id_str}-#{season}.xml"
+    # Output league standings
+    filename = "Standings-league-#{league_id_str}-#{season}.xml"
     if true
       xml_doc = Nokogiri::XML(aws_data_fetch({
         name: filename,
@@ -69,8 +71,179 @@ class LeaguesController < ApplicationController
     else
       xml_doc = Nokogiri::XML(File.open("XML-RAW/#{filename}").read)
     end
-    xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
+    xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/LeagueStanding")
     namespace = 'xmlns:'
+    xml_doc.xpath("//#{namespace}TeamLeagueStanding").each do |node|
+
+      if ["16", "17", "20"].include?(@league.league_id.to_s)
+        competition_group_name = @team_group_map[node.xpath("#{namespace}Team_Id").text]
+      else
+        competition_group_name = 'domestic_league'
+      end
+
+      # Handle shittle situation
+      if node.xpath("#{namespace}Team_Id").text == "579"
+        node.xpath("#{namespace}Team").first.content = "Shittle Flounders FC"
+      end
+
+      @standingsX[competition_group_name] << {
+        team:            node.xpath("#{namespace}Team").text,
+        team_id:         node.xpath("#{namespace}Team_Id").text,
+        played:          node.xpath("#{namespace}Played").text,
+        played_at_home:  node.xpath("#{namespace}PlayedAtHome").text,
+        played_away:     node.xpath("#{namespace}PlayedAway").text,
+        won:             node.xpath("#{namespace}Won").text,
+        draw:            node.xpath("#{namespace}Draw").text,
+        lost:            node.xpath("#{namespace}Lost").text,
+        number_of_shots: node.xpath("#{namespace}NumberOfShots").text,
+        yellow_cards:    node.xpath("#{namespace}YellowCards").text,
+        red_cards:       node.xpath("#{namespace}RedCards").text,
+        goals_for:       node.xpath("#{namespace}Goals_For").text,
+        goals_against:   node.xpath("#{namespace}Goals_Against").text,
+        goal_difference: node.xpath("#{namespace}Goal_Difference").text,
+        points:          node.xpath("#{namespace}Points").text,
+      }
+    end
+
+    # Load arrays for completed (@fixturesX) and remaining (@fixturesY) fixtures, accomodating std
+    # leagues (@final_round > 1), MLS (@final_round == 1), and competitions (@final_round == 0)
+    @latest_round = @league.latest_round
+    @final_round = @league.final_round
+
+    # Initial data structures
+    @fixturesX = Hash.new
+    @fixturesY = Hash.new
+    if @final_round > 1
+      (1..@latest_round).each do |round|
+        @fixturesX[round.to_s] = Array.new
+      end
+      @start_round = @latest_round + 1
+      @end_round = @league.final_round
+      (@start_round..@end_round).each do |round|
+        @fixturesY[round.to_s] = Array.new
+      end
+    elsif @final_round == 1
+      @fixturesX['1'] = Array.new
+      @fixturesY['1'] = Array.new
+    elsif @group_names # @final_round == 0
+      @group_names.each do |group_name|
+        @fixturesX[group_name] = Array.new
+        @fixturesY[group_name] = Array.new
+      end
+    end
+
+    # Get fixtures for this league, sorting them out appropriately
+    Fixture.where(league_id: @league.league_id).each do |fixture|
+      if @final_round > 1
+        if @fixturesX[fixture.round.to_s]
+          @fixturesX[fixture.round.to_s] << fixture
+        elsif @fixturesY[fixture.round.to_s]
+          @fixturesY[fixture.round.to_s] << fixture
+        end
+      elsif @final_round == 1
+        if fixture.time_x == "Finished"
+          @fixturesX['1'] << fixture
+        else
+          @fixturesY['1'] << fixture
+        end
+      elsif @group_names
+        if fixture.time_x == "Finished"
+          @fixturesX[@team_group_map[fixture.home_team_id.to_s]] << fixture
+        else
+          @fixturesY[@team_group_map[fixture.home_team_id.to_s]] << fixture
+        end
+      end
+    end
+
+    # Handle MLS - separate fixtures by month
+    if @final_round == 1
+      @fixturesX['1'].each do |fixture|
+        month = fixture.date.in_time_zone.strftime('%B')
+        @fixturesX[month] = Array.new unless @fixturesX[month]
+        @fixturesX[month] << fixture
+      end
+      @fixturesY['1'].each do |fixture|
+        month = fixture.date.in_time_zone.strftime('%B')
+        @fixturesY[month] = Array.new unless @fixturesY[month]
+        @fixturesY[month] << fixture
+      end
+    end
+
+    # # Output results (completed fixtures)
+    # @fixturesX = Hash.new
+    # @latest_round = @league.latest_round
+    # if @latest_round > 1
+    #   (1..@latest_round).each do |round|
+    #     @fixturesX[round.to_s] = Array.new
+    #   end
+    #   Fixture.where(league_id: @league.league_id).each do |fixture|
+    #     break if fixture.round > @latest_round
+    #     @fixturesX[fixture.round.to_s] << fixture
+    #   end
+    # elsif @latest_round == 1
+    #   @fixturesX['1'] = Fixture.where(league_id: @league.league_id, time_x: "Finished")
+    #   @fixturesX['1'].each do |fixture|
+    #     month = fixture.date.in_time_zone.strftime('%B')
+    #     @fixturesX[month] = Array.new unless @fixturesX[month]
+    #     @fixturesX[month] << fixture
+    #   end
+    # elsif @group_names # @latest_round == 0
+    #   @group_names.each do |group_name|
+    #     @fixturesX[group_name] = Array.new
+    #   end
+    #   Fixture.where(league_id: @league.league_id, time_x: "Finished").each do |fixture|
+    #     @fixturesX[@team_group_map[fixture.home_team_id.to_s]] << fixture
+    #   end
+    # end
+
+    # # Output scheduled fixtures
+    # @fixturesY = Hash.new
+    # @final_round = @league.final_round
+    # if @final_round > 1
+    #   @start_round = @latest_round + 1
+    #   @end_round = @league.final_round
+    #   (@start_round..@end_round).each do |round|
+    #     @fixturesY[round.to_s] = Array.new
+    #   end
+    #   Fixture.where(league_id: @league.league_id).each do |fixture|
+    #     next if fixture.round < @start_round
+    #     @fixturesY[fixture.round.to_s] << fixture
+    #   end
+    # elsif @final_round == 1
+    #   @fixturesY['1'] = Fixture.where(league_id: @league.league_id) - @fixturesX['1']
+    #   @fixturesY['1'].each do |fixture|
+    #     month = fixture.date.in_time_zone.strftime('%B')
+    #     @fixturesY[month] = Array.new unless @fixturesY[month]
+    #     @fixturesY[month] << fixture
+    #   end
+    # elsif @group_names # @final_round == 0
+    #   @group_names.each do |group_name|
+    #     @fixturesY[group_name] = Array.new
+    #   end
+    #   Fixture.where(league_id: @league.league_id).each do |fixture|
+    #     group_name = @team_group_map[fixture.home_team_id.to_s]
+    #     @fixturesY[group_name] << fixture
+    #   end
+    #   @group_names.each do |group_name|
+    #     @fixturesY[group_name] -= @fixturesX[group_name]
+    #   end
+    # end
+
+    # Output league members (teams)
+    domestic_league_name = domestic_league_link = ''
+    competition_group_name = 'domestic_league'
+    
+    filename = "Teams-league-#{league_id_str}-#{season}.xml"
+    path = 'soccer/raw-data'
+    if true
+      xml_doc = Nokogiri::XML(aws_data_fetch({
+        name: filename,
+        path: path,
+      }))
+    else
+      xml_doc = Nokogiri::XML(File.open("XML-RAW/#{filename}").read)
+    end
+    xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
 
     xml_doc.xpath("//#{namespace}Team").each do |node|
       
@@ -102,114 +275,6 @@ class LeaguesController < ApplicationController
         league_link:   domestic_league_link,
       }
     end
-
-    # League standings
-    filename = "Standings-league-#{league_id_str}-#{season}.xml"
-    if true
-      xml_doc = Nokogiri::XML(aws_data_fetch({
-        name: filename,
-        path: 'soccer/raw-data',
-      }))
-    else
-      xml_doc = Nokogiri::XML(File.open("XML-RAW/#{filename}").read)
-    end
-    xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/LeagueStanding")
-    namespace = 'xmlns:'
-    xml_doc.xpath("//#{namespace}TeamLeagueStanding").each do |node|
-
-      if ["16", "17", "20"].include?(@league.league_id.to_s)
-        competition_group_name = @team_group_map[node.xpath("#{namespace}Team_Id").text]
-      else
-        competition_group_name = 'domestic_league'
-      end
-
-      # Handle shittle situation
-      if node.xpath("#{namespace}Team_Id").text == "579"
-        node.xpath("#{namespace}Team").first.content = "Shittle Flounders FC"
-      end
-
-      # logger.debug "TEAM ID : '#{node.xpath("#{namespace}Team_Id").text}', GROUP NAME: '#{competition_group_name}'"
-
-      @standingsX[competition_group_name] << {
-        team:            node.xpath("#{namespace}Team").text,
-        team_id:         node.xpath("#{namespace}Team_Id").text,
-        played:          node.xpath("#{namespace}Played").text,
-        played_at_home:  node.xpath("#{namespace}PlayedAtHome").text,
-        played_away:     node.xpath("#{namespace}PlayedAway").text,
-        won:             node.xpath("#{namespace}Won").text,
-        draw:            node.xpath("#{namespace}Draw").text,
-        lost:            node.xpath("#{namespace}Lost").text,
-        number_of_shots: node.xpath("#{namespace}NumberOfShots").text,
-        yellow_cards:    node.xpath("#{namespace}YellowCards").text,
-        red_cards:       node.xpath("#{namespace}RedCards").text,
-        goals_for:       node.xpath("#{namespace}Goals_For").text,
-        goals_against:   node.xpath("#{namespace}Goals_Against").text,
-        goal_difference: node.xpath("#{namespace}Goal_Difference").text,
-        points:          node.xpath("#{namespace}Points").text,
-      }
-    end
-
-    # Output results (completed fixtures)
-    @fixturesX = Hash.new
-    @latest_round = @league.latest_round
-    if @latest_round > 1
-      (1..@latest_round).each do |round|
-        @fixturesX[round.to_s] = Array.new
-      end
-      Fixture.where(league_id: @league.league_id).each do |fixture|
-        break if fixture.round > @latest_round
-        @fixturesX[fixture.round.to_s] << fixture
-      end
-    elsif @latest_round == 1
-      @fixturesX['1'] = Fixture.where(league_id: @league.league_id, time_x: "Finished")
-      @fixturesX['1'].each do |fixture|
-        month = fixture.date.in_time_zone.strftime('%B')
-        @fixturesX[month] = Array.new unless @fixturesX[month]
-        @fixturesX[month] << fixture
-      end
-    elsif @group_names # @latest_round == 0
-      @group_names.each do |group_name|
-        @fixturesX[group_name] = Array.new
-      end
-      Fixture.where(league_id: @league.league_id, time_x: "Finished").each do |fixture|
-        @fixturesX[@team_group_map[fixture.home_team_id.to_s]] << fixture
-      end
-    end
-
-    # Output scheduled fixtures
-    @fixturesY = Hash.new
-    @final_round = @league.final_round
-    if @final_round > 1
-      @start_round = @latest_round + 1
-      @end_round = @league.final_round
-      (@start_round..@end_round).each do |round|
-        @fixturesY[round.to_s] = Array.new
-      end
-      Fixture.where(league_id: @league.league_id).each do |fixture|
-        next if fixture.round < @start_round
-        @fixturesY[fixture.round.to_s] << fixture
-      end
-    elsif @final_round == 1
-      @fixturesY['1'] = Fixture.where(league_id: @league.league_id) - @fixturesX['1']
-      @fixturesY['1'].each do |fixture|
-        month = fixture.date.in_time_zone.strftime('%B')
-        @fixturesY[month] = Array.new unless @fixturesY[month]
-        @fixturesY[month] << fixture
-      end
-    elsif @group_names # @final_round == 0
-      @group_names.each do |group_name|
-        @fixturesY[group_name] = Array.new
-      end
-      Fixture.where(league_id: @league.league_id).each do |fixture|
-        group_name = @team_group_map[fixture.home_team_id.to_s]
-        @fixturesY[group_name] << fixture
-      end
-      @group_names.each do |group_name|
-        @fixturesY[group_name] -= @fixturesX[group_name]
-      end
-    end
-
-    # render 'show-orig'
 
   end
 
