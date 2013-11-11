@@ -50,42 +50,84 @@ module NoDB
 
 		private :do_the_get_call, :do_the_put_call, :do_the_delete_call
 
-
 		# ===================================================================================
 		#  Public routines to perform basic Orchestrate actions
 
 		# -------------------------------------------------------------------
-		#  Name: get_collection_key
-		#  Desc: return specified 'row' of data (key)
-		#  Args: collection, key
+		#  Name: query
+		#  Desc: query the collection
+		#  Args: collection, query
 		# -------------------------------------------------------------------
-		def get_collection_key(args)
-			api_url = "#{base_url}/#{args[:collection]}/#{args[:key]}"
+		def query(args)
+			api_url = "#{@base_url}/#{args[:collection]}/?query=#{args[:query]}"
 			do_the_get_call( url: api_url )
 		end
 
 		# -------------------------------------------------------------------
-		#  Name: put_collection_key
+		#  Name: get_collection
+		#  Desc: get the entire collection
+		#  Args: collection
+		# -------------------------------------------------------------------
+		def get_collection(args)
+			api_url = "#{@base_url}/#{args[:collection]}"
+			do_the_get_call( url: api_url )
+		end
+
+		# -------------------------------------------------------------------
+		#  Name: put_collection
+		#  Desc: create a new collection
+		#  Args: collection
+		# -------------------------------------------------------------------
+		def put_collection(args)
+			api_url = "#{@base_url}/#{args[:collection]}"
+			puts do_the_put_call( url: api_url, json: '{}' )
+			$stdout.flush
+		end
+
+		# -------------------------------------------------------------------
+		#  Name: delete_collection
+		#  Desc: delete the entire collection
+		#  Args: collection
+		# -------------------------------------------------------------------
+		def delete_collection(args)
+			api_url = "#{@base_url}/#{args[:collection]}"
+			puts do_the_delete_call( url: api_url )
+			$stdout.flush
+		end
+
+		# -------------------------------------------------------------------
+		#  Name: get_key
+		#  Desc: return specified 'row' of data (key)
+		#  Args: collection, key
+		# -------------------------------------------------------------------
+		def get_key(args)
+			api_url = "#{@base_url}/#{args[:collection]}/#{args[:key]}"
+			do_the_get_call( url: api_url )
+		end
+
+		# -------------------------------------------------------------------
+		#  Name: put_key
 		#  Desc: add specified 'row' of data (key)
 		#  Args: collection, key, json (string)
 		# -------------------------------------------------------------------
-		def put_collection_key(args)
+		def put_key(args)
 			api_url = "#{@base_url}/#{args[:collection]}/#{args[:key]}"
 			puts do_the_put_call( url: api_url, json: args[:json] )
 			$stdout.flush
 		end
 
 		# -------------------------------------------------------------------
-		#  Name: delete_collection_key
+		#  Name: delete_key
 		#  Desc: delete specified 'row' of data (key)
 		#  Args: collection, key
 		# -------------------------------------------------------------------
-		def delete_collection_key(args)
+		def delete_key(args)
 			api_url = "#{@base_url}/#{args[:collection]}/#{args[:key]}"
 			puts do_the_delete_call( url: api_url )
 			$stdout.flush
 		end
 
+		
 		# -------------------------------------------------------------------
 		#  Name: get_events
 		#  Desc: return requested events from specified key
@@ -117,14 +159,25 @@ module NoDB
 		end
 
 		# -------------------------------------------------------------------
-		#  Name: get_relation
-		#  Desc: return requested relation from specified key
+		#  Name: get_relations
+		#  Desc: return requested relations from specified key
 		#  Args: collection, key, relation
 		# -------------------------------------------------------------------
-		def get_relation(args)
+		def get_relations(args)
 			api_url = "#{@base_url}/#{args[:collection]}/#{args[:key]}/relations/#{args[:relation]}"
 			do_the_get_call( url: api_url )
 		end
+
+		# # -------------------------------------------------------------------
+		# #  Name: get_relation
+		# #  Desc: return requested relation from specified key
+		# #  Args: collection, key, relation
+		# # -------------------------------------------------------------------
+		# def get_relation(args)
+		# 	api_url = "#{@base_url}/#{args[:collection_A]}/#{args[:key_A]}/relations/#{args[:relation]}" +
+		# 												 "#{args[:collection_B]}/#{args[:key_B]}"
+		# 	do_the_get_call( url: api_url )
+		# end
 
 		# -------------------------------------------------------------------
 		#  Name: put_relation
@@ -138,13 +191,12 @@ module NoDB
 			$stdout.flush
 		end
 
-		# JMC - ?Matt? - neither approach to delete relations works
 		# -------------------------------------------------------------------
-		#  Name: delete_relation_all
+		#  Name: delete_relations
 		#  Desc: delete specified relations (all) from specified key
 		#  Args: collection, key, relation
 		# -------------------------------------------------------------------
-		def delete_relation_all(args)
+		def delete_relations(args)
 			api_url = "#{@base_url}/#{args[:collection_A]}/#{args[:key_A]}/relation/" +
 			                       "#{args[:relation]}"
 			do_the_delete_call( url: api_url )
