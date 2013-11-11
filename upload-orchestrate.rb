@@ -206,7 +206,7 @@ def clean_up_my_app
 	#  Delete the league/teams relationship for each league
 	#
 	#  JMC - This doesn't seem to work - ? for Matt from orchestrate.io
-	if @population_control['member-teams']
+	if @population_control['member-teams'] == :delete
 		@all_league_ids.each do |league_id_str|
 			# Try deleting each relation individually
 			filename = "#{@root_name}-leagues-#{league_id_str}-teams-t2-relation.json"
@@ -226,24 +226,30 @@ def clean_up_my_app
 		end
 	end
 
-	# # -----------------------------------------------------------------------------------
-	# #  Delete the league/standings events for each league
-	# #
-	# if @population_control[:standings]
-	# 	@all_league_ids.each do |league_id_str|
-	# 		orchestrate.delete_events(collection_A: :leagues, key: league_id_str, event: :standings)
-	# 	end
-	# end
+	# -----------------------------------------------------------------------------------
+	#  Delete the league/standings events for each league
+	#
+	if @population_control[:standings] == :delete
+		@all_league_ids.each do |league_id_str|
+			orchestrate.delete_events(collection_A: :leagues, key: league_id_str, event: :standings)
+		end
+	end
 
-	# # -----------------------------------------------------------------------------------
-	# #  Delete the leagues collection keys
-	# #
-	# if @population_control[:leagues]
-	# 	@all_league_ids.each do |league_id_str|
-	# 		orchestrate.delete_collection(collection: :leagues,	keys: @all_league_ids)
-	# 	end
-	# end
+	# -----------------------------------------------------------------------------------
+	#  Delete the leagues collection keys
+	#
+	if @population_control[:leagues] == :delete
+		@all_league_ids.each do |league_id_str|
+			orchestrate.delete_collection(collection: :leagues,	keys: @all_league_ids)
+		end
+	end
 	
+end
+
+if false
+	['member-teams', :standings, :leagues].each do |group|
+		@population_control[group] = :delete
+	end
 end
 
 clean_up_my_app
