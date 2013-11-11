@@ -1,38 +1,16 @@
-%ul.teams.list-group
+%ul.leagues.list-group
  %li.list-group-item
   %h3.list-group-item-heading= "FREE FANTASY FOOTBALL . INFO"
   %ul.list-group
    %li.list-group-item
-    .row.list-group-item-heading
-     / .col-md-1.away-team= "ID"
-     .col-md-3= "CLUB"
-     .col-md-3= "STADIUM"
-     .col-md-4= "LEAGUE"
-     .col-md-2= "COMPETITIONS"
-    - @teams.each do |team|
+    %h3.row.list-group-item-heading
+     .col-md-6.col-md-offset-3.center= "Club Pages by Country"
+    - while @countries.size % 4 > 0
+     - @countries << { name: '', link: '' }
+    - incr = @countries.length/4
+    - (0..incr-1).each do |idx|
      .row
-      .col-md-3= link_to "#{team[:name]}", team_url(team.id)
-      .col-md-3= team.stadium
-      - tmpstr = team.league == "Unknown" ? '-- ? --' : team.league
-      .col-md-4= tmpstr
-      - league = League.find_by(league_id: team.competitions)
-      - tmpstr = league.nil? ? '' : league.name
-      .col-md-2= tmpstr
-      
-
-
-
-/ %h2= "Teams#index"
-/ %ul
-/  .row
-/   %strong
-/    .col-md-1= "ID"
-/    .col-md-2= "Country"
-/    .col-md-2= "Name"
-/    .col-md-3= "Stadium"
-/  - @teams.each do |team|
-/   .row
-/    .col-md-1= "#{team[:team_id]}"
-/    .col-md-2= "#{team[:country]}"
-/    .col-md-2= link_to "#{team[:name]}", team_url(team.id)
-/    .col-md-3= "#{team[:stadium]}"
+      .col-md-3= link_to @countries[idx][:name], @countries[idx][:link]
+      .col-md-3= link_to @countries[idx+incr][:name], @countries[idx+incr][:link]
+      .col-md-3= link_to @countries[idx+incr*2][:name], @countries[idx+incr*2][:link]
+      .col-md-2= link_to @countries[idx+incr*3][:name], @countries[idx+incr*3][:link]

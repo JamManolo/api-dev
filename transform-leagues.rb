@@ -7,6 +7,7 @@ require "json"
 require "uri"
 require "Nokogiri"
 require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
+require "./transform-utils"
 
 # ---------------------------------------------------
 #  Name: transform_leagues
@@ -14,41 +15,56 @@ require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
 # ---------------------------------------------------
 def transform_leagues(options={})
 
-  localtest = (options[:localtest].nil? or options[:localtest] != true) ? false : true
+  localtest = options[:localtest] ? options[:localtest] : false
+  use_ds    = options[:use_ds]    ? options[:use_ds]    : false
+  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
 
-  unless localtest == true
+  if use_ds == true
+    puts "Fetching 'All Leagues' info from production data store ..."
+    leagues_xml = Nokogiri::XML(aws_data_fetch({
+      name: 'AllLeagues.xml',
+      path: 'soccer/raw-data',
+    }))
+  elsif localtest == true
+    puts "Reading local data for all leagues ..."
+    leagues_xml = Nokogiri::XML(File.open("#{src_dir}/AllLeagues.xml"))
+  else
     puts "Setting up client"
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
-      api_type: "Demo"
+      api_type: "Full"
     })
     puts "Requesting data for all leagues ..."
     STDOUT.flush
     leagues_xml = Nokogiri::XML(xmlsoccer_client.get_all_leagues.body)
-  else
-    puts "Reading local data for all leagues ..."
-    leagues_xml = Nokogiri::XML(File.open("XML/AllLeagues.xml"))
   end
 
   league_recs = Array.new
+  update_recs = Array.new
   data_file_recs = Array.new
-  
+  jmc_recs = Array.new
+
   leagues_xml.xpath("//League").each do |node|
 
-    # Save the XML file for this league
-    filename = "xmlsoccer-league-#{node.xpath("Id").text}.xml"
-    f = File.open("./XML-FILES/leagues/#{filename}", "w")
-    f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    f.puts "<FreeFantasyFootball.Info>"
-    f.puts "\t<#{node.name}>"
-    node.elements.each do |e|
-     f.puts "\t\t#{e}"
+    ["Historical_Data", "Fixtures", "Livescore"].each do |key|
+      node.xpath(key).first.content = node.xpath(key).text == 'false' ? false : true
     end
-    f.puts "\t</#{node.name}>"
-    f.puts "</FreeFantasyFootball.Info>"
-    f.close
 
-    league_recs <<    { league_id:         node.xpath("Id").text,
+    league_id = node.xpath("Id").text
+    league_id_str = league_id.to_i < 10 ? "0#{league_id}" : league_id
+
+    filename = write_xml_file({
+      group: 'league',
+      group_info: league_id_str,
+      node: node,
+    })
+
+    data_file_recs << { name:      filename,
+                        path:      'soccer/leagues',
+                        timestamp: `date`.strip
+                      } 
+
+    league_recs <<    { league_id:         league_id,
                         name:              node.xpath("Name").text,
                         country:           node.xpath("Country").text,
                         historical_data:   node.xpath("Historical_Data").text,
@@ -59,83 +75,94 @@ def transform_leagues(options={})
                         latest_round:      0,
                         final_round:       0,
                         data_file_id:      0
-                      } 
+                      }
 
-    data_file_recs << { name:      filename,
-                        path:      'soccer/leagues',
-                        timestamp: `date`.strip
-                      } 
-  end
+    # Save this record as json file, for noDB
+    filename = write_nodb_record_json_file({
+      rec_type: 'leagues',
+      rec_info: "#{league_id_str}-create-a1",
+      rec: league_recs.last,
+    })
+    jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
+    update_recs <<    { league_id:         node.xpath("Id").text,
+                        latest_match_date: node.xpath("LatestMatch").text,
+                      }
 
-  # Save json file for easy upload to data store...
-  f = File.open("./JSON-FILES/xmlsoccer-league-data-files.json", "w")
-  f.puts '{ "league-data-files": ['
-  data_file_recs.each do |record|
-    f.puts '{'
-    record.each do |k,v|
-      my_comma = k == :timestamp ? '' : ','
-      f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
-    end
-    my_comma = record == data_file_recs.last ? '' : ','
-    f.puts "}#{my_comma}"
-  end
-  f.puts '] }'
-  f.close
+    # Save this record as json file, for noDB
+    filename = write_nodb_record_json_file({
+      rec_type: 'leagues',
+      rec_info: "#{league_id_str}-update-a1",
+      rec: update_recs.last,
+    })
+    jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-  # Save as json file, for whatever purpose...
-  f = File.open("./JSON-FILES/xmlsoccer-leagues.json", "w")
-  f.puts '{ "leagues": ['
-  league_recs.each do |record|
-    f.puts '{'
-    record.each do |k,v|
-      my_comma = k == :data_file_id ? '' : ','
-      f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
-    end
-    my_comma = record == league_recs.last ? '' : ','
-    f.puts "}#{my_comma}"
-  end
-  f.puts '] }'
-  f.close
+  end # leagues.each
+
+  # Save json file for easy upload of xml files to data store...
+  write_data_file_json_file({
+    rec_type: 'league',
+    rec_info: 'all',
+    rec_data: 'xml',
+    recs: data_file_recs,
+  })
+
+  # Save as json file, for noDB
+  filename = write_records_json_file({
+    rec_type: 'leagues',
+    rec_info: 'all-create-a1',
+    recs: league_recs,
+  })
+  jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
+
+  # # Save json file for easy upload of noDB json files to data store...
+  # write_data_file_json_file({
+  #   rec_type: "league",
+  #   rec_info: 'all',
+  #   rec_data: 'nodb',
+  #   recs: [ { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, } ]
+  # })
+
+  # Save as json file, for noDB
+  filename = write_records_json_file({
+    rec_type: 'leagues',
+    rec_info: 'all-update-a1',
+    recs: update_recs,
+  })
+  jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
+
+  # Save json file for easy upload of noDB json files to data store...
+  write_data_file_json_file({
+    rec_type: "league",
+    rec_info: 'all',
+    rec_data: 'nodb',
+    recs: jmc_recs
+  })
 
   # Or...just create the rake file now - DUH!
-  if options[:update].nil? or options[:update] != true
-    File.open("./RAKE-FILES/create_a1_league_data.rake", "w") do |f|
-      f.puts 'namespace :db do'
-      f.puts "\tdesc \"Fill database with league data\""
-      f.puts "\ttask populate: :environment do"
-      f.puts "\t\tif !ENV['create'].nil? and ENV['create'] == 'league'"
-      league_recs.each do |record|
-        f.puts "\t\t\tLeague.create!("
-        record.each do |k,v|
-          f.puts "\t\t\t\t\"#{k}\" => \"#{v}\","
-        end
-        f.puts "\t\t\t)"
-      end
-      f.puts "\t\tend\n\tend\nend"
-    end
-  else
-    File.open("./RAKE-FILES/update_a1_league_data.rake", "w") do |f|
-      f.puts 'namespace :db do'
-      f.puts "\tdesc \"Update database with league data\""
-      f.puts "\ttask populate: :environment do"
-      f.puts "\t\tif !ENV['update'].nil? and ENV['update'] == 'league'"
-      league_recs.each do |record|
-        f.puts "\t\t\tid = League.find_by(league_id: #{record[:league_id]})"
-        f.puts "\t\t\tLeague.update("
-        f.puts "\t\t\t\tid,"
-        record.each do |k,v|
-          next unless k == :latest_match_date
-          f.puts "\t\t\t\t#{k}: \"#{v}\","
-        end
-        f.puts "\t\t\t)"
-      end
-      f.puts "\t\tend\n\tend\nend"
-    end
-  end
+  # if options[:update] and options[:update] == true
+    write_update_records_rake_file({
+      rec_class: 'League',
+      rec_type: 'league',
+      rec_key: 'league_id',
+      desc: 'Update database with league data',
+      recs: update_recs,
+      jmc: 'a1',
+      ext: 'all',
+    })
+  # else
+    write_create_records_rake_file({
+      rec_class: 'League',
+      rec_type: 'league',
+      desc: 'Fill database with league data',
+      recs: league_recs,
+      jmc: 'a1',
+      ext: 'all',
+    })
+  # end
 
 end
 
-transform_leagues(localtest: true, update: false)
-transform_leagues(localtest: true, update: true)
+transform_leagues(localtest: true, update: false, use_ds: true, src_dir: './XML-RAW')
+# transform_leagues(localtest: true, update: true, src_dir: './XML-RAW')
 

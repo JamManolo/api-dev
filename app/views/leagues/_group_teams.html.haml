@@ -1,0 +1,12 @@
+%h3.list-group-item-heading= title
+%ul.list-group
+ %li.list-group-item
+  .row.list-group-item-heading
+   .col-md-4= "CLUB"
+   .col-md-4= "STADIUM"
+   .col-md-4= "LEAGUE"
+  - teams.each do |team|
+   .row
+    .col-md-4= link_to "#{team[:name]}", team_url(Team.find_by(team_id: team[:team_id]))
+    .col-md-4= "#{team[:stadium]}"
+    .col-md-4= link_to "#{team[:league]}", team[:league_link]

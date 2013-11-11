@@ -19,7 +19,10 @@ def transform_fixtures(options={})
   league_id = league = options[:league_id].nil? ? 3 : options[:league_id]
   season = options[:season].nil? ? '1314' : options[:season]
 
-  unless localtest == true
+  if localtest == true
+    puts "Reading local data for all fixtures from 'XML-NEW/Fixtures-league-#{league_id}-#{season}.xml'..."
+    fixtures_xml = Nokogiri::XML(File.open("XML-NEW/Fixtures-league-#{league_id}-#{season}.xml"))
+  else
     puts "Setting up client"
     xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
@@ -29,9 +32,6 @@ def transform_fixtures(options={})
     STDOUT.flush
     fixtures_xml = 
       Nokogiri::XML(xmlsoccer_client.get_fixtures_by_league_and_season(league_id, season).body)
-  else
-    puts "Reading local data for all fixtures from 'XML-NEW/Fixtures-league-#{league_id}-#{season}.xml'..."
-    fixtures_xml = Nokogiri::XML(File.open("XML-NEW/Fixtures-league-#{league_id}-#{season}.xml"))
   end
 
   fixture_recs = Array.new

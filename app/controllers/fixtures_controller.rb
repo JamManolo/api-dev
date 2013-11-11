@@ -101,6 +101,7 @@ class FixturesController < ApplicationController
         @reports << { league: node.xpath("League").text,
                       round: node.xpath("Round").text,
                       date: node.xpath("Date").text,
+                      match_id: node.xpath("FixtureMatch_Id").text,
                       
                       home_team: node.xpath("HomeTeam").text,
                       home_team_id: node.xpath("HomeTeam_Id").text,

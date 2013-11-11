@@ -18,21 +18,31 @@
 /*privatekey.p12
 /client_secret*
 
+/o.io.txt
+
 /jmc.objects/
 /jmc.aws.objects/
 /JMC.JMC
 /jmc.log
+/jmc_errorlog.txt
+/jmc.stderr.txt
 
 /downloads/
 /lib/tasks/
 /FILES/
 /JSON-FILES/
+/JSON-FILES-ORIG/
+/JSON-NODB
 /RAKE-FILES/
+/RAKE-FILES-ORIG/
 /soccer
 /XML/
 /XML-FILES/
 /XML-NEW/
+/XML-RAW
+/XML-RAW-*/
 /XML-TEST/
+/XML-TEST.pass-1/
 
 
 /bogus.txt
@@ -41,5 +51,6 @@
 /aws_config.json
 /gapi_config.json
 /dropbox_config.json
+/orch_config.json
 /rackspace_config.json
 /xmlsoccer_config.json
