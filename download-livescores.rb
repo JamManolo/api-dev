@@ -34,9 +34,11 @@ def download_livescore_file(options={})
   
   puts "Initiating livescore download for league #{league}, season #{season} ..."
   STDOUT.flush
+
+  league_id_str = league.to_i < 10 ? "0#{league}" : league
   
   # GetLiveScoreByLeague
-  xml_file = "./XML-NEW/Teams-league-#{league}-#{season}.xml"
+  xml_file = "./XML-NEW/LiveScore-league-#{league_id_str}-#{season}.xml"
   unless File.exist?(xml_file)
     xml_data = xmlsoccer_client.get_live_score_by_league(league).body
     save_xml_data(xml_file, xml_data)
@@ -66,7 +68,7 @@ def download_xmlsoccer_files
     league_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,14, 17, 18, 19, 20, 33, 36, 37, 38, 39, 40, 41]
   end
 
-  (301..320).each do |idx|
+  (680..680).each do |idx|
     league_ids.each do |league_id|
       download_livescore_file({
         client: xmlsoccer_client, league: league_id, season: idx,
