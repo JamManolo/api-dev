@@ -20,8 +20,9 @@ def populate_example_app(orchestrate)
 	#  Populate the 'films' collection
 	#
 	@films.keys.each do |key|
-		orchestrate.put_key(collection: 'films',	key: key, json: @films[key])
-		puts @films[key]
+		puts orchestrate.put_key(collection: 'films',	key: key, json: @films[key])
+    $stdout.flush
+		# puts @films[key]
 	end
 
 	# -----------------------------------------------------------------------------------
@@ -61,21 +62,21 @@ def test_example_app(orchestrate)
   #  Get the entire 'films' collection
   #
   # Try creating the collection - NOT.  But it does get created when the first key is created.
-  puts orchestrate.get_collection(collection: 'films')
-  $stdout.flush
+  # puts orchestrate.get_collection(collection: 'films')
+  # $stdout.flush
 
-  # -----------------------------------------------------------------------------------
-  #  Get each film from the 'films' collection
-  #
-  @films.keys.each do |key|
-    puts orchestrate.get_key(collection: 'films',  key: key)
-    $stdout.flush
-  end
+  # # -----------------------------------------------------------------------------------
+  # #  Get each film from the 'films' collection
+  # #
+  # @films.keys.each do |key|
+  #   puts orchestrate.get_key(collection: 'films',  key: key)
+  #   $stdout.flush
+  # end
 
-  # -----------------------------------------------------------------------------------
-  #  Get 'films/comments' events for 'the_godfather'
-  #
-  puts orchestrate.get_events(collection: 'films', key: 'the_godfather', event_type: :comments)
+  # # -----------------------------------------------------------------------------------
+  # #  Get 'films/comments' events for 'the_godfather'
+  # #
+  # puts orchestrate.get_events(collection: 'films', key: 'the_godfather', event_type: :comments)
 
   # -----------------------------------------------------------------------------------
   #  Get the 'films/sequel' relations for the Godfather series
@@ -181,16 +182,16 @@ end
 
 def get_orchestrate_client
 	user = @orch_config['user-example'] 
-	client = NoDB::Orchestrate.new('base-url' => @orch_config['base-url'], 'user' => user)
+	client = NoDB::Orchestrate.new('base-url' => @orch_config['base-url'], user: user, verbose: true)
 	puts "user: '#{user}'"
 	client
 end
 
 orch_client = get_orchestrate_client
 
-# populate_example_app(orch_client)
+populate_example_app(orch_client)
 
-test_example_app(orch_client)
+# test_example_app(orch_client)
 
 # clean_up_example_app(orch_client)
 

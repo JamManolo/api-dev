@@ -9,14 +9,15 @@ module NoDB
 		
 		def initialize(orch_config={})
 			@base_url = orch_config['base-url']  # https://api.orchestrate.io/v0
-			@user     = orch_config['user']      # <user-key-from-orchestrate.io>
+			@user     = orch_config[:user]      # <user-key-from-orchestrate.io>
+			@verbose  = orch_config[:verbose] if orch_config[:verbose]
 		end
 
 		# -------------------------------------------------------------------
 		#  Use Curl to do the HTTP stuff (GET, PUT, DELETE)
 		# -------------------------------------------------------------------
 		def do_the_get_call(args)
-			puts "----- GET: #{args[:url]}"
+			puts "----- GET: #{args[:url]}" if @verbose
 			c = Curl::Easy.new(args[:url]) do |curl|
 				curl.http_auth_types = :basic
 				curl.username = @user
@@ -26,7 +27,7 @@ module NoDB
 		end
 
 		def do_the_put_call(args)
-			puts "----- PUT: #{args[:url]}"
+			puts "----- PUT: #{args[:url]}" if @verbose
 			c = Curl::Easy.http_put(args[:url], args[:json]) do |curl|
 				curl.headers['Accept'] = 'application/json'
 				curl.headers['Content-Type'] = 'application/json'
@@ -34,11 +35,11 @@ module NoDB
 				curl.username = @user
 			end
 			c.perform
-		  # c.body_str
+		  c.body_str
 		end
 
 		def do_the_delete_call(args)
-			puts "----- DELETE: #{args[:url]}"
+			puts "----- DELETE: #{args[:url]}" if @verbose
 			c = Curl::Easy.new(args[:url]) do |curl|
 				curl.http_auth_types = :basic
 				curl.username = @user
