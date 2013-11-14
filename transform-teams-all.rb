@@ -64,9 +64,10 @@ def transform_all_teams(options={})
     end
 
     # 'standardize' the team_id string
-    team_id_str = node.xpath("Team_Id").text
-    team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
-    team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
+    # team_id_str = node.xpath("Team_Id").text
+    # team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
+    # team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
+    team_id_str = standardize_id_str(node.xpath("Team_Id").text, :team)
 
     # Add team_id to all teams array
     all_team_ids << team_id_str

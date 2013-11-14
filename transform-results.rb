@@ -20,9 +20,10 @@ def transform_results(options={})
   localtest = options[:localtest] ? options[:localtest] : false
   src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
   season    = options[:season]    ? options[:season]    : '1314'
-  league_id = league_id_str = league = options[:league]
+  league_id = league = options[:league]
 
-  league_id_str = "0#{league_id_str}" if league_id.to_i < 10
+  # league_id_str = "0#{league_id_str}" if league_id.to_i < 10
+  league_id_str = standardize_id_str(league_id, :league)
 
   if use_ds == true
       puts "Fetching 'Results by League' info from production data store ..."
@@ -58,6 +59,8 @@ def transform_results(options={})
     next if localtest == false or node.xpath("Id").text == "62364"
 
     # puts "========= MATCH ID : '#{node.xpath("FixtureMatch_Id").text}' : LEAGUE : #{league} ========="
+    fixture_match_id = node.xpath("FixtureMatch_Id").text
+    fixture_id_str = standardize_id_str(fixture_match_id, :fixture)
 
     # Get substitution info from LiveScore data
     fixture_match_id = node.xpath("FixtureMatch_Id").text
@@ -228,7 +231,7 @@ def transform_results(options={})
 
     filename = write_xml_file({
       group: 'match',
-      group_info: node.xpath("FixtureMatch_Id").text,
+      group_info: fixture_id_str,
       node: node,
     })
 
@@ -314,14 +317,18 @@ def transform_results(options={})
 
 end
 
+# -----------------------------------------------------------------------------
+#  Name:transform_driver
+#  Desc:
+# -----------------------------------------------------------------------------
 def transform_driver
 
   @nodb_file_recs = Array.new
 
-  xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
-  league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
-
-  league_ids.each do |league_id|
+  # xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
+  # league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
+  # league_ids.each do |league_id|
+  get_league_ids.each do |league_id|
     next if ["15","34"].include? league_id
     puts "league_id = '#{league_id}'"
     transform_results(league: league_id.to_i, season: '1314', localtest: true,

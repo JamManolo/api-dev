@@ -21,9 +21,10 @@ def transform_fixtures(options={})
   localtest = options[:localtest] ? options[:localtest] : false
   season    = options[:season]    ? options[:season]    : '1314' 
   src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
-  league_id = league_id_str = options[:league_id] ? options[:league_id] :3
+  league_id = options[:league_id] ? options[:league_id] :3
 
-  league_id_str = "0#{league_id_str}" if league_id.to_i < 10
+  # league_id_str = "0#{league_id_str}" if league_id.to_i < 10
+  league_id_str = standardize_id_str(league_id, :league)
 
   if use_ds == true
       puts "Fetching 'Fixtures by League' info from production data store ..."
@@ -63,26 +64,33 @@ def transform_fixtures(options={})
     # puts "========= MATCH ID : '#{node.xpath("Id").text}' : LEAGUE : #{league_id} ========="
 
     # 'standardize' the fixture_id string
-    fixture_id_str = node.xpath("Id").text
-    fixture_id_str = fixture_id_str.to_i < 100000 ? "0#{fixture_id_str}" : fixture_id_str
+    # fixture_id_str = node.xpath("Id").text
+    # fixture_id_str = fixture_id_str.to_i < 100000 ? "0#{fixture_id_str}" : fixture_id_str
 
     # Add this fixture to list for this league
+    fixture_id_str = standardize_id_str(node.xpath("Id").text, :fixture)
     league_fixture_ids << fixture_id_str
 
-    # Add this fixture to lists for both the home and away teams
-    team_id_str = home_team_id = node.xpath("HomeTeam_Id").text
-    team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
-    team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
-    @all_team_ids << team_id_str
-    @team_fixture_ids[team_id_str] = Array.new unless @team_fixture_ids[team_id_str]
-    @team_fixture_ids[team_id_str] << fixture_id_str
+    # home_team_id = node.xpath("HomeTeam_Id").text
+    # team_id_str = standarize_id_str(home_team_id, :team)
+    # @all_team_ids << team_id_str
+    # @team_fixture_ids[team_id_str] = Array.new unless @team_fixture_ids[team_id_str]
+    # @team_fixture_ids[team_id_str] << fixture_id_str
 
-    team_id_str = away_team_id = node.xpath("AwayTeam_Id").text
-    team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
-    team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
-    @all_team_ids << team_id_str
-    @team_fixture_ids[team_id_str] = Array.new unless @team_fixture_ids[team_id_str]
-    @team_fixture_ids[team_id_str] << fixture_id_str
+    # team_id_str = away_team_id = node.xpath("AwayTeam_Id").text
+    # team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
+    # team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
+    # @all_team_ids << team_id_str
+    # @team_fixture_ids[team_id_str] = Array.new unless @team_fixture_ids[team_id_str]
+    # @team_fixture_ids[team_id_str] << fixture_id_str
+
+    # Add this fixture to lists for both the home and away teams
+    ["Home","Away"].each do |team|
+      team_id_str = standardize_id_str(node.xpath("#{team}Team_Id").text, :team)
+      @all_team_ids << team_id_str
+      @team_fixture_ids[team_id_str] = Array.new unless @team_fixture_ids[team_id_str]
+      @team_fixture_ids[team_id_str] << fixture_id_str
+    end
 
     # Handle missing 'Time' element (identified in MLS)
     node.add_child("<Time/>") if node.xpath("Time").first.nil?
@@ -297,10 +305,10 @@ def transform_driver
   @all_team_ids = Array.new
   @team_fixture_ids = Hash.new
 
-  xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
-  league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
-
-  league_ids.each do |league_id|
+  # xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
+  # league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
+  # league_ids.each do |league_id|
+  get_league_ids.each do |league_id|
     next if ["15","34"].include? league_id
     transform_fixtures(league_id: league_id, season: '1314',
                        localtest: true, use_ds: true,

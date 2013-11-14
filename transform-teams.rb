@@ -25,18 +25,19 @@ def transform_all_teams_by_league(options={})
     })
   end
 
-  xml_doc = Nokogiri::XML(open("#{src_dir}/AllLeagues.xml"))
-  league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
-
   comp_hash = Hash.new
   nodb_file_recs = Array.new
   all_member_team_ids = Array.new
   all_comp_team_ids = Array.new
 
-  league_ids.each do |league_id|
+  # xml_doc = Nokogiri::XML(open("#{src_dir}/AllLeagues.xml"))
+  # league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
+  # league_ids.each do |league_id|
+  get_league_ids.each do |league_id|
 
     next if ["15", "34"].include? league_id
-    league_id_str = league_id.to_i < 10 ? "0#{league_id}" : league_id
+    # league_id_str = league_id.to_i < 10 ? "0#{league_id}" : league_id
+    league_id_str = standardize_id_str(league_id, :league)
 
     if use_ds == true
       puts "Fetching 'Teams by League' info from production data store ..."
@@ -76,9 +77,10 @@ def transform_all_teams_by_league(options={})
       end
 
       # 'standardize' the team_id string
-      team_id_str = node.xpath("#{namespace}Team_Id").text
-      team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
-      team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
+      # team_id_str = node.xpath("#{namespace}Team_Id").text
+      # team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
+      # team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
+      team_id_str = standardize_id_str(node.xpath("#{namespace}Team_Id").text, :team)
 
       # Add team_id to league members (teams)
       member_team_ids << team_id_str

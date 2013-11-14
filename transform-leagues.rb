@@ -51,7 +51,8 @@ def transform_leagues(options={})
     end
 
     league_id = node.xpath("Id").text
-    league_id_str = league_id.to_i < 10 ? "0#{league_id}" : league_id
+    # league_id_str = league_id.to_i < 10 ? "0#{league_id}" : league_id
+    league_id_str = standardize_id_str(league_id, :league)
 
     filename = write_xml_file({
       group: 'league',

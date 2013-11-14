@@ -1,6 +1,82 @@
-#
-# simple 'include' file for transform tools
-#
+# =================================================================================================
+#    Simple 'include' file for transform tools
+# =================================================================================================
+
+# ----------------------------------------------
+#  Id 'standardization' routine
+# ----------------------------------------------
+@id_str_lengths = { league: 2, team: 3, fixture: 6 }
+
+def standardize_id_str(id, type)
+  id_str = id.to_s
+  while id_str.length < @id_str_lengths[type] do
+    id_str = "0#{id_str}"
+  end
+  id_str
+end
+
+# ----------------------------------------------
+#  Return all league_ids
+# ----------------------------------------------
+def get_league_ids
+  xml_data = aws_data_fetch(path: 'soccer/raw-data', name: 'AllLeagues.xml')
+  Nokogiri::XML(xml_data).xpath("//League/Id").map { |node| node.text }
+end
+
+# ----------------------------------------------
+#  Return all team_ids
+# ----------------------------------------------
+def get_team_ids
+  xml_data = aws_data_fetch(path: 'soccer/raw-data', name: 'AllTeams.xml')
+  Nokogiri::XML(xml_data).xpath("//Team/Team_Id").map { |node| node.text }
+end
+
+# ----------------------------------------------
+#  Return all fixture_ids
+# ----------------------------------------------
+def get_fixture_ids
+  fixtures = Array.new
+  puts "getting fixtures"
+  get_league_ids.each do |league_id|
+    next if ['15','34'].include? league_id
+    league_id_str = standardize_id_str(league_id, :league)
+    puts "... for league #{league_id_str}"
+
+    filename = "Fixtures-league-#{league_id}-1314.xml"
+    jmclist = Nokogiri::XML(open("XML-TEST/#{filename}")).xpath("//Match/Id").map { |node| node.text }
+    puts "XML LEN: '#{jmclist.length}'"
+
+    filename = "Fixtures-league-#{league_id_str}-1314.xml"
+    xml_data = aws_data_fetch(path: 'soccer/raw-data', name: filename)
+    jmclist = Nokogiri::XML(xml_data).xpath("//Match/Id").map { |node| node.text }
+    puts "AWS LEN: '#{jmclist.length}'"
+    fixtures += jmclist
+  end
+  fixtures
+end
+
+# ----------------------------------------------
+#  Return all result_ids
+# ----------------------------------------------
+def get_result_ids
+  fixtures = Array.new
+  puts "getting results"
+  get_league_ids.each do |league_id|
+    next if ['15','34'].include? league_id
+    league_id_str = standardize_id_str(league_id, :league)
+    puts "... for league #{league_id_str}"
+    src_dir = 'XML-TEST'
+    # JMC filename = "Fixtures-league-#{league_id_str}-1314.xml"
+    filename = "HistoricMatches-league-#{league_id}-1314.xml"
+    fixtures += Nokogiri::XML(open("#{src_dir}/#{filename}")).xpath("//Match/FixtureMatch_Id").map { |node| node.text }
+  end
+  fixtures
+end
+
+
+# ----------------------------------------------
+#  File creation routines
+# ----------------------------------------------
 
 def write_xml_file(args)
   target_dir = './XML-FILES'
@@ -158,7 +234,7 @@ def aws_data_fetch(data_file_rec)
   test_config = JSON.parse(File.open('test_config.json').read)
   bucket_name = test_config['test-bucket-name-aws']
   filename = data_file_rec[:path].nil? ? data_file_rec[:name] : "#{data_file_rec[:path]}/#{data_file_rec[:name]}"
-  puts "AWS download: '#{filename}'"
+  puts "AWS download: '#{filename}'" if @verbose
   $stdout.flush
   @s3.buckets[bucket_name].objects[filename].read 
 end
