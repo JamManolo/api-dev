@@ -10,6 +10,8 @@ gem 'xmlsoccerhttp', path: '/Users/jimcar/rails_projects/api-dev/mygem/xmlsoccer
 gem 'nokogiri'
 gem 'json'
 
+gem 'orchestrate-v0', github: 'jimcar/orchestrate-v0'
+
 # Use fog to manage Rackspace API
 gem 'fog'
 

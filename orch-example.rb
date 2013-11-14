@@ -1,5 +1,5 @@
 require "json"
-require "./mygem/orchestrate/lib/orchestrate"
+require "orchestrate-v0"
 require "./orch-example-data"
 
 # =================================================================================================
@@ -19,18 +19,21 @@ def populate_example_app(orchestrate)
 	# -----------------------------------------------------------------------------------
 	#  Populate the 'films' collection
 	#
-	@films.keys.each do |key|
-		puts orchestrate.put_key(collection: 'films',	key: key, json: @films[key])
-    $stdout.flush
-		# puts @films[key]
-	end
+  @films.keys.each do |key|
+  	orchestrate.put_key(collection: 'films',	key: key, json: @films[key])
+  end
 
 	# -----------------------------------------------------------------------------------
 	#  Populate 'films/comments' events for key 'the_godfather'
 	#
- 	@comments.each do |comment|
-			orchestrate.put_event(collection: 'films', key: 'the_godfather', event_type: :comments, json: comment)
- 	end
+  already_populated = 
+    JSON.parse(orchestrate.get_events(collection: 'films', key: 'the_godfather', event_type: 'comments'))['count'] > 0
+
+  unless already_populated == true
+   	@comments.each do |comment|
+  		orchestrate.put_event(collection: 'films', key: 'the_godfather', event_type: 'comments', json: comment)
+    end
+  end
 
 	# -----------------------------------------------------------------------------------
 	#  Create the 'films/sequel' relations for the Godfather series
@@ -40,15 +43,6 @@ def populate_example_app(orchestrate)
 
 	orchestrate.put_relation(collection_A: 'films', key_A: 'the_godfather_part_2', relation: 'sequel',
 													 collection_B: 'films', key_B: 'the_godfather_part_3')
-
-  # -----------------------------------------------------------------------------------
-  #  Create the 'films/sequel' relations for the Pulp Fiction 'for-testing-purposes-only' series
-  #
-  orchestrate.put_relation(collection_A: 'films', key_A: 'pulp_fiction', relation: 'sequel',
-                           collection_B: 'films', key_B: 'pulp_fiction_part_2A')
-
-  orchestrate.put_relation(collection_A: 'films', key_A: 'pulp_fiction', relation: 'sequel',
-                           collection_B: 'films', key_B: 'pulp_fiction_part_2B')
 end
 
 
@@ -56,71 +50,63 @@ end
 #  Test the Orchestrate.io example application
 #
 # =================================================================================================
+@show_response = true
+
+def show_response(response)
+  if @show_response == true
+    puts response
+    $stdout.flush
+  end
+end
+
 def test_example_app(orchestrate)
 
   # -----------------------------------------------------------------------------------
   #  Get the entire 'films' collection
   #
-  # Try creating the collection - NOT.  But it does get created when the first key is created.
-  # puts orchestrate.get_collection(collection: 'films')
-  # $stdout.flush
+  # Try creating the collection explicitly.  It does get created implicitly when the first key is created.
+  show_response orchestrate.get_collection(collection: 'films')
 
-  # # -----------------------------------------------------------------------------------
-  # #  Get each film from the 'films' collection
-  # #
-  # @films.keys.each do |key|
-  #   puts orchestrate.get_key(collection: 'films',  key: key)
-  #   $stdout.flush
-  # end
+  # -----------------------------------------------------------------------------------
+  #  Get each film from the 'films' collection
+  #
+  @films.keys.each do |key|
+    show_response orchestrate.get_key(collection: 'films',  key: key)
+  end
 
-  # # -----------------------------------------------------------------------------------
-  # #  Get 'films/comments' events for 'the_godfather'
-  # #
-  # puts orchestrate.get_events(collection: 'films', key: 'the_godfather', event_type: :comments)
+  # -----------------------------------------------------------------------------------
+  #  Get 'films/comments' events for 'the_godfather'
+  #
+  show_response orchestrate.get_events(collection: 'films', key: 'the_godfather', event_type: 'comments')
 
   # -----------------------------------------------------------------------------------
   #  Get the 'films/sequel' relations for the Godfather series
   #
-  puts orchestrate.get_relations(collection: 'films', key: 'the_godfather', relation: 'sequel')
-  $stdout.flush
+  show_response orchestrate.get_relations(collection: 'films', key: 'the_godfather', relation: 'sequel')
+  show_response orchestrate.get_relations(collection: 'films', key: 'the_godfather', relation: 'sequel/sequel')
+  show_response orchestrate.get_relations(collection: 'films', key: 'the_godfather_part_2', relation: 'sequel')
 
-  puts orchestrate.get_relations(collection: 'films', key: 'the_godfather', relation: 'sequel/sequel')
-  $stdout.flush
+  # Try to get individual relations - (corresponding to how they were 'put')
+  show_response orchestrate.get_relation(collection_A: 'films', key_A: 'the_godfather', relation: 'sequel',
+                                  collection_B: 'films', key_B: 'the_godfather_part_2')
 
-  puts orchestrate.get_relations(collection: 'films', key: 'the_godfather_part_2', relation: 'sequel')
-  $stdout.flush
-
-  # See if we can get individual relations - hmm, guess not...
-  # puts orchestrate.get_relation(collection_A: 'films', key_A: 'the_godfather', relation: 'sequel',
-  #                               collection_B: 'films', key_B: 'the_godfather_part_2')
-  # puts orchestrate.get_relation(collection_A: 'films', key_A: 'the_godfather_part_2', relation: 'sequel',
-  #                               collection_B: 'films', key_B: 'the_godfather_part_3')
-  # $stdout.flush
-
-  # -----------------------------------------------------------------------------------
-  #  Get the 'films/sequel' relations for the Pulp Fiction series
-  #
-  puts orchestrate.get_relations(collection: 'films', key: 'pulp_fiction', relation: 'sequel')
-  $stdout.flush
+  show_response orchestrate.get_relation(collection_A: 'films', key_A: 'the_godfather_part_2', relation: 'sequel',
+                                  collection_B: 'films', key_B: 'the_godfather_part_3')
 
   # -----------------------------------------------------------------------------------
   #  Do some queries
   #
   query = "Rated:M"
-  puts orchestrate.query(collection: 'films', query: query)
-  $stdout.flush
+  show_response orchestrate.query(collection: 'films', query: query)
 
   query = "Genre:crime"
-  puts orchestrate.query(collection: 'films', query: query)
-  $stdout.flush
+  show_response orchestrate.query(collection: 'films', query: query)
 
   query = "*"
-  puts orchestrate.query(collection: 'films', query: query)
-  $stdout.flush
+  show_response orchestrate.query(collection: 'films', query: query)
 
   query = "*will*"
-  puts orchestrate.query(collection: 'films', query: query)
-  $stdout.flush
+  show_response orchestrate.query(collection: 'films', query: query)
 end
 
 
@@ -165,7 +151,6 @@ def clean_up_example_app(orchestrate)
   #  Delete the entire 'films' collection
   #
   orchestrate.delete_collection(collection: 'films')
-	
 end
 
 
@@ -178,7 +163,7 @@ end
 #   	 "user-example":"user-key-from-orchestrate.io"
 # 	 }
 # =================================================================================================
-@orch_config = JSON.parse(open("orch_config.json").read)
+@orch_config = JSON.parse(open('orch_config.json').read)
 
 def get_orchestrate_client
 	user = @orch_config['user-example'] 
@@ -189,11 +174,10 @@ end
 
 orch_client = get_orchestrate_client
 
+clean_up_example_app(orch_client)
 populate_example_app(orch_client)
+test_example_app(orch_client)
 
-# test_example_app(orch_client)
-
-# clean_up_example_app(orch_client)
 
 
 

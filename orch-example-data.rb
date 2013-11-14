@@ -97,44 +97,6 @@
       "Type": "movie",
       "Response": "True"
     }',
-  'pulp_fiction_part_2A' =>
-    '{
-      "Title": "Pulp Fiction II-A",
-      "Year": 1995,
-      "Rated": "R",
-      "Released": "14 Oct 1995",
-      "Runtime": "2 h 48 min",
-      "Genre": "Crime, Drama, Thriller",
-      "Director": "Quentin Tarantino",
-      "Writer": "Quentin Tarantino, Roger Avary",
-      "Actors": "John Travolta, Uma Thurman, Samuel L. Jackson, Bruce Willis",
-      "Plot": "The lives of two mob hit men, a boxer, a gangster\'s wife, and a pair of diner bandits intertwine in four tales of violence and redemption.",
-      "Poster": "http://ia.media-imdb.com/images/M/MV5BMjE0ODk2NjczOV5BMl5BanBnXkFtZTYwNDQ0NDg4._V1_SX300.jpg",
-      "imdbRating": 9.0,
-      "imdbVotes": "801,931",
-      "imdbID": "tt0110912",
-      "Type": "movie",
-      "Response": "True"
-    }',
-  'pulp_fiction_part_2B' =>
-    '{
-      "Title": "Pulp Fiction II-B",
-      "Year": 1996,
-      "Rated": "R",
-      "Released": "14 Oct 1996",
-      "Runtime": "2 h 48 min",
-      "Genre": "Crime, Drama, Thriller",
-      "Director": "Quentin Tarantino",
-      "Writer": "Quentin Tarantino, Roger Avary",
-      "Actors": "John Travolta, Uma Thurman, Samuel L. Jackson, Bruce Willis",
-      "Plot": "The lives of two mob hit men, a boxer, a gangster\'s wife, and a pair of diner bandits intertwine in four tales of violence and redemption.",
-      "Poster": "http://ia.media-imdb.com/images/M/MV5BMjE0ODk2NjczOV5BMl5BanBnXkFtZTYwNDQ0NDg4._V1_SX300.jpg",
-      "imdbRating": 9.0,
-      "imdbVotes": "801,931",
-      "imdbID": "tt0110912",
-      "Type": "movie",
-      "Response": "True"
-    }',
 	'the_good_the_bad_and_the_ugly' =>
     '{
       "Title": "The Good, the Bad and the Ugly",
