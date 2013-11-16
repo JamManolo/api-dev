@@ -68,7 +68,7 @@ def download_xmlsoccer_files
     league_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ,14, 17, 18, 19, 20, 33, 36, 37, 38, 39, 40, 41]
   end
 
-  (680..680).each do |idx|
+  (701..705).each do |idx|
     league_ids.each do |league_id|
       download_livescore_file({
         client: xmlsoccer_client, league: league_id, season: idx,
