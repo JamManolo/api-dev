@@ -1,5 +1,7 @@
 #!/bin/csh -f
 
+cp RAKE-FILES/*.rake lib/tasks
+
 set echo
 
 rake db:reset

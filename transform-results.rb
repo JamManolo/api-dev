@@ -20,13 +20,10 @@ def transform_results(options={})
   localtest = options[:localtest] ? options[:localtest] : false
   src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
   season    = options[:season]    ? options[:season]    : '1314'
-  league_id = league = options[:league]
-
-  # league_id_str = "0#{league_id_str}" if league_id.to_i < 10
-  league_id_str = standardize_id_str(league_id, :league)
+  league_id_str = league_id = options[:league]
 
   if use_ds == true
-      puts "Fetching 'Results by League' info from production data store ..."
+      puts "Fetching 'Results by League' info for league #{league_id_str} from production data store ..."
       match_xml = Nokogiri::XML(aws_data_fetch({
         name: "HistoricMatches-league-#{league_id_str}-#{season}.xml",
         path: 'soccer/raw-data',
@@ -35,16 +32,6 @@ def transform_results(options={})
     puts "Reading local data for league #{league_id_str}, season #{season} " +
          "from #{src_dir}/HistoricMatches-league-#{league_id_str}-#{season}.xml..."
     match_xml = Nokogiri::XML(File.open("#{src_dir}/HistoricMatches-league-#{league_id_str}-#{season}.xml"))
-  else
-    puts "Setting up client"
-    xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
-      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
-      api_type: "Demo"
-    })
-    puts "Requesting data for league #{league}, season #{season} ..."
-    STDOUT.flush
-    match_xml = Nokogiri::XML(
-      xmlsoccer_client.get_historic_matches_by_league_and_season(league, season).body)
   end
 
   data_file_recs = Array.new
@@ -55,7 +42,6 @@ def transform_results(options={})
 
   match_xml.xpath("//Match").each do |node|
 
-    # next if node.xpath("Round").text.to_i < 9
     next if localtest == false or node.xpath("Id").text == "62364"
 
     # puts "========= MATCH ID : '#{node.xpath("FixtureMatch_Id").text}' : LEAGUE : #{league} ========="
@@ -63,23 +49,14 @@ def transform_results(options={})
     fixture_id_str = standardize_id_str(fixture_match_id, :fixture)
 
     # Get substitution info from LiveScore data
-    fixture_match_id = node.xpath("FixtureMatch_Id").text
     if live_score_match_ids.include? fixture_match_id
       live_score_node = live_score_xml.at("Id:contains(#{fixture_match_id})").parent
       ["Home","Away"].each do |team|
         sub_details = Array.new
         sub_details_node = node.add_child("<#{team}SubDetails></#{team}SubDetails>")
         live_score_node.xpath("#{team}SubDetails").text.split(';').reverse_each do |sub|
-          time, name = sub.split(':')
-          if name =~ /^ out /
-            dir = "out"
-            name.sub!(/ out /, '')
-          elsif name =~  /^ in /
-            dir = "in"
-            name.sub!(/ in /, '')
-          end
+          sub_details << get_sub_details(sub)
           sub_details_node.first.add_child("<SubDetail />")
-          sub_details << { name: name, dir: dir, time: time }
         end
 
         i = 0
@@ -97,29 +74,8 @@ def transform_results(options={})
     ["Home","Away"].each do |team|
       # JMC - skip Brasiliero 'GoalDetails' for now
       unless league_id == "37" or node.xpath("#{team}GoalDetails").first.nil?
-        goal_details = Array.new
-        goal_detail_line = node.xpath("#{team}GoalDetails").text
-        # puts "goal_detail_line 2: #{goal_detail_line}" if goal_detail_line =~ /nbsp/
-        # while goal_detail_line =~ /nbsp\;/
-        #   goal_detail_line.sub!(/nbsp\;/, '') 
-        # end
-        while goal_detail_line =~ /nbsp\;/
-          goal_detail_line.sub!(/nbsp\;/, '') 
-        end
-        while goal_detail_line =~ /\&/
-          goal_detail_line.sub!(/\&/, '') 
-        end
-        while goal_detail_line =~ /amp;/
-          goal_detail_line.sub!(/amp;/, '') 
-        end
-
-        goal_detail_line.split(';').reverse_each do |goal|
-          time, name = goal.split(':')
-          goal_details << { name: name.strip, time: time }
-        end
-
+        goal_details = get_details(node.xpath("#{team}GoalDetails").text)
         node.xpath("#{team}GoalDetails").first.content = ''
-
         goal_details.each do |goal|
           tmp_str = "<GoalDetail>" +
                     "<Name>#{goal[:name]}</Name>" +
@@ -143,6 +99,7 @@ def transform_results(options={})
     #   end
     # end
 
+    # Lineups
     ["Home","Away"].each do |team|
       node.add_child("<#{team}Lineup />")
       tmp_str = "<Player>" +
@@ -170,25 +127,8 @@ def transform_results(options={})
       ["Yellow","Red"].each do |card|
         # Skip when missing 'TeamCardDetails' element (identified in Serie B data)
         unless node.xpath("#{team}Team#{card}CardDetails").first.nil?
-          tmp_card_details = Array.new
-          
-          card_detail_line = node.xpath("#{team}Team#{card}CardDetails").text
-          while card_detail_line =~ /nbsp\;/
-            card_detail_line.sub!(/nbsp\;/, '') 
-          end
-          while card_detail_line =~ /\&/
-            card_detail_line.sub!(/\&/, '') 
-          end
-          while card_detail_line =~ /amp;/
-            card_detail_line.sub!(/amp;/, '') 
-          end
-
-          card_detail_line.split(';').reverse_each do |offense|
-            time, name = offense.split(':')
-            tmp_card_details << { name: name.strip, time: time }
-          end
+          tmp_card_details = get_details(node.xpath("#{team}Team#{card}CardDetails").text)
           node.xpath("#{team}Team#{card}CardDetails").first.content = ''
-
           tmp_card_details.each do |tcd|
             tmp_str = "<CardDetail>" +
                       "<Name>#{tcd[:name]}</Name>" +
@@ -215,20 +155,6 @@ def transform_results(options={})
     end 
 
     # Save the XML file for this match
-    # report_id = node.xpath("Id").text
-    # fixture_match_id = node.xpath("FixtureMatch_Id").text
-    # filename = "xmlsoccer-match-#{fixture_match_id}.xml"
-    # f = File.open("./XML-FILES/matches/#{filename}", "w")
-    # f.puts "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-    # f.puts "<FreeFantasyFootball.Info>"
-    # f.puts "<#{node.name}>"
-    # node.elements.each do |e|
-    #  f.puts "#{e}"
-    # end
-    # f.puts "</#{node.name}>"
-    # f.puts "</FreeFantasyFootball.Info>"
-    # f.close
-
     filename = write_xml_file({
       group: 'match',
       group_info: fixture_id_str,
@@ -243,32 +169,18 @@ def transform_results(options={})
                         # data_store:      'aws',
                         # data_store_id:   1,
                         timestamp:       `date`.strip } 
-  end
+
+  end # end match_reports
 
   # Save as json file for uploading xml files to data store
-  write_data_file_json_file({
+  write_upload_list_json_file({
     rec_type: 'result',
     rec_info: league_id_str,
     rec_data: 'xml',
     recs: data_file_recs,
   })
 
-  # Save as json file, for whatever purpose
-  # File.open("./JSON-FILES/xmlsoccer-data-files-#{league}.json", "w") do |f|
-  #   f.puts '{ "data-files": ['
-  #   data_file_recs.each do |record|
-  #     f.puts '{'
-  #     record.each do |k,v|
-  #       my_comma = k == :timestamp ? '' : ','
-  #       f.puts "\"#{k}\":\"#{v}\"#{my_comma}"
-  #     end
-  #     my_comma = record == data_file_recs.last ? '' : ','
-  #     f.puts "}#{my_comma}"
-  #   end
-  #   f.puts '] }'
-  # end
-
-  # Or...just create the rake file now - DUH!
+  # JMC-CREATE: Initialize the DataFile records
   write_create_records_rake_file({
     rec_class: 'DataFile',
     rec_type: 'file',
@@ -285,8 +197,7 @@ def transform_results(options={})
   # fixture_match_ids = match_xml.xpath("//Match/FixtureMatch_Id").map{ |node| node.text }
   update_recs = Array.new
   missing_recs = Array.new
-  fixture_xml = Nokogiri::XML(File.open("#{src_dir}/Fixtures-league-#{league_id_str}-#{season}.xml"))
-  fixture_ids = fixture_xml.xpath("//Match/Id").map{ |node| node.text }
+  fixture_ids = get_league_fixture_ids(league_id_str)
   match_xml.xpath("//Match/FixtureMatch_Id").map{ |node| node.text }.each do |match_id|
     next if match_id == "0"
     if fixture_ids.include? match_id
@@ -297,18 +208,37 @@ def transform_results(options={})
   end
   puts missing_recs
 
+  # JMC-UPDATE: Fixture-update rec for NoDB
+  update_recs.each do |update_rec|
+    write_nodb_record_json_file({
+      rec_type: 'fixtures',
+      rec_info: "#{update_rec[:match_id]}-update-r1",
+      rec:      update_rec,
+    })
+  end
+
+  # JMC-UPDATE: Fixture-missing rec for NoDB
+  missing_recs.each do |missing_rec|
+    write_nodb_record_json_file({
+      rec_type: 'fixtures',
+      rec_info: "#{missing_rec[:match_id]}-missing-r1",
+      rec:      missing_rec,
+    })
+  end
+
+  # JMC-UPDATE: Fixture-update record (with 'has-match-report' info)
   write_update_records_rake_file({
     rec_class: 'Fixture',
-    rec_type: 'fixture',
-    rec_key: 'match_id',
-    desc: 'Update database with match report data',
-    recs: update_recs,
-    jmc: 'r1',
-    ext: league_id_str,
+    rec_type:  'fixture',
+    rec_key:   'match_id',
+    desc:      'Update database with match report data',
+    recs:      update_recs,
+    jmc:       'r1',
+    ext:       league_id_str,
   })
 
-  # Create json file for easy upload of json update records
-  filename = write_records_json_file({
+  # JMC-UPDATE-TBD: Fixture-update record
+  filename = write_record_array_json_file({
     rec_type: 'fixtures',
     rec_info: "#{league_id_str}-update-r1",
     recs: update_recs,
@@ -325,18 +255,13 @@ def transform_driver
 
   @nodb_file_recs = Array.new
 
-  # xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
-  # league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
-  # league_ids.each do |league_id|
   get_league_ids.each do |league_id|
-    next if ["15","34"].include? league_id
-    puts "league_id = '#{league_id}'"
-    transform_results(league: league_id.to_i, season: '1314', localtest: true,
+    transform_results(league: league_id, season: '1314', localtest: true,
                       use_ds: true, src_dir: 'XML-RAW')
   end
 
-  # Save json file for easy upload to noDB data store...
-  write_data_file_json_file({
+  # JMC-CREATE: Save json file for easy upload to noDB data store...
+  write_upload_list_json_file({
     rec_type: "result",
     rec_info: 'all',
     rec_data: 'nodb',
@@ -347,5 +272,4 @@ end
 
 transform_driver
 
-# transform_results({ league: 19, season: '1314', localtest: true, src_dir: 'XML-RAW' })
 

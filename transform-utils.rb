@@ -2,6 +2,50 @@
 #    Simple 'include' file for transform tools
 # =================================================================================================
 
+@verbose = false
+
+# ----------------------------------------------
+#  Name: get_sub_details
+# ----------------------------------------------
+def get_sub_details(sub)
+
+  time, name = sub.split(':')
+  if name =~ /^ out /
+    dir = "out"
+    name.sub!(/ out /, '')
+  elsif name =~  /^ in /
+    dir = "in"
+    name.sub!(/ in /, '')
+  end
+
+  { name: name, dir: dir, time: time }
+end
+
+# ----------------------------------------------
+#  Name: get_details (for goals and cards)
+# ----------------------------------------------
+def get_details(detail_line)
+
+  details = Array.new
+  while detail_line =~ /nbsp\;/
+    detail_line.sub!(/nbsp\;/, '') 
+  end
+  while detail_line =~ /\&/
+    detail_line.sub!(/\&/, '') 
+  end
+  while detail_line =~ /amp;/
+    detail_line.sub!(/amp;/, '') 
+  end
+
+  detail_line.split(';').reverse_each do |info|
+    time, name = info.split(':')
+    details << { name: name.strip, time: time }
+  end
+
+  details
+end
+
+
 # ----------------------------------------------
 #  Id 'standardization' routine
 # ----------------------------------------------
@@ -19,8 +63,11 @@ end
 #  Return all league_ids
 # ----------------------------------------------
 def get_league_ids
+  bad_league_list = ["15","34"]
   xml_data = aws_data_fetch(path: 'soccer/raw-data', name: 'AllLeagues.xml')
-  Nokogiri::XML(xml_data).xpath("//League/Id").map { |node| node.text }
+  Nokogiri::XML(xml_data).xpath("//League/Id").map { |node|
+    standardize_id_str(node.text, :league)
+  }.select { |e| !bad_league_list.include? e.to_s }
 end
 
 # ----------------------------------------------
@@ -28,7 +75,17 @@ end
 # ----------------------------------------------
 def get_team_ids
   xml_data = aws_data_fetch(path: 'soccer/raw-data', name: 'AllTeams.xml')
-  Nokogiri::XML(xml_data).xpath("//Team/Team_Id").map { |node| node.text }
+  Nokogiri::XML(xml_data).xpath("//Team/Team_Id").map { |node| standardize_id_str(node.text, :team) }
+end
+
+# ----------------------------------------------
+#  Return all league/fixture_ids
+# ----------------------------------------------
+def get_league_fixture_ids(league_id_str)
+  puts "getting fixtures for league #{league_id_str}" if @verbose
+  filename = "Fixtures-league-#{league_id_str}-1314.xml"
+  xml_data = aws_data_fetch(path: 'soccer/raw-data', name: filename)
+  Nokogiri::XML(xml_data).xpath("//Match/Id").map { |node| node.text }
 end
 
 # ----------------------------------------------
@@ -36,21 +93,14 @@ end
 # ----------------------------------------------
 def get_fixture_ids
   fixtures = Array.new
-  puts "getting fixtures"
+  puts "getting fixtures" if @verbose
   get_league_ids.each do |league_id|
     next if ['15','34'].include? league_id
     league_id_str = standardize_id_str(league_id, :league)
     puts "... for league #{league_id_str}"
-
-    filename = "Fixtures-league-#{league_id}-1314.xml"
-    jmclist = Nokogiri::XML(open("XML-TEST/#{filename}")).xpath("//Match/Id").map { |node| node.text }
-    puts "XML LEN: '#{jmclist.length}'"
-
     filename = "Fixtures-league-#{league_id_str}-1314.xml"
     xml_data = aws_data_fetch(path: 'soccer/raw-data', name: filename)
-    jmclist = Nokogiri::XML(xml_data).xpath("//Match/Id").map { |node| node.text }
-    puts "AWS LEN: '#{jmclist.length}'"
-    fixtures += jmclist
+    fixtures += Nokogiri::XML(xml_data).xpath("//Match/Id").map { |node| node.text }
   end
   fixtures
 end
@@ -60,15 +110,14 @@ end
 # ----------------------------------------------
 def get_result_ids
   fixtures = Array.new
-  puts "getting results"
+  puts "getting results" if @verbose
   get_league_ids.each do |league_id|
     next if ['15','34'].include? league_id
     league_id_str = standardize_id_str(league_id, :league)
     puts "... for league #{league_id_str}"
-    src_dir = 'XML-TEST'
-    # JMC filename = "Fixtures-league-#{league_id_str}-1314.xml"
-    filename = "HistoricMatches-league-#{league_id}-1314.xml"
-    fixtures += Nokogiri::XML(open("#{src_dir}/#{filename}")).xpath("//Match/FixtureMatch_Id").map { |node| node.text }
+    filename = "HistoricMatches-league-#{league_id_str}-1314.xml"
+    xml_data = aws_data_fetch(path: 'soccer/raw-data', name: filename)
+    fixtures += Nokogiri::XML(xml_data).xpath("//Match/FixtureMatch_Id").map { |node| node.text }
   end
   fixtures
 end
@@ -94,7 +143,7 @@ def write_xml_file(args)
   filename
 end
 
-def write_data_file_json_file(args)
+def write_upload_list_json_file(args)
   target_dir = "./JSON-FILES"
   rec_data = args[:rec_data] ? args[:rec_data] : 'data'
   filename = "xmlsoccer-#{args[:rec_type]}s-#{args[:rec_info]}-#{rec_data}-files.json"
@@ -118,7 +167,7 @@ def write_nodb_relation_json_file(args)
   rel_type = args[:rel_type] ? args[:rel_type] : 'relation'
   target_dir = "./JSON-NODB"
   filename = "xmlsoccer-#{args[:rel_A]}-#{args[:rel_key_A]}-#{args[:rel_B]}-#{args[:jmc]}-#{rel_type}.json"
-  puts "writing #{filename}"
+  puts "writing #{filename}" if @verbose
   File.open("#{target_dir}/#{filename}", "w") do |f|
     f.puts "{  \"#{args[:rel_info]}\": ["
     args[:rel_keys_B].each do |v|
@@ -133,7 +182,7 @@ end
 def write_nodb_record_json_file(args)
   target_dir = "./JSON-NODB"
   filename = "xmlsoccer-#{args[:rec_type]}-#{args[:rec_info]}-record.json"
-  puts "writing #{filename}"
+  puts "writing #{filename}" if @verbose
   File.open("#{target_dir}/#{filename}", "w") do |f|
     f.puts '{'
     args[:rec].each do |k,v|
@@ -145,10 +194,10 @@ def write_nodb_record_json_file(args)
   filename
 end
 
-def write_records_json_file(args)
+def write_record_array_json_file(args)
   target_dir = "./JSON-FILES"
   filename = "xmlsoccer-#{args[:rec_type]}-#{args[:rec_info]}-records.json"
-  puts "writing #{filename}"
+  puts "writing #{filename}"  if @verbose
   File.open("#{target_dir}/#{filename}", "w") do |f|
     f.puts "{ \"#{args[:rec_type]}\" : ["
     args[:recs].each do |rec|
@@ -168,7 +217,7 @@ end
 def write_create_records_rake_file(args)
   target_dir = "./RAKE-FILES"
   filename = "create_#{args[:jmc]}_#{args[:rec_type]}_data-#{args[:ext]}.rake"
-  puts "writing #{filename}"
+  puts "writing #{filename}" if @verbose
   File.open("#{target_dir}/#{filename}", "w") do |f|
     f.puts 'namespace :db do'
     f.puts "\tdesc \"#{args[:desc]}\""
@@ -189,7 +238,7 @@ def write_update_records_rake_file(args)
   rec_key = args[:rec_key]
   target_dir = "./RAKE-FILES"
   filename = "update_#{args[:jmc]}_#{args[:rec_type]}_data-#{args[:ext]}.rake"
-  puts "writing #{filename}"
+  puts "writing #{filename}" if @verbose
   File.open("#{target_dir}/#{filename}", "w") do |f|
     f.puts 'namespace :db do'
     f.puts "\tdesc \"#{args[:desc]}\""

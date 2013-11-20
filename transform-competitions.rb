@@ -23,11 +23,10 @@ def transform_fixtures(options={})
   src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
   league_id = options[:league_id] ? options[:league_id] :3
 
-  # league_id_str = "0#{league_id_str}" if league_id.to_i < 10
   league_id_str = standardize_id_str(league_id, :league)
 
   if use_ds == true
-      puts "Fetching 'Fixtures by League' info from production data store ..."
+      puts "Fetching 'Fixtures by League' info for league #{league_id_str} from production data store ..."
       fixtures_xml = Nokogiri::XML(aws_data_fetch({
         name: "Fixtures-league-#{league_id_str}-#{season}.xml",
         path: 'soccer/raw-data',
@@ -41,7 +40,7 @@ def transform_fixtures(options={})
       api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
       api_type: "Demo"
     })
-    puts "Requesting data for all fixtures ..."
+    puts "Requesting data for all fixtures for league #{league_id} from xmlsoccer..."
     STDOUT.flush
     fixtures_xml = 
       Nokogiri::XML(xmlsoccer_client.get_fixtures_by_league_and_season(league_id, season).body)
@@ -50,7 +49,6 @@ def transform_fixtures(options={})
   fixture_recs = Array.new
   data_file_recs = Array.new
   league_create_recs = Array.new
-  # league_update_recs = Array.new
   fixture_update_recs = Array.new
   league_fixture_ids = Array.new
 
@@ -63,26 +61,12 @@ def transform_fixtures(options={})
 
     # puts "========= MATCH ID : '#{node.xpath("Id").text}' : LEAGUE : #{league_id} ========="
 
-    # 'standardize' the fixture_id string
-    # fixture_id_str = node.xpath("Id").text
-    # fixture_id_str = fixture_id_str.to_i < 100000 ? "0#{fixture_id_str}" : fixture_id_str
+    # Add this fixture to all-fixtures list
+    fixture_id_str = standardize_id_str(node.xpath("Id").text, :fixture)
+    @all_fixture_ids << fixture_id_str
 
     # Add this fixture to list for this league
-    fixture_id_str = standardize_id_str(node.xpath("Id").text, :fixture)
     league_fixture_ids << fixture_id_str
-
-    # home_team_id = node.xpath("HomeTeam_Id").text
-    # team_id_str = standarize_id_str(home_team_id, :team)
-    # @all_team_ids << team_id_str
-    # @team_fixture_ids[team_id_str] = Array.new unless @team_fixture_ids[team_id_str]
-    # @team_fixture_ids[team_id_str] << fixture_id_str
-
-    # team_id_str = away_team_id = node.xpath("AwayTeam_Id").text
-    # team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
-    # team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
-    # @all_team_ids << team_id_str
-    # @team_fixture_ids[team_id_str] = Array.new unless @team_fixture_ids[team_id_str]
-    # @team_fixture_ids[team_id_str] << fixture_id_str
 
     # Add this fixture to lists for both the home and away teams
     ["Home","Away"].each do |team|
@@ -108,8 +92,6 @@ def transform_fixtures(options={})
     end
 
     # Add the league_id
-    # league_name = node.xpath("League").text
-    # league_id = @xmlsoccer_league_map[league_name]
     node.add_child("<League_Id>#{league_id}</League_Id>")
 
     # Save current and final round information
@@ -137,13 +119,13 @@ def transform_fixtures(options={})
       node: node,
     })
 
-    # Record array for creating upload (json) file 
+    # Add XML file to the array for creating upload file list
     data_file_recs << { name:      filename,
                         path:      'soccer/fixtures',
                         timestamp: `date`.strip
                       }
 
-    # Record array for rake and json files
+    # Add record to the array for creating rake and json files
     fixture_recs << { match_id:     node.xpath("Id").text,
                       date:         node.xpath("Date").text,
                       league:       node.xpath("League").text,
@@ -160,7 +142,7 @@ def transform_fixtures(options={})
                       report_id:    0
                     }
 
-    # Save this record as json file, for populating noDB
+    # JMC-CREATE: Save this record as json file, for populating noDB
     filename = write_nodb_record_json_file({
       rec_type: 'fixtures',
       rec_info: "#{fixture_id_str}-create-f1",
@@ -168,7 +150,7 @@ def transform_fixtures(options={})
     })
     @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-
+    # JMC-UPDATE: Add to array used to update Fixtures record (after fixtures that been played)
     fixture_update_recs << {
       match_id:     node.xpath("Id").text,
       home_goals:   node.xpath("HomeGoals").text,
@@ -176,6 +158,7 @@ def transform_fixtures(options={})
       time_x:       time_x,
     }
 
+    # JMC-CREATE: Add to array used to update Leagues record with final_found
     league_create_recs << {
       match_id:    node.xpath("Id").text,
       final_round: final_round,
@@ -183,44 +166,47 @@ def transform_fixtures(options={})
 
   end # end fixtures.each
 
-  # Save json file for easy upload of xml files to data store...
-  write_data_file_json_file({
+  # JMC-UPLOAD: Save json file for easy upload of xml files to data store...
+  write_upload_list_json_file({
     rec_type: 'fixture',
     rec_data: 'xml',
     rec_info: league_id_str,
     recs: data_file_recs,
   })
 
-  # Save as json file, for ... noDB
-  filename = write_records_json_file({
+  # JMC-CREATE-NOT-USED: Save all league/fixture records in a json fmt, potentially for noDB
+  filename = write_record_array_json_file({
     rec_type: 'fixtures',
     rec_info: "#{league_id_str}-create-f1",
     recs: fixture_recs,
   })
   @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-  filename = write_records_json_file({
+  # JMC-CREATE: Leagues-update record - but only needed ONCE, along with Fixtures create
+  filename = write_record_array_json_file({
     rec_type: 'leagues',
     rec_info: "#{league_id_str}-create-f1",
     recs: [ league_id: league_id, final_round: final_round ]
   })
   @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-  filename = write_records_json_file({
+  # JMC-UPDATE-TBD: Fixtures-update record, to be used by noDB update mechanism
+  filename = write_record_array_json_file({
     rec_type: 'fixtures',
     rec_info: "#{league_id_str}-update-f1",
     recs: fixture_update_recs,
   })
   @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-  filename = write_records_json_file({
+  # JMC-UPDATE-TBD: Update Leagues record, repeat as needed
+  filename = write_record_array_json_file({
     rec_type: 'leagues',
     rec_info: "#{league_id_str}-update-f1",
     recs: [ league_id: league_id, latest_round: latest_round ]
   })
   @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-  # Or...just create the rake files now - DUH!
+  # JMC-CREATE: Initialize Leagues record
   write_create_records_rake_file({
     rec_class: 'Fixture',
     rec_type: 'fixture',
@@ -234,6 +220,7 @@ def transform_fixtures(options={})
   # immediately after create-league-table, thanks to the magic of alphabetic ordering.
   # (rake executes create_a1_league_data-00.rake, then create_f1_league_data-00.rake) 
   # 
+  # JMC-CREATE: Leagues-update record - but only needed ONCE, along with Fixtures create
   File.open("./RAKE-FILES/create_f1_league_data-#{league_id_str}.rake", "w") do |f|
     f.puts 'namespace :db do'
     f.puts "\tdesc \"Fill database with additional league data\""
@@ -247,7 +234,7 @@ def transform_fixtures(options={})
     f.puts "\t\tend\n\tend\nend"
   end
 
-  # Update the fixture record with the league_id_str 
+  # JMC-UPDATE: Fixtures-update record (with the league_id_str)
   write_update_records_rake_file({
     rec_class: 'Fixture',
     rec_type: 'fixture',
@@ -258,7 +245,8 @@ def transform_fixtures(options={})
     ext: league_id_str,
   })
 
-  # Update the league record with the latest_round
+  # JMC-UPDATE: Leagues-update record (add the latest_round)
+  #             only needed ONCE, along with Fixtures create
   write_update_records_rake_file({
     rec_class: 'League',
     rec_type: 'league',
@@ -269,7 +257,7 @@ def transform_fixtures(options={})
     ext: league_id_str,
   })
 
-  # Save json file for creating league/fixtures relationship
+  # JMC-CREATE: Save json file for creating league/fixtures relationship
   filename = write_nodb_relation_json_file({
     rel_A:     'leagues',
     rel_B:     'fixtures',
@@ -282,9 +270,13 @@ def transform_fixtures(options={})
 
 end
 
-
+# ---------------------------------------------------
+#  Name: team_fixtures_relatonship
+#  Desc: 
+# ---------------------------------------------------
 def team_fixtures_relationship
 
+  # JMC-CREATE: Save json file for creating team/fixtures relationship
   @all_team_ids.sort.uniq.each do |team_id|
     filename = write_nodb_relation_json_file({
       rel_A:     'teams',
@@ -299,27 +291,43 @@ def team_fixtures_relationship
 
 end
 
+# ---------------------------------------------------
+#  Name: transform_driver
+#  Desc: 
+# ---------------------------------------------------
 def transform_driver
 
   @nodb_file_recs = Array.new
   @all_team_ids = Array.new
   @team_fixture_ids = Hash.new
+  @all_fixture_ids = Array.new
 
-  # xml_doc = Nokogiri::XML(open("./XML/AllLeagues.xml"))
-  # league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
-  # league_ids.each do |league_id|
+  @jmc_bad_league_list = ["15","34"]
+
   get_league_ids.each do |league_id|
-    next if ["15","34"].include? league_id
+    next if @jmc_bad_league_list.include? league_id
     transform_fixtures(league_id: league_id, season: '1314',
                        localtest: true, use_ds: true,
                        src_dir: 'XML-RAW')
   end
 
-  # Save json file for creating team/fixtures relationship
+  # JMC-CREATE: Save json file for creating team/fixtures relationship
   team_fixtures_relationship
 
-  # Save json file for easy upload to noDB data store...
-  write_data_file_json_file({
+  # JMC-CREATE: Save json file for handy all-fixtures list
+  filename = write_nodb_relation_json_file({
+    rel_A:     'fixtures',
+    rel_B:     'fixtures',
+    rel_info:  'all-fixture-ids',
+    rel_key_A:  'all',
+    rel_keys_B: @all_fixture_ids.sort,
+    jmc:        'f1',
+    rel_type:   'list',
+  })
+  @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
+
+  # JMC-CREATE: Save json file for easy upload to noDB data store...
+  write_upload_list_json_file({
     rec_type: "fixture",
     rec_info: 'all',
     rec_data: 'nodb',

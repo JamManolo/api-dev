@@ -29,27 +29,27 @@ module SoccerStatsHelper
   # ---------------------------------------------------
   #  Rackspace Cloud Storage - fetch helper
   # ---------------------------------------------------
-  require 'fog'
+  # require 'fog'
 
-  def rackspace_data_fetch(data_file_rec)
-    rackspace_config = JSON.parse(File.open('rackspace_config.json').read)
-    rackspace_service = Fog::Storage.new({
-      provider:          'Rackspace',
-      rackspace_username: rackspace_config['username'],
-      rackspace_api_key:  rackspace_config['api_key'],
-      rackspace_region:   rackspace_config['region'],
-      connection_options: {},
-    })
+  # def rackspace_data_fetch(data_file_rec)
+  #   rackspace_config = JSON.parse(File.open('rackspace_config.json').read)
+  #   rackspace_service = Fog::Storage.new({
+  #     provider:          'Rackspace',
+  #     rackspace_username: rackspace_config['username'],
+  #     rackspace_api_key:  rackspace_config['api_key'],
+  #     rackspace_region:   rackspace_config['region'],
+  #     connection_options: {},
+  #   })
 
-    filename = "#{data_file_rec[:path]}/#{data_file_rec[:name]}"
-    directories = rackspace_service.directories
-    File.open("./downloads/rackspace/#{filename}", "w") do |f|
-      directories.first.files.get(filename) do |data, remaining, content_length|
-        f.syswrite data
-      end
-    end
-    File.open("./downloads/rackspace/#{filename}").read
-  end
+  #   filename = "#{data_file_rec[:path]}/#{data_file_rec[:name]}"
+  #   directories = rackspace_service.directories
+  #   File.open("./downloads/rackspace/#{filename}", "w") do |f|
+  #     directories.first.files.get(filename) do |data, remaining, content_length|
+  #       f.syswrite data
+  #     end
+  #   end
+  #   File.open("./downloads/rackspace/#{filename}").read
+  # end
 
   # ------------------------------------------------
   #  Google Cloud Storage - fetch helper

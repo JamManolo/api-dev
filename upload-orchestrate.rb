@@ -1,5 +1,8 @@
 require "json"
-require "./mygem/orchestrate/lib/orchestrate"
+require "orchestrate-v0"
+require "./orchestrate-utils"
+
+puts Gem.loaded_specs['orchestrate-v0'].full_gem_path
 
 # =================================================================================================
 #  Initialize application-specific data
@@ -15,7 +18,7 @@ require "./mygem/orchestrate/lib/orchestrate"
 @root_name       = @orch_config['root-name']
 @all_league_ids  = @orch_config['all-league-ids']
 @all_comp_ids    = @orch_config['all-competition-ids']
-# @all_fixture_ids = JSON.parse(open("#{@src_dir}/#{@root_name}-fixtures-all-fixtures-f1-list.json").read)['all-fixture-ids']
+@all_fixture_ids = JSON.parse(open("#{@src_dir}/#{@root_name}-fixtures-all-fixtures-f1-list.json").read)['all-fixture-ids']
 @comp_team_ids   = JSON.parse(open("#{@src_dir}/#{@root_name}-teams-all-competitions-t2-list.json").read)['all-team-ids']
 @all_team_ids    = JSON.parse(open("#{@src_dir}/#{@root_name}-teams-all-teams-t1-list.json").read)['all-team-ids']
 @member_team_ids = JSON.parse(open("#{@src_dir}/#{@root_name}-teams-all-leagues-t2-list.json").read)['all-team-ids']
@@ -29,12 +32,21 @@ require "./mygem/orchestrate/lib/orchestrate"
 # -----------------------------------------------------------------------------------
 def setup_population_control
 	@population_control = Hash.new
-	population_groups = [:leagues, :orphans, :members, 'member-teams']
-	population_groups += [:competitions, :standings, :fixtures, 'league-fixtures', 'team-fixtures']
+	# population_groups = [:leagues, :orphans, :members, 'member-teams', :fixtures]
+	population_groups = [:orphans, :members, 'member-teams']
+	population_groups += [:competitions, :standings, 'league-fixtures', 'team-fixtures']
 	population_groups.each do |x|
 		@population_control[x] = true
 	end
+
+	if false
+		['member-teams', :standings, :leagues].each do |group|
+			@population_control[group] = :delete
+		end
+	end
 end
+
+
 setup_population_control
 
 
@@ -42,223 +54,240 @@ setup_population_control
 #  Populate the Orchestrate.io application (fff-info)
 # =================================================================================================
 
-def populate_my_app
-
-  orchestrate = NoDB::Orchestrate.new({
-		'base-url' => @orch_config['base-url'],
-		'user'     => @orch_config['user'],
-	})
+def populate_my_app(orchestrate)
 
 	# -----------------------------------------------------------------------------------
-	#  Populate the leagues collection
+	#  Populate the 'leagues' collection
 	#
-	unless @population_control[:leagues]
-		collection = 'leagues'
-		json = Hash.new
-		@all_league_ids.each do |key|
-			json[key] = open("#{@src_dir}/#{@root_name}-#{collection}-#{key}-create-a1-record.json")
-		end
-		orchestrate.populate_collection(collection: collection,	keys: @all_league_ids, json: json)
-	end
+	# unless @population_control[:leagues]
+	# 	populate_keys(client: orchestrate, collection: 'leagues', keys: @all_league_ids, jmc: 'a1')
+	# end
+
+	# # -----------------------------------------------------------------------------------
+	# #  Populate the 'teams' collection for non-league (orphan) teams
+	# #
+	# unless @population_control[:orphans]
+	# 	populate_keys(client: orchestrate, collection: 'teams', keys: @orphan_team_ids, jmc: 't1')
+	# end
+
+	# # -----------------------------------------------------------------------------------
+	# #  Populate the 'teams' collection for league (member) teams
+	# #
+	# unless @population_control[:members]
+	# 	populate_keys(client: orchestrate, collection: 'teams', keys: @member_team_ids, jmc: 't2')
+	# end
 
 	# -----------------------------------------------------------------------------------
-	#  Populate the teams collection for non-league (orphan) teams
+	#  Populate the 'fixtures' collection
 	#
-	unless @population_control[:orphans]
-		collection = 'teams'
-		json = Hash.new
-		@orphan_team_ids.each do |key|
-			json[key] = open("#{@src_dir}/#{@root_name}-#{collection}-#{key}-create-t1-record.json")
-		end
-		orchestrate.populate_collection(collection: collection, keys: @orphan_team_ids, json: json)
-	end
-
-	# -----------------------------------------------------------------------------------
-	#  Populate the teams collection for league (member) teams
-	#
-	unless @population_control[:members]
-		collection = 'teams'
-		json = Hash.new
-		@member_team_ids.each do |key|
-			json[key] = open("#{@src_dir}/#{@root_name}-#{collection}-#{key}-create-t2-record.json")
-		end
-		orchestrate.populate_collection(collection: collection, keys: @member_team_ids, json: json)
-	end
-
-	# -----------------------------------------------------------------------------------
-	#  Populate the fixtures collection
-	#
+	my_fixture_ids = ["299537", "299538"]
 	unless @population_control[:fixtures]
-		collection = 'fixtures'
-		json = Hash.new
-		@all_fixture_ids.each do |key|
-			json[key] = open("#{@src_dir}/#{@root_name}-#{collection}-#{key}-create-f1-record.json")
-		end
-		orchestrate.populate_collection(collection: collection, keys: @all_fixture_ids, json: json)
+		populate_keys(client: orchestrate, collection: 'fixtures', keys: my_fixture_ids, jmc: 'f1')
+		# populate_keys(client: orchestrate, collection: 'fixtures', keys: @all_fixture_ids, jmc: 'f1')
 	end
 
+	# # -----------------------------------------------------------------------------------
+	# #  Populate 'league/standings' events for each league
+	# #
+	# unless @population_control[:standings]
+	# 	@all_league_ids.each do |league_id_str|
+	# 		populate_events({
+	# 			client:     orchestrate,
+	# 			collection: :leagues,
+	# 			key:        league_id_str,
+	# 			event_type: :standings,
+	# 			list:       'standings-ids',
+	# 			jmc:        's1',
+	# 		})
+	# 	end
+	# end
+
+	# # -----------------------------------------------------------------------------------
+	# #  Create the 'league/teams' relationship for each league
+	# #
+	# unless @population_control['member-teams']
+	# 	@all_league_ids.each do |league_id_str|
+	# 		get_relation_list({
+	# 			collection_A: :leagues,
+	# 			key_A:        league_id_str,
+	# 			relation:     :teams,
+	# 			collection_B: :teams,
+	# 		  list:         'member-team-ids',
+	# 		  jmc:          't2',
+	# 		}).each do |key_B|
+	# 			orchestrate.put_relation({
+	# 				collection_A: :leagues,
+	# 				key_A:        league_id_str,
+	# 				relation:     :teams,
+	# 				collection_B: :teams,
+	# 				key_B:        key_B
+	# 			})
+	# 		end
+	# 		# populate_relation({
+	# 		# 	client:       orchestrate,
+	# 		# 	collection_A: :leagues,
+	# 		# 	key_A:        league_id_str,
+	# 		# 	relation:     :teams,
+	# 		# 	collection_B: :teams,
+	# 		#   list:         'member-team-ids',
+	# 		#   jmc:          't2',
+	# 		# })
+	# 	end
+	# end
+
+	# # -----------------------------------------------------------------------------------
+	# #  Create the 'teams/competitions' relationship for each participating team
+	# # 
+	# unless @population_control[:competitions]
+	# 	@comp_team_ids.each do |team_id_str|
+	# 		populate_relation({
+	# 			client:       orchestrate,
+	# 			collection_A: :teams,
+	# 			key_A:        team_id_str,
+	# 			relation:     :competitions,
+	# 			collection_B: :leagues,
+	# 			list:         'competition-ids',
+	# 			jmc:          't2',
+	# 		})
+	# 	end
+	# end
+
+	# # -----------------------------------------------------------------------------------
+	# #  Create the 'league/fixtures' relationship for each league
+	# #
+	# unless @population_control['league-fixtures']
+	# 	@all_league_ids.each do |league_id_str|
+	# 		populate_relation({
+	# 			client:       orchestrate,
+	# 			collection_A: :leagues,
+	# 			key_A:        league_id_str,
+	# 			relation:     :fixtures,
+	# 			collection_B: :fixtures,
+	# 	    keys_B:       'fixture-ids',
+	# 			jmc:          'f1',
+	# 		})
+	# 	end
+	# end
+
+	# # -----------------------------------------------------------------------------------
+	# #  Create the 'team/fixtures' relationship for each team
+	# #
+	# unless @population_control['team-fixtures']
+	# 	@all_team_ids.each do |team_id_str|
+	# 		populate_relation({
+	# 			client:       orchestrate,
+	# 			collection_A: :teams,
+	# 			key_A:        team_id_str,
+	# 			relation:     :fixtures,
+	# 			collection_B: :fixtures,
+	# 	    keys_B:       'fixture-ids',
+	# 			jmc:          'f1',
+	# 		})
+	# 	end
+	# end
+
+
 	# -----------------------------------------------------------------------------------
-	#  Populate league/standings events for each league
+	#  Update each 'fixtures' record with the 'report_id'
 	#
-	unless @population_control[:standings]
-		collection = :leagues
-		type       = :standings
-		@all_league_ids.each do |league_id_str|
-			key = league_id_str
-			filename = "#{@src_dir}/#{@root_name}-#{collection}-#{key}-#{type}-s1-list.json"
-			JSON.parse(open(filename).read)['standings-ids'].each do |event|
-				filename = "#{@root_name}-#{collection}-#{key}-#{type}-#{event}-create-s1-event.json"
-				json = open("#{@src_dir}/#{filename}")
-				orchestrate.put_events({
-					collection: collection,
-					key:        key,
-					event_type: type,
-					json:       json,
-				})
-			end
-		end
-	end
+	unless @population_control['fixtures-report']
+		# @update_fixture_ids.each do |fixture_id_str|
 
-	# -----------------------------------------------------------------------------------
-	#  Create the league/teams relationship for each league
-	#
-	unless @population_control['member-teams']
-		collection_A = :leagues
-		collection_B = :teams
-		@all_league_ids.each do |league_id_str|
-			key_A        = league_id_str
-			filename = "#{@root_name}-#{collection_A}-#{key_A}-#{collection_B}-t2-relation.json"
-			keys_B = JSON.parse(open("#{@src_dir}/#{filename}").read)['member-team-ids']
-			orchestrate.populate_relation({
-				collection_A: collection_A,
-				key_A:        key_A,
-				relation:     :teams,
-				collection_B: collection_B,
-		    keys_B:       keys_B,
-			})
-		end
-	end
-
-	# -----------------------------------------------------------------------------------
-	#  Create the teams/competitions relationship for each participating team
-	# 
-	unless @population_control[:competitions]
-		@comp_team_ids.each do |team_id_str|
-			orchestrate.populate_relation({
-				collection_A: :teams,
-				key_A:        team_id_str,
-				relation:     :competitions,
-				collection_B: leagues,
-				keys_B:       'competition-ids',
-				jmc:          't2',
-				})
-		end
-	end
-
-	# -----------------------------------------------------------------------------------
-	#  Create the league/fixtures relationship for each league
-	#
-	unless @population_control['league-fixtures']
-		@all_league_ids.each do |league_id_str|
-			orchestrate.populate_relation({
-				collection_A: :leagues,
-				key_A:        league_id_str,
-				relation:     :fixtures,
-				collection_B: :fixtures,
-		    keys_B:       'fixture-ids',
-				jmc:          'f1',
-			})
-		end
-	end
-
-	# -----------------------------------------------------------------------------------
-	#  Create the team/fixtures relationship for each team
-	#
-	unless @population_control['team-fixtures']
-		@all_team_ids.each do |team_id_str|
-			orchestrate.populate_relation({
-				collection_A: :teams,
-				key_A:        team_id_str,
-				relation:     :fixtures,
-				collection_B: :fixtures,
-		    keys_B:       'fixture-ids',
-				jmc:          'f1',
+		my_fixture_ids.each do |fixture_id_str|
+			update_key({
+				client:      orchestrate,
+				collection:  'fixtures',
+				key:         fixture_id_str,
+				update_idx:  'match_id',
+				jmc:         'r1',
 			})
 		end
 	end
 
 end
-
-populate_my_app
 
 
 # =================================================================================================
 #  Cleanup/empty/reset/delete/etc the Orchestrate.io application data (fff-info)
 # =================================================================================================
-def clean_up_my_app
-
-	orchestrate = NoDB::Orchestrate.new({
-		'base-url' => @orch_config['base-url'],
-		'user'     => @orch_config['user'],
-	})
+def clean_up_my_app(orchestrate)
 
 	# -----------------------------------------------------------------------------------
-	#  Delete the league/teams relationship for each league
+	#  Delete the 'league/teams' relationship for each league
 	#
-	#  JMC - This doesn't seem to work - ? for Matt from orchestrate.io
 	if @population_control['member-teams'] == :delete
-		@all_league_ids.each do |league_id_str|
-			# Try deleting each relation individually
-			filename = "#{@root_name}-leagues-#{league_id_str}-teams-t2-relation.json"
-			keys_B = JSON.parse(open("#{@src_dir}/#{filename}").read)['member-team-ids']
-			keys_B.each do |key_B|
-				orchestrate.delete_relation({
-					collection_A: :leagues,
-					key_A:        league_id_str,
-					relation:     :teams,
-					collection_B: :teams,
-					key_B:        key_B,
+		if false
+			@all_league_ids.each do |league_id_str|
+				# # Try deleting each relation individually (directly via the API)
+				# filename = "#{@root_name}-leagues-#{league_id_str}-teams-t2-relation.json"
+				# keys_B = JSON.parse(open("#{@src_dir}/#{filename}").read)['member-team-ids']
+				# keys_B.each do |key_B|
+				# 	orchestrate.delete_relation({
+				# 		collection_A: :leagues,
+				# 		key_A:        league_id_str,
+				# 		relation:     :teams,
+				# 		collection_B: :teams,
+				# 		key_B:        key_B,
+				# 	})
+				# end
+
+				# Try deleting each relation individually (via the helper)
+				delete_relation_list({
+					client:       orchestrate,
+					collection_A: 'leagues',
+					key_A:        league_id_str, 
+					relation:     'teams'
 				})
-				$stdout.flush
+
+				# Try deleting the entire relationship
+				orchestrate.delete_relations(collection_A: 'leagues', key_A: league_id_str, relation: 'teams')
 			end
-			# Try just deleting the entire relationship
-			orchestrate.delete_relation_list(collection_A: 'leagues', key_A: league_id_str, relation: 'teams')
 		end
 	end
 
 	# -----------------------------------------------------------------------------------
-	#  Delete the league/standings events for each league
+	#  Delete the 'league/standings' events for each league
 	#
 	if @population_control[:standings] == :delete
-		@all_league_ids.each do |league_id_str|
-			orchestrate.delete_events(collection_A: :leagues, key: league_id_str, event: :standings)
+		if false
+			@all_league_ids.each do |league_id_str|
+				orchestrate.delete_events(collection_A: 'leagues', key: league_id_str, event_type: 'standings')
+			end
 		end
 	end
 
 	# -----------------------------------------------------------------------------------
-	#  Delete the leagues collection keys
+	#  Delete the 'leagues' collection keys
 	#
 	if @population_control[:leagues] == :delete
 		@all_league_ids.each do |league_id_str|
-			orchestrate.delete_collection(collection: :leagues,	keys: @all_league_ids)
+			orchestrate.delete_key(collection: 'leagues', key: league_id_str)
 		end
 	end
-	
 end
 
-if false
-	['member-teams', :standings, :leagues].each do |group|
-		@population_control[group] = :delete
-	end
+
+# =================================================================================================
+#  Get a client and get started!
+#
+#  This is what 'orch_config.json' looks like:
+# 	 {
+#    	 "base-url":"https://api.orchestrate.io/v0",
+#   	 "user-example":"user-key-from-orchestrate.io"
+# 	 }
+# =================================================================================================
+@orch_config = JSON.parse(open('orch_config.json').read)
+
+def get_orchestrate_client
+  client = NoDB::Orchestrate.new({
+    'base-url' => @orch_config['base-url'], user: @orch_config['user'], verbose: true
+  })
 end
 
-clean_up_my_app
+orchestrate_client = get_orchestrate_client
 
-
-
-
-
-
+# clean_up_my_app(orchestrate_client)
+populate_my_app(orchestrate_client)
 
 
 

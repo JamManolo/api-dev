@@ -101,7 +101,7 @@ def transform_leagues(options={})
   end # leagues.each
 
   # Save json file for easy upload of xml files to data store...
-  write_data_file_json_file({
+  write_upload_list_json_file({
     rec_type: 'league',
     rec_info: 'all',
     rec_data: 'xml',
@@ -109,7 +109,7 @@ def transform_leagues(options={})
   })
 
   # Save as json file, for noDB
-  filename = write_records_json_file({
+  filename = write_record_array_json_file({
     rec_type: 'leagues',
     rec_info: 'all-create-a1',
     recs: league_recs,
@@ -117,7 +117,7 @@ def transform_leagues(options={})
   jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
   # # Save json file for easy upload of noDB json files to data store...
-  # write_data_file_json_file({
+  # write_upload_list_json_file({
   #   rec_type: "league",
   #   rec_info: 'all',
   #   rec_data: 'nodb',
@@ -125,7 +125,7 @@ def transform_leagues(options={})
   # })
 
   # Save as json file, for noDB
-  filename = write_records_json_file({
+  filename = write_record_array_json_file({
     rec_type: 'leagues',
     rec_info: 'all-update-a1',
     recs: update_recs,
@@ -133,7 +133,7 @@ def transform_leagues(options={})
   jmc_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
   # Save json file for easy upload of noDB json files to data store...
-  write_data_file_json_file({
+  write_upload_list_json_file({
     rec_type: "league",
     rec_info: 'all',
     rec_data: 'nodb',

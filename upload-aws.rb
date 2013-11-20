@@ -106,8 +106,8 @@ def upload_nodb_files
   upload_files(data_file_recs)
 end
 
-upload_source_files
-# upload_application_files
+# upload_source_files
+upload_application_files
 # upload_extraneous_xml_files
 # upload_nodb_files
 

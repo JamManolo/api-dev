@@ -150,7 +150,7 @@ def transform_all_teams_by_league(options={})
     end # team_nodes.each
 
     # Save json file for easy upload of xml files to data store...
-    write_data_file_json_file({
+    write_upload_list_json_file({
       rec_type: "team",
       rec_data: 'xml',
       rec_info: league_id_str,
@@ -158,7 +158,7 @@ def transform_all_teams_by_league(options={})
     })
     
     # Save as team records json file, for ... noDB
-    filename = write_records_json_file({
+    filename = write_record_array_json_file({
       rec_type: "teams",
       rec_info: "#{league_id_str}-create-t2",
       recs: team_recs
@@ -177,7 +177,7 @@ def transform_all_teams_by_league(options={})
     })
 
     # Save as json file, for ... noDB
-    filename = write_records_json_file({
+    filename = write_record_array_json_file({
       rec_type: "teams",
       rec_info: "#{league_id_str}-update-t2",
       recs: update_recs
@@ -241,7 +241,7 @@ def transform_all_teams_by_league(options={})
   })
 
   # Save as json file, for ... noDB
-  filename = write_records_json_file({
+  filename = write_record_array_json_file({
     rec_type: "teams",
     rec_info: "all-update-t2",
     recs: competitions_recs
@@ -249,7 +249,7 @@ def transform_all_teams_by_league(options={})
   nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
   # Save json file for easy upload to noDB data store...
-  write_data_file_json_file({
+  write_upload_list_json_file({
     rec_type: "team",
     rec_info: 'league',
     rec_data: 'nodb',

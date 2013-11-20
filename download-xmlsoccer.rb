@@ -173,7 +173,7 @@ def download_xmlsoccer_files(options={})
   end
 
   # Create json file to facilitate upload to data-store
-  write_data_file_json_file({
+  write_upload_list_json_file({
     rec_type: 'source',
     rec_info: 'all',
     rec_data: 'xml',
