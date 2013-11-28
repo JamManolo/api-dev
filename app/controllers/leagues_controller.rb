@@ -233,44 +233,80 @@ class LeaguesController < ApplicationController
     domestic_league_name = domestic_league_link = ''
     competition_group_name = 'domestic_league'
     
-    filename = "Teams-league-#{league_id_str}-#{season}.xml"
-    path = 'soccer/raw-data'
-    if true
-      xml_doc = Nokogiri::XML(aws_data_fetch({
-        name: filename,
-        path: path,
-      }))
-    else
-      xml_doc = Nokogiri::XML(File.open("XML-RAW/#{filename}").read)
-    end
-    xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
+    # filename = "Teams-league-#{league_id_str}-#{season}.xml"
+    # path = 'soccer/raw-data'
+    # if true
+    #   xml_doc = Nokogiri::XML(aws_data_fetch({
+    #     name: filename,
+    #     path: path,
+    #   }))
+    # else
+    #   xml_doc = Nokogiri::XML(File.open("XML-RAW/#{filename}").read)
+    # end
+    # xml_doc.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
 
-    xml_doc.xpath("//#{namespace}Team").each do |node|
+    # xml_doc.xpath("//#{namespace}Team").each do |node|
       
+    #   if ["16", "17",].include?(@league.league_id.to_s) 
+    #     team = Team.find_by(team_id: node.xpath("#{namespace}Team_Id").text)
+    #     if team.league.downcase == "unknown"
+    #       domestic_league_name = "(#{team.country})"
+    #       domestic_league_link = countries_url(country: team.country)
+    #     else
+    #       domestic_league_name = team.league
+    #       domestic_league_link = league_url(League.find_by(league_id: team.league_id))
+    #     end
+    #     competition_group_name = @team_group_map[team.team_id.to_s]
+    #   elsif @league.league_id == 20
+    #     competition_group_name = @team_group_map[node.xpath("#{namespace}Team_Id").text]
+    #     if node.xpath("#{namespace}Name").text =~ /Seattle/
+    #       node.xpath("#{namespace}Name").first.content = "Shittle Flounders FC"
+    #     end
+    #   end
+
+    #   @teamsX[competition_group_name] << {
+    #     team_id:       node.xpath("#{namespace}Team_Id").text,
+    #     country:       node.xpath("#{namespace}Country").text,
+    #     name:          node.xpath("#{namespace}Name").text,
+    #     stadium:       node.xpath("#{namespace}Stadium").text,
+    #     home_page_url: node.xpath("#{namespace}HomePageURL").text,
+    #     wiki_link:     node.xpath("#{namespace}WIKILink").text,
+    #     league:        domestic_league_name,
+    #     league_link:   domestic_league_link,
+    #   }
+
+    @orch_config = JSON.parse(open('orch_config.json').read)
+    orchestrate = NoDB::Orchestrate.new({
+      'base-url' => @orch_config['base-url'], user: @orch_config['user']
+    })
+
+    response = orchestrate.get_relations(collection: 'leagues', key: league_id_str, relation: 'teams')
+
+    results = JSON.parse(response[:body])['results']
+    results.each do |result|
+
+      team = result['value']
+
       if ["16", "17",].include?(@league.league_id.to_s) 
-        team = Team.find_by(team_id: node.xpath("#{namespace}Team_Id").text)
-        if team.league.downcase == "unknown"
-          domestic_league_name = "(#{team.country})"
+        if team['league'].downcase == "unknown"
+          domestic_league_name = "(#{team['country']})"
           domestic_league_link = countries_url(country: team.country)
         else
-          domestic_league_name = team.league
-          domestic_league_link = league_url(League.find_by(league_id: team.league_id))
+          domestic_league_name = team['league']
+          domestic_league_link = league_url(League.find_by(league_id: team['league_id']))
         end
-        competition_group_name = @team_group_map[team.team_id.to_s]
+        competition_group_name = @team_group_map[team['team_id'].to_s]
       elsif @league.league_id == 20
-        competition_group_name = @team_group_map[node.xpath("#{namespace}Team_Id").text]
-        if node.xpath("#{namespace}Name").text =~ /Seattle/
-          node.xpath("#{namespace}Name").first.content = "Shittle Flounders FC"
-        end
+        competition_group_name = @team_group_map[team['team_id']]
       end
 
       @teamsX[competition_group_name] << {
-        team_id:       node.xpath("#{namespace}Team_Id").text,
-        country:       node.xpath("#{namespace}Country").text,
-        name:          node.xpath("#{namespace}Name").text,
-        stadium:       node.xpath("#{namespace}Stadium").text,
-        home_page_url: node.xpath("#{namespace}HomePageURL").text,
-        wiki_link:     node.xpath("#{namespace}WIKILink").text,
+        team_id:       team['team_id'],
+        country:       team['country'],
+        name:          team['name'],
+        stadium:       team['stadium'],
+        home_page_url: team['home_page_url'],
+        wiki_link:     team['wiki_link'],
         league:        domestic_league_name,
         league_link:   domestic_league_link,
       }

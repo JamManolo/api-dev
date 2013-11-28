@@ -30,13 +30,8 @@ def transform_all_teams_by_league(options={})
   all_member_team_ids = Array.new
   all_comp_team_ids = Array.new
 
-  # xml_doc = Nokogiri::XML(open("#{src_dir}/AllLeagues.xml"))
-  # league_ids = xml_doc.xpath("//League/Id").map { |node| node.text }
-  # league_ids.each do |league_id|
   get_league_ids.each do |league_id|
 
-    next if ["15", "34"].include? league_id
-    # league_id_str = league_id.to_i < 10 ? "0#{league_id}" : league_id
     league_id_str = standardize_id_str(league_id, :league)
 
     if use_ds == true
@@ -49,10 +44,6 @@ def transform_all_teams_by_league(options={})
       filename = "#{src_dir}/Teams-league-#{league_id_str}-#{season}.xml"
       puts "Reading local data for league #{league_id_str} from #{filename} ..."
       teams_xml = Nokogiri::XML(File.open(filename))
-    else
-      puts "Requesting data for league #{league_id} ..."
-      STDOUT.flush
-      teams_xml = Nokogiri::XML(xmlsoccer_client.get_all_teams_by_league_and_season(league_id, season).body)
     end
     teams_xml.xpath("//XMLSOCCER.COM").first.add_namespace_definition(nil, "http://xmlsoccer.com/Team")
     namespace = 'xmlns:'
@@ -77,9 +68,6 @@ def transform_all_teams_by_league(options={})
       end
 
       # 'standardize' the team_id string
-      # team_id_str = node.xpath("#{namespace}Team_Id").text
-      # team_id_str = team_id_str.to_i < 100 ? "0#{team_id_str}" : team_id_str
-      # team_id_str = team_id_str.to_i < 10  ? "0#{team_id_str}" : team_id_str
       team_id_str = standardize_id_str(node.xpath("#{namespace}Team_Id").text, :team)
 
       # Add team_id to league members (teams)
@@ -87,8 +75,7 @@ def transform_all_teams_by_league(options={})
 
       # Add league information, separating competitions from domestic leagues
       # Collect records for writing rake update files
-      is_competition = ["15", "16", "17", "34", "35"].include?(league_id) ? true : false
-      if is_competition == true
+      if @competition_league_list.include? league_id 
         node.add_child("<Competition>#{@xmlsoccer_league_map[league_id]}</Competition>")
         node.add_child("<Competition_Id>#{league_id}</Competition_Id>")
         team_id = node.xpath("#{namespace}Team_Id").text

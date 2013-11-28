@@ -47,28 +47,45 @@ end
 
 
 # ----------------------------------------------
-#  Id 'standardization' routine
+#  Name: standardize_id_str
+#  Desc: id standardization routine
 # ----------------------------------------------
-@id_str_lengths = { league: 2, team: 3, fixture: 6 }
+@standard_id_length = { league: 2, team: 3, fixture: 6 }
 
 def standardize_id_str(id, type)
   id_str = id.to_s
-  while id_str.length < @id_str_lengths[type] do
+  while id_str.length < @standard_id_length[type] do
     id_str = "0#{id_str}"
   end
   id_str
 end
 
+
 # ----------------------------------------------
-#  Return all league_ids
+#  Name: get_league_ids
+#  Desc: return all league_ids
 # ----------------------------------------------
+@empty_league_list = ["15","34"]
+@competition_league_list = ["15","16","17","34","35"]
+
 def get_league_ids
-  bad_league_list = ["15","34"]
   xml_data = aws_data_fetch(path: 'soccer/raw-data', name: 'AllLeagues.xml')
   Nokogiri::XML(xml_data).xpath("//League/Id").map { |node|
     standardize_id_str(node.text, :league)
-  }.select { |e| !bad_league_list.include? e.to_s }
+  }.select { |e| !@empty_league_list.include? e.to_s }
 end
+
+def get_domestic_league_ids
+  xml_data = aws_data_fetch(path: 'soccer/raw-data', name: 'AllLeagues.xml')
+  Nokogiri::XML(xml_data).xpath("//League/Id").map { |node|
+    standardize_id_str(node.text, :league)
+  }.select { |e| !@competition_league_list.include? e.to_s }
+end
+
+def get_competition_league_ids
+  @competitition_league_list.select { |e| !@empty_league_list.include? e.to_s }
+end
+
 
 # ----------------------------------------------
 #  Return all team_ids

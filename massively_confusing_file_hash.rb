@@ -43,10 +43,10 @@
   'team-all-nodb' => { data_type: 'team', name_str: 'teams', group: 'all', file_type: 'nodb', },
 
   # File: xmlsoccer-teams-league-nodb-files.json
-  # Desc:  'team-nodb-files', xmlsoccer-teams-00-create-t1-records.json, 'soccer/nodb'
-  #        'team-nodb-files', xmlsoccer-teams-00-update-t1-records.json, 'soccer/nodb'
+  # Desc:  'team-nodb-files', xmlsoccer-teams-00-create-t2-records.json, 'soccer/nodb'
+  #        'team-nodb-files', xmlsoccer-teams-00-update-t2-records.json, 'soccer/nodb'
   'team-nodb' => { data_type: 'team', name_str: 'teams', group: 'league', file_type: 'nodb', },
-
+  
   # File: xmlsoccer-fixtures-all-nodb-files.json
   # Desc:  'fixture-nodb-files', xmlsoccer-fixtures-00-create-f1-records.json, 'soccer/nodb'
   #        'fixture-nodb-files', xmlsoccer-fixtures-00-update-f1-records.json, 'soccer/nodb'
@@ -59,4 +59,11 @@
   'result-nodb' => { data_type: 'result', name_str: 'results', group: 'all', file_type: 'nodb', },
 
   # ----- Thank you ------------------------------------------------------------------------------------
+
+  # File: xmlsoccer-teams-each-nodb-files.json
+  # Desc:  'team-nodb-files', xmlsoccer-teams-000-create-t1-record.json, 'soccer/nodb'
+  #        'team-nodb-files', xmlsoccer-teams-000-create-t2-record.json, 'soccer/nodb'
+  'team-nodb' => { data_type: 'team', name_str: 'teams', group: 'team', file_type: 'nodb', },
+
+
 }

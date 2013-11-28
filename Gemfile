@@ -11,7 +11,8 @@ gem 'nokogiri'
 gem 'json'
 gem 'curb'
 
-gem 'orchestrate-v0', github: 'jimcar/orchestrate-v0'
+# gem 'orchestrate-v0', github: 'jimcar/orchestrate-v0'
+gem 'orchestrate-v0', path: '/Users/jimcar/rails_projects/Gems/orchestrate-v0'
 
 # Use fog to manage Rackspace API
 gem 'fog'

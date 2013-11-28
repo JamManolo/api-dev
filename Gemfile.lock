@@ -1,10 +1,4 @@
 GIT
-  remote: git://github.com/jimcar/orchestrate-v0.git
-  revision: 2fdcf59ffcf7559413a8281a2b8f44a55e538b00
-  specs:
-    orchestrate-v0 (0.1.0)
-
-GIT
   remote: git://github.com/thomas-mcdonald/bootstrap-sass.git
   revision: 9c6c07f74ff515cf38380b014cfede14a4f0eae4
   branch: 3
@@ -18,6 +12,11 @@ PATH
     xmlsoccer (0.0.1)
       savon
       supermodel
+
+PATH
+  remote: /Users/jimcar/rails_projects/Gems/orchestrate-v0
+  specs:
+    orchestrate-v0 (0.1.0)
 
 PATH
   remote: mygem/xmlsoccerhttp
