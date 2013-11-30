@@ -60,13 +60,12 @@ def standardize_id_str(id, type)
   id_str
 end
 
-
 # ----------------------------------------------
 #  Name: get_league_ids
 #  Desc: return all league_ids
 # ----------------------------------------------
-@empty_league_list = ["15","34"]
 @competition_league_list = ["15","16","17","34","35"]
+@empty_league_list = ["15","34"]
 
 def get_league_ids
   xml_data = aws_data_fetch(path: 'soccer/raw-data', name: 'AllLeagues.xml')
@@ -96,7 +95,8 @@ def get_team_ids
 end
 
 # ----------------------------------------------
-#  Return all league/fixture_ids
+#  Name: get_league_fixture_ids
+#  Desc: return fixture_ids for specified league
 # ----------------------------------------------
 def get_league_fixture_ids(league_id_str)
   puts "getting fixtures for league #{league_id_str}" if @verbose

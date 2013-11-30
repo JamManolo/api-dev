@@ -10,7 +10,7 @@ require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
 require "./transform-utils"
 require "./xmlsoccer-league-map"
 
-def transform_all_teams_by_league(options={})
+def transform_teams_by_league(options={})
 
   use_ds    = options[:use_ds]    ? options[:use_ds]    : false
   localtest = options[:localtest] ? options[:localtest] : false
@@ -182,9 +182,12 @@ def transform_all_teams_by_league(options={})
     })
     nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 
-    all_member_team_ids += member_team_ids
+    @all_member_team_ids += member_team_ids
 
   end # league_ids.each
+end
+
+def jmc_write_all_summary_type_files_YO
 
   # Save json file for handy all-leagues list
   # (use :rel_type to specify this is actually a list)
@@ -193,7 +196,7 @@ def transform_all_teams_by_league(options={})
     rel_B:     'leagues',
     rel_info:  'all-team-ids',
     rel_key_A:  'all',
-    rel_keys_B: all_member_team_ids.sort.uniq,
+    rel_keys_B: @all_member_team_ids.sort.uniq,
     rel_type:   'list',
     jmc:        't2',
   })
@@ -245,7 +248,40 @@ def transform_all_teams_by_league(options={})
 
 end
 
+# -------------------------------------------------------------------------------------------------
+#  Name: transform_driver
+#  Desc: 
+# -------------------------------------------------------------------------------------------------
+def transform_driver
 
-transform_all_teams_by_league(localtest: true, use_ds: true, src_dir: 'XML-RAW')
+  use_ds    = options[:use_ds]    ? options[:use_ds]    : false
+  localtest = options[:localtest] ? options[:localtest] : false
+  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
+  season = '1314'
+
+  if use_ds == false and localtest == false
+    puts "Setting up client"
+    xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
+      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
+      api_type: "Full"
+    })
+  end
+
+  @comp_hash = Hash.new
+  @nodb_file_recs = Array.new
+  @all_member_team_ids = Array.new
+  @all_comp_team_ids = Array.new
+
+  get_domestic_league_ids.each do |league_id|
+    transform_teams_by_league(localtest: true, use_ds: true, src_dir: 'XML-RAW')
+  end
+
+  jmc_write_all_summary_type_files_YO
+
+end
+
+
+transform_driver
+# transform_all_teams_by_league(localtest: true, use_ds: true, src_dir: 'XML-RAW')
 
 
