@@ -32,9 +32,26 @@ puts Gem.loaded_specs['orchestrate-v0'].full_gem_path
 # -----------------------------------------------------------------------------------
 def setup_population_control
 	@population_control = Hash.new
-	# population_groups = [:leagues, :orphans, :members, 'member-teams', :fixtures]
-	population_groups = [:orphans, :members, 'member-teams']
-	population_groups += [:competitions, :standings, 'league-fixtures', 'team-fixtures']
+	population_groups = []
+
+	# Collections
+	population_groups << :leagues
+	population_groups << :orphans
+	population_groups << :members
+	population_groups << :fixtures
+
+	# Events
+	# population_groups << :standings           # leagues/standings
+
+	# Relations
+	population_groups << 'member-teams'       # leagues/teams
+	population_groups << 'league-fixtures'    # leagues/fixtures
+	population_groups << :competitions        # teams/competitions
+	population_groups << 'team-fixtures'      # teams/fixtures
+
+	# Collection updates
+	population_groups << 'fixtures-report'
+
 	population_groups.each do |x|
 		@population_control[x] = true
 	end
@@ -45,7 +62,6 @@ def setup_population_control
 		end
 	end
 end
-
 
 setup_population_control
 
@@ -59,48 +75,46 @@ def populate_my_app(orchestrate)
 	# -----------------------------------------------------------------------------------
 	#  Populate the 'leagues' collection
 	#
-	# unless @population_control[:leagues]
-	# 	populate_keys(client: orchestrate, collection: 'leagues', keys: @all_league_ids, jmc: 'a1')
-	# end
+	unless @population_control[:leagues]
+		populate_keys(client: orchestrate, collection: 'leagues', keys: @all_league_ids, jmc: 'a1')
+	end
 
-	# # -----------------------------------------------------------------------------------
-	# #  Populate the 'teams' collection for non-league (orphan) teams
-	# #
-	# unless @population_control[:orphans]
-	# 	populate_keys(client: orchestrate, collection: 'teams', keys: @orphan_team_ids, jmc: 't1')
-	# end
+	# -----------------------------------------------------------------------------------
+	#  Populate the 'teams' collection for non-league (orphan) teams
+	#
+	unless @population_control[:orphans]
+		populate_keys(client: orchestrate, collection: 'teams', keys: @orphan_team_ids, jmc: 't1')
+	end
 
-	# # -----------------------------------------------------------------------------------
-	# #  Populate the 'teams' collection for league (member) teams
-	# #
-	# unless @population_control[:members]
-	# 	populate_keys(client: orchestrate, collection: 'teams', keys: @member_team_ids, jmc: 't2')
-	# end
+	# -----------------------------------------------------------------------------------
+	#  Populate the 'teams' collection for league (member) teams
+	#
+	unless @population_control[:members]
+		populate_keys(client: orchestrate, collection: 'teams', keys: @member_team_ids, jmc: 't2')
+	end
 
 	# -----------------------------------------------------------------------------------
 	#  Populate the 'fixtures' collection
 	#
-	my_fixture_ids = ["299537", "299538"]
+	# my_fixture_ids = ["299537", "299538"]
 	unless @population_control[:fixtures]
-		populate_keys(client: orchestrate, collection: 'fixtures', keys: my_fixture_ids, jmc: 'f1')
-		# populate_keys(client: orchestrate, collection: 'fixtures', keys: @all_fixture_ids, jmc: 'f1')
+		# populate_keys(client: orchestrate, collection: 'fixtures', keys: my_fixture_ids, jmc: 'f1')
+		populate_keys(client: orchestrate, collection: 'fixtures', keys: @all_fixture_ids, jmc: 'f1')
 	end
 
-	# # -----------------------------------------------------------------------------------
-	# #  Populate 'league/standings' events for each league
-	# #
-	# unless @population_control[:standings]
-	# 	@all_league_ids.each do |league_id_str|
-	# 		populate_events({
-	# 			client:     orchestrate,
-	# 			collection: :leagues,
-	# 			key:        league_id_str,
-	# 			event_type: :standings,
-	# 			list:       'standings-ids',
-	# 			jmc:        's1',
-	# 		})
-	# 	end
-	# end
+	# -----------------------------------------------------------------------------------
+	#  Populate 'league/standings' events for each league
+	#
+	unless @population_control[:standings]
+		@all_league_ids.each do |league_id_str|
+			next if league_id_str.to_i < 9
+			populate_events({
+				client: orchestrate, collection: 'leagues', key: league_id_str,
+				event_type: 'standings', list: 'league-standing-ids',	jmc: 's1',
+			})
+			$stdout.flush
+		end
+	end
 
 	# # -----------------------------------------------------------------------------------
 	# #  Create the 'league/teams' relationship for each league
@@ -135,39 +149,41 @@ def populate_my_app(orchestrate)
 	# 	end
 	# end
 
-	# # -----------------------------------------------------------------------------------
-	# #  Create the 'teams/competitions' relationship for each participating team
-	# # 
-	# unless @population_control[:competitions]
-	# 	@comp_team_ids.each do |team_id_str|
-	# 		populate_relation({
-	# 			client:       orchestrate,
-	# 			collection_A: :teams,
-	# 			key_A:        team_id_str,
-	# 			relation:     :competitions,
-	# 			collection_B: :leagues,
-	# 			list:         'competition-ids',
-	# 			jmc:          't2',
-	# 		})
-	# 	end
-	# end
+	# -----------------------------------------------------------------------------------
+	#  Create the 'teams/competitions' relationship for each participating team
+	# 
+	unless @population_control[:competitions]
+		@comp_team_ids.each do |team_id_str|
+			populate_relation({
+				client:       orchestrate,
+				collection_A: :teams,
+				key_A:        team_id_str,
+				relation:     :competitions,
+				collection_B: :leagues,
+				list:         'competition-ids',
+				jmc:          't2',
+			})
+		end
+	end
 
-	# # -----------------------------------------------------------------------------------
-	# #  Create the 'league/fixtures' relationship for each league
-	# #
-	# unless @population_control['league-fixtures']
-	# 	@all_league_ids.each do |league_id_str|
-	# 		populate_relation({
-	# 			client:       orchestrate,
-	# 			collection_A: :leagues,
-	# 			key_A:        league_id_str,
-	# 			relation:     :fixtures,
-	# 			collection_B: :fixtures,
-	# 	    keys_B:       'fixture-ids',
-	# 			jmc:          'f1',
-	# 		})
-	# 	end
-	# end
+	# -----------------------------------------------------------------------------------
+	#  Create the 'league/fixtures' relationship for each league
+	#
+	unless @population_control['league-fixtures']
+		@all_league_ids.each do |league_id_str|
+			populate_relation({
+				client:       orchestrate,
+				collection_A: :leagues,
+				key_A:        league_id_str,
+				relation:     :fixtures,
+				collection_B: :fixtures,
+				list:         'league-fixture-ids',
+		    # keys_B:       'fixture-ids',
+				# jmc:          'f1',
+				jmc:          't1',
+			})
+		end
+	end
 
 	# # -----------------------------------------------------------------------------------
 	# #  Create the 'team/fixtures' relationship for each team
@@ -192,7 +208,7 @@ def populate_my_app(orchestrate)
 	#
 	unless @population_control['fixtures-report']
 		# @update_fixture_ids.each do |fixture_id_str|
-
+		my_fixture_ids = ["299537", "299538"]
 		my_fixture_ids.each do |fixture_id_str|
 			update_key({
 				client:      orchestrate,

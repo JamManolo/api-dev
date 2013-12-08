@@ -5,20 +5,24 @@
   - fixtures.each do |fixture|
    .row
     .col-md-4.home-team
-     = link_to "#{fixture[:home_team]}", team_url(Team.find_by(team_id: fixture[:home_team_id]))
-    .col-md-1.center= "#{fixture[:home_goals]}"
-    - if fixture[:time_x] =~ /^Finished/
-     - if fixture[:report_id] == fixture[:match_id]
-      .col-md-2.center= link_to "FT", report_fixture_url(Fixture.find_by(match_id: fixture[:match_id]))
+     / = link_to "#{fixture['home_team']}", team_url(Team.find_by(team_id: fixture['home_team_id']))
+     = fixture['home_team']
+    .col-md-1.center= "#{fixture['home_goals']}"
+    - if fixture['time_x'] =~ /^Finished/
+     - if fixture['report_id'] == fixture['match_id']
+      / .col-md-2.center= link_to "FT", report_fixture_url(Fixture.find_by(match_id: fixture['match_id']))
+      .col-md-2.center= "FT"
      - else
       .col-md-2.center= link_to "FT", fixture_url(fixture)
-    - elsif fixture[:time_x] =~ /\'$/
+    - elsif fixture['time_x'] =~ /\'$/
      .col-md-2.center
-      = link_to fixture[:time_x], report_fixture_url(Fixture.find_by(match_id: fixture[:match_id]))
+      / = link_to fixture['time_x'], report_fixture_url(Fixture.find_by(match_id: fixture['match_id']))
+      = fixture['time_x']
     - else
-     - tmpstr = fixture[:time_x] == "Postponed" ? 'postponed' : 'wtf'
-     - tmpstr = fixture[:time_x] == "Not started" ? '---' : tmpstr
+     - tmpstr = fixture['time_x'] == "Postponed" ? 'postponed' : 'wtf'
+     - tmpstr = fixture['time_x'] == "Not started" ? '---' : tmpstr
      .col-md-2.center= tmpstr
-    .col-md-1.center= "#{fixture[:away_goals]}"
+    .col-md-1.center= "#{fixture['away_goals']}"
     .col-md-4.away-team
-     = link_to "#{fixture[:away_team]}", team_url(Team.find_by(team_id: fixture[:away_team_id]))
+     / = link_to "#{fixture['away_team']}", team_url(Team.find_by(team_id: fixture['away_team_id']))
+     = fixture['away_team']

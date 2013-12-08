@@ -13,6 +13,7 @@
 
 def get_the_json(file_str)
 	filename = "#{@root_name}-#{file_str}.json"
+	puts "Reading JSON from '#{filename}'"
 	json = @use_ds ? aws_fetch_data(path: 'soccer/nodb', name: filename)
 	               : open("#{@src_dir}/#{filename}").read
 end
@@ -87,18 +88,20 @@ end
 # -------------------------------------------------------------------------------------------------
 def get_events_list(args)
 	JSON.parse(
-		get_the_json("#{args[:collection]}-#{args[:key]}-#{args[:type]}-#{args[:jmc]}-list")
+		get_the_json("#{args[:collection]}-#{args[:key]}-#{args[:event_type]}-#{args[:jmc]}-list")
   )[args[:list]]
 end
 
 # -------------------------------------------------------------------------------------------------
 #  Name: populate_events
-#  Desc: client, convenience method to PUT  a list events for specified 'key/event_type'
+#  Desc: client, convenience method to PUT a list events for specified 'key/event_type'
 #  Args: client, collection, key, jmc, list
 # -------------------------------------------------------------------------------------------------
 def populate_events(args)
-	get_event_list(args).each do |event|
-		json = get_the_json("#{args[:collection]}-#{args[:key]}-create-#{args[:jmc]}-events")
+	get_events_list(args).each do |event|
+		json = get_the_json("#{args[:collection]}-#{args[:key]}-#{args[:event_type]}-#{event}-#{args[:jmc]}-record")
+		puts json
+		$stdout.flush
 		args[:client].put_event(collection: args[:collection], key: args[:key],
 		                        event_type: args[:event_type], json: json )
 	end
@@ -125,7 +128,7 @@ end
 # -------------------------------------------------------------------------------------------------
 def populate_relation(args)
 	get_relation_list(args).each do |key_B|
-		args[:client].put_relation({
+		show_response args[:client].put_relation({
 			collection_A: args[:collection_A], key_A: args[:key_A], relation: args[:relation],
 			collection_B: args[:collection_B], key_B: key_B
 		})

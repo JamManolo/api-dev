@@ -17,34 +17,23 @@ require './transform-groups'
 # ---------------------------------------------------
 def transform_fixtures(options={})
 
-  use_ds    = options[:use_ds]    ? options[:use_ds]    : false
-  localtest = options[:localtest] ? options[:localtest] : false
   season    = options[:season]    ? options[:season]    : '1314' 
-  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
   league_id = options[:league_id] ? options[:league_id] :3
 
   league_id_str = standardize_id_str(league_id, :league)
 
-  if use_ds == true
-      puts "Fetching 'Fixtures by League' info for league #{league_id_str} from production data store ..."
-      fixtures_xml = Nokogiri::XML(aws_data_fetch({
-        name: "Fixtures-league-#{league_id_str}-#{season}.xml",
-        path: 'soccer/raw-data',
-      }))
-  elsif localtest == true
-    puts "Reading local data for all fixtures from '#{src_dir}/Fixtures-league-#{league_id_str}-#{season}.xml'..."
-    fixtures_xml = Nokogiri::XML(File.open("#{src_dir}/Fixtures-league-#{league_id_str}-#{season}.xml"))
-  else
-    puts "Setting up client"
-    xmlsoccer_client = XMLsoccerHTTP::RequestManager.new({
-      api_key: JSON.parse(File.open('xmlsoccer_config.json').read)['api_key'],
-      api_type: "Demo"
-    })
-    puts "Requesting data for all fixtures for league #{league_id} from xmlsoccer..."
-    STDOUT.flush
-    fixtures_xml = 
-      Nokogiri::XML(xmlsoccer_client.get_fixtures_by_league_and_season(league_id, season).body)
-  end
+  puts "Fetching 'Fixtures by League' info for league #{league_id_str} from production data store ..."
+  fixtures_xml = Nokogiri::XML(aws_data_fetch({
+    name: "Fixtures-league-#{league_id_str}-#{season}.xml",
+    path: 'soccer/raw-data',
+  }))
+
+  puts "Fetching 'Results by League' info for league #{league_id_str} from production data store ..."
+  report_xml = Nokogiri::XML(aws_data_fetch({
+    name: "HistoricMatches-league-#{league_id_str}-#{season}.xml",
+    path: 'soccer/raw-data',
+  }))
+  report_ids = report_xml.xpath("//Match/FixtureMatch_Id").map{ |node| node.text }
 
   fixture_recs = Array.new
   data_file_recs = Array.new
@@ -75,6 +64,9 @@ def transform_fixtures(options={})
       @team_fixture_ids[team_id_str] = Array.new unless @team_fixture_ids[team_id_str]
       @team_fixture_ids[team_id_str] << fixture_id_str
     end
+
+    # Add report_id for fixtures that have reports
+    report_id = (report_ids.include? fixture_id_str) ? fixture_id_str : 0
 
     # Handle missing 'Time' element (identified in MLS)
     node.add_child("<Time/>") if node.xpath("Time").first.nil?
@@ -139,7 +131,7 @@ def transform_fixtures(options={})
                       away_goals:   node.xpath("AwayGoals").text,
                       location:     node.xpath("Location").text,
                       time_x:       time_x,
-                      report_id:    0
+                      report_id:    report_id,
                     }
 
     # JMC-CREATE: Save this record as json file, for populating noDB
@@ -226,7 +218,7 @@ def transform_fixtures(options={})
     f.puts "\tdesc \"Fill database with additional league data\""
     f.puts "\ttask populate: :environment do"
     f.puts "\t\tif !ENV['create'].nil? and ENV['create'] == 'league'"
-    f.puts "\t\t\tid = League.find_by(league_id: #{league_id})"
+    f.puts "\t\t\tid = League.find_by(league_id: #{league_id.to_i})"
     f.puts "\t\t\tLeague.update("
     f.puts "\t\t\t\tid,"
     f.puts "\t\t\t\t\"final_round\" => \"#{final_round}\","
@@ -264,7 +256,7 @@ def transform_fixtures(options={})
     rel_info:  'league-fixture-ids',
     rel_key_A:  league_id_str,
     rel_keys_B: league_fixture_ids.sort,
-    jmc:        't1',
+    jmc:        'f1',
   })
   @nodb_file_recs << { name: filename, path: 'soccer/nodb', timestamp: `date`.strip, }
 

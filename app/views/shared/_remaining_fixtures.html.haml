@@ -5,12 +5,12 @@
   - fixtures.each do |fixture|
    .row
     .col-md-4.home-team
-     = link_to "#{fixture[:home_team]}", team_url(Team.find_by(team_id: fixture[:home_team_id]))
+     = link_to "#{fixture['home_team']}", team_url(Team.find_by(team_id: fixture['home_team_id']))
     .col-md-4
      .row
-      .col-md-2.col-md-offset-2= fixture[:date].in_time_zone.strftime('%a')
-      .col-md-1= fixture[:date].in_time_zone.strftime('%b')
-      .col-md-1= fixture[:date].in_time_zone.strftime('%d,')
-      .col-md-2= fixture[:date].in_time_zone.strftime('%H:%M')
+      .col-md-2.col-md-offset-2= fixture['date'].in_time_zone.strftime('%a')
+      .col-md-1= fixture['date'].in_time_zone.strftime('%b')
+      .col-md-1= fixture['date'].in_time_zone.strftime('%d,')
+      .col-md-2= fixture['date'].in_time_zone.strftime('%H:%M')
     .col-md-4.away-team 
-     = link_to "#{fixture[:away_team]}", team_url(Team.find_by(team_id: fixture[:away_team_id]))
+     = link_to "#{fixture['away_team']}", team_url(Team.find_by(team_id: fixture['away_team_id']))

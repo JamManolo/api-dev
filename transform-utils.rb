@@ -50,7 +50,7 @@ end
 #  Name: standardize_id_str
 #  Desc: id standardization routine
 # ----------------------------------------------
-@standard_id_length = { league: 2, team: 3, fixture: 6 }
+@standard_id_length = { league: 2, standing: 2, team: 3, fixture: 6 }
 
 def standardize_id_str(id, type)
   id_str = id.to_s
@@ -82,7 +82,7 @@ def get_domestic_league_ids
 end
 
 def get_competition_league_ids
-  @competitition_league_list.select { |e| !@empty_league_list.include? e.to_s }
+  @competition_league_list.select { |e| !@empty_league_list.include? e.to_s }
 end
 
 
@@ -180,6 +180,10 @@ def write_upload_list_json_file(args)
   filename
 end
 
+# -----------------------------------------------------------------------------
+#  Name: write_nodb_relation_json_file
+#  Desc: rel_type can be 'list' or 'relation' (default)
+# -----------------------------------------------------------------------------
 def write_nodb_relation_json_file(args)
   rel_type = args[:rel_type] ? args[:rel_type] : 'relation'
   target_dir = "./JSON-NODB"

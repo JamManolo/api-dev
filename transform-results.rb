@@ -5,7 +5,7 @@ require 'net/https'
 require "rubygems"
 require "json"
 require "uri"
-require "Nokogiri"
+# require "Nokogiri"
 require "./mygem/xmlsoccerhttp/lib/xmlsoccerhttp"
 require './xmlsoccer-league-map'
 require './transform-utils'
@@ -16,33 +16,26 @@ require './transform-utils'
 # ---------------------------------------------------
 def transform_results(options={})
 
-  use_ds    = options[:use_ds]    ? options[:use_ds]    : false
-  localtest = options[:localtest] ? options[:localtest] : false
-  src_dir   = options[:src_dir]   ? options[:src_dir]   : 'XML'
-  season    = options[:season]    ? options[:season]    : '1314'
+  season = options[:season] ? options[:season] : '1314'
   league_id_str = league_id = options[:league]
 
-  if use_ds == true
-      puts "Fetching 'Results by League' info for league #{league_id_str} from production data store ..."
-      match_xml = Nokogiri::XML(aws_data_fetch({
-        name: "HistoricMatches-league-#{league_id_str}-#{season}.xml",
-        path: 'soccer/raw-data',
-      }))
-  elsif localtest == true
-    puts "Reading local data for league #{league_id_str}, season #{season} " +
-         "from #{src_dir}/HistoricMatches-league-#{league_id_str}-#{season}.xml..."
-    match_xml = Nokogiri::XML(File.open("#{src_dir}/HistoricMatches-league-#{league_id_str}-#{season}.xml"))
-  end
+  puts "Fetching 'Results by League' info for league #{league_id_str} from production data store ..."
+  match_xml = Nokogiri::XML(aws_data_fetch({
+    name: "HistoricMatches-league-#{league_id_str}-#{season}.xml",
+    path: 'soccer/raw-data',
+  }))
 
   data_file_recs = Array.new
   
-  live_score_xml = Nokogiri::XML(File.open("XML/LiveScore-league3-latest.xml"))
-  live_score_match_ids = live_score_xml.xpath("//Match/Id").map{ |node| node.text }
-  # puts "live_score_match_ids #{live_score_match_ids}"
+  # live_score_xml = Nokogiri::XML(File.open("XML/LiveScore-league3-latest.xml"))
+  # live_score_match_ids = live_score_xml.xpath("//Match/Id").map{ |node| node.text }
+  # # puts "live_score_match_ids #{live_score_match_ids}"
+  live_score_match_ids = Array.new
 
   match_xml.xpath("//Match").each do |node|
 
-    next if localtest == false or node.xpath("Id").text == "62364"
+    next if node.xpath("Id").text == "62364"
+
 
     # puts "========= MATCH ID : '#{node.xpath("FixtureMatch_Id").text}' : LEAGUE : #{league} ========="
     fixture_match_id = node.xpath("FixtureMatch_Id").text
@@ -190,7 +183,6 @@ def transform_results(options={})
     ext: league_id_str,
   })
 
-
   # Create rake file to update Fixture.report_id with the match report id.
   # Yep, same as Fixture.match_id - essentially used as a 'has match report'
   # boolean for now, but keeping since the report id is likely to change
@@ -198,6 +190,7 @@ def transform_results(options={})
   update_recs = Array.new
   missing_recs = Array.new
   fixture_ids = get_league_fixture_ids(league_id_str)
+  $stdout.flush
   match_xml.xpath("//Match/FixtureMatch_Id").map{ |node| node.text }.each do |match_id|
     next if match_id == "0"
     if fixture_ids.include? match_id
@@ -256,8 +249,7 @@ def transform_driver
   @nodb_file_recs = Array.new
 
   get_league_ids.each do |league_id|
-    transform_results(league: league_id, season: '1314', localtest: true,
-                      use_ds: true, src_dir: 'XML-RAW')
+    transform_results(league: league_id, season: '1314')
   end
 
   # JMC-CREATE: Save json file for easy upload to noDB data store...

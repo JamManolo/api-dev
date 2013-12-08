@@ -17,6 +17,7 @@
 
 /*privatekey.p12
 /client_secret*
+/config/initializers/secret_token.rb
 
 /o.io.txt
 

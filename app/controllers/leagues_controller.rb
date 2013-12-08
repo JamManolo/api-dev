@@ -18,21 +18,24 @@ class LeaguesController < ApplicationController
     if @league.league_id == 16
       @group_names = ('A'..'H').to_a
       @team_group_map = {
-        "140"=>"A", "71"=>"D",  "17"=>"A",  "220"=>"B", "170"=>"C", "314"=>"B", "531"=>"C", "436"=>"D",
-        "155"=>"H", "75"=>"H",  "78"=>"F",  "68"=>"E",  "123"=>"F", "15"=>"E",  "145"=>"G", "846"=>"G",
-        "548"=>"G", "57"=>"F",  "188"=>"H", "54"=>"H",  "9"=>"F",   "537"=>"G", "425"=>"E", "375"=>"E",
-        "543"=>"D", "154"=>"B", "87"=>"B",  "74"=>"A",  "131"=>"C", "18"=>"D",  "192"=>"C", "549"=>"A",
+        "140"=>"A", "071"=>"D", "017"=>"A", "220"=>"B", "170"=>"C", "314"=>"B", "531"=>"C", "436"=>"D",
+        "155"=>"H", "075"=>"H", "078"=>"F", "068"=>"E", "123"=>"F", "015"=>"E", "145"=>"G", "846"=>"G",
+        "548"=>"G", "057"=>"F", "188"=>"H", "054"=>"H", "009"=>"F", "537"=>"G", "425"=>"E", "375"=>"E",
+        "543"=>"D", "154"=>"B", "087"=>"B", "074"=>"A", "131"=>"C", "018"=>"D", "192"=>"C", "549"=>"A",
+         "71"=>"D",  "17"=>"A",  "75"=>"H",  "78"=>"F",  "68"=>"E",  "15"=>"E",  "57"=>"F",  "54"=>"H",
+          "9"=>"F",  "87"=>"B",  "74"=>"A",  "18"=>"D", 
       }
     elsif @league.league_id == 17
       @group_names = ('A'..'L').to_a
       @team_group_map = {
-        "141"=>"A", "83"=>"E",  "230"=>"F", "184"=>"B", "770"=>"F", "864"=>"A", "194"=>"C", "379"=>"B",
-        "366"=>"D", "390"=>"C", "202"=>"D", "855"=>"E", "76"=>"J",  "60"=>"H",  "138"=>"I", "21"=>"K",
+        "141"=>"A", "083"=>"E", "230"=>"F", "184"=>"B", "770"=>"F", "864"=>"A", "194"=>"C", "379"=>"B",
+        "366"=>"D", "390"=>"C", "202"=>"D", "855"=>"E", "076"=>"J", "060"=>"H", "138"=>"I", "021"=>"K",
         "362"=>"G", "865"=>"J", "165"=>"L", "858"=>"L", "380"=>"K", "851"=>"G", "538"=>"I", "529"=>"H",
         "426"=>"K", "550"=>"D", "394"=>"L", "900"=>"A", "183"=>"L", "130"=>"I", "151"=>"H", "443"=>"G",
-        "412"=>"J", "372"=>"H", "195"=>"G", "212"=>"J", "857"=>"I", "417"=>"K", "133"=>"F", "19"=>"A", 
-        "12"=>"D",  "404"=>"C", "542"=>"E", "419"=>"F", "359"=>"C", "534"=>"E", "848"=>"B", "401"=>"B",
+        "412"=>"J", "372"=>"H", "195"=>"G", "212"=>"J", "857"=>"I", "417"=>"K", "133"=>"F", "019"=>"A", 
+        "012"=>"D", "404"=>"C", "542"=>"E", "419"=>"F", "359"=>"C", "534"=>"E", "848"=>"B", "401"=>"B",
         "854"=>"A",
+         "83"=>"E",  "76"=>"J",  "60"=>"H",  "21"=>"K",  "19"=>"A",  "12"=>"D", 
       }
     elsif @league.league_id == 20
       @month_names = [ 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', ]
@@ -77,6 +80,13 @@ class LeaguesController < ApplicationController
 
       if ["16", "17", "20"].include?(@league.league_id.to_s)
         competition_group_name = @team_group_map[node.xpath("#{namespace}Team_Id").text]
+        if competition_group_name.nil?
+          team_id_str = node.xpath("#{namespace}Team_Id").text
+          while team_id_str.length < 3
+            team_id_str = "0#{team_id_str}"
+          end
+          competition_group_name = @team_group_map[team_id_str]
+        end
       else
         competition_group_name = 'domestic_league'
       end
@@ -132,42 +142,74 @@ class LeaguesController < ApplicationController
       end
     end
 
+    # Set up orchestrate client - only here for now, b4 moving to more appropos location
+    @orch_config = JSON.parse(open('orch_config.json').read)
+    orchestrate = NoDB::Orchestrate.new({
+      'base-url' => @orch_config['base-url'], user: @orch_config['user']
+    })
+
     # Get fixtures for this league, sorting them out appropriately
-    Fixture.where(league_id: @league.league_id).each do |fixture|
+    response = orchestrate.get_relations(collection: 'leagues', key: league_id_str, relation: 'fixtures')
+    results = JSON.parse(response[:body])['results']
+    results.each do |result|
+      fixture = result['value']
       if @final_round > 1
-        if @fixturesX[fixture.round.to_s]
-          @fixturesX[fixture.round.to_s] << fixture
-        elsif @fixturesY[fixture.round.to_s]
-          @fixturesY[fixture.round.to_s] << fixture
+        if @fixturesX[fixture['round'].to_s]
+          @fixturesX[fixture['round'].to_s] << fixture
+        elsif @fixturesY[fixture['round'].to_s]
+          @fixturesY[fixture['round'].to_s] << fixture
         end
       elsif @final_round == 1
-        if fixture.time_x == "Finished"
+        if fixture['time_x'] == "Finished"
           @fixturesX['1'] << fixture
         else
           @fixturesY['1'] << fixture
         end
       elsif @group_names
-        if fixture.time_x == "Finished"
-          @fixturesX[@team_group_map[fixture.home_team_id.to_s]] << fixture
+        if fixture['time_x'] == "Finished"
+          @fixturesX[@team_group_map[fixture['home_team_id'].to_s]] << fixture
         else
-          @fixturesY[@team_group_map[fixture.home_team_id.to_s]] << fixture
+          @fixturesY[@team_group_map[fixture['home_team_id'].to_s]] << fixture
         end
       end
     end
 
-    # Handle MLS - separate fixtures by month
-    if @final_round == 1
-      @fixturesX['1'].each do |fixture|
-        month = fixture.date.in_time_zone.strftime('%B')
-        @fixturesX[month] = Array.new unless @fixturesX[month]
-        @fixturesX[month] << fixture
-      end
-      @fixturesY['1'].each do |fixture|
-        month = fixture.date.in_time_zone.strftime('%B')
-        @fixturesY[month] = Array.new unless @fixturesY[month]
-        @fixturesY[month] << fixture
-      end
-    end
+    # # Get fixtures for this league, sorting them out appropriately
+    # Fixture.where(league_id: @league.league_id).each do |fixture|
+    #   if @final_round > 1
+    #     if @fixturesX[fixture.round.to_s]
+    #       @fixturesX[fixture.round.to_s] << fixture
+    #     elsif @fixturesY[fixture.round.to_s]
+    #       @fixturesY[fixture.round.to_s] << fixture
+    #     end
+    #   elsif @final_round == 1
+    #     if fixture.time_x == "Finished"
+    #       @fixturesX['1'] << fixture
+    #     else
+    #       @fixturesY['1'] << fixture
+    #     end
+    #   elsif @group_names
+    #     if fixture.time_x == "Finished"
+    #       @fixturesX[@team_group_map[fixture.home_team_id.to_s]] << fixture
+    #     else
+    #       @fixturesY[@team_group_map[fixture.home_team_id.to_s]] << fixture
+    #     end
+    #   end
+    # end
+
+    # # Handle MLS - separate fixtures by month
+    # if @final_round == 1
+    #   @fixturesX['1'].each do |fixture|
+    #     month = fixture.date.in_time_zone.strftime('%B')
+    #     @fixturesX[month] = Array.new unless @fixturesX[month]
+    #     @fixturesX[month] << fixture
+    #   end
+    #   @fixturesY['1'].each do |fixture|
+    #     month = fixture.date.in_time_zone.strftime('%B')
+    #     @fixturesY[month] = Array.new unless @fixturesY[month]
+    #     @fixturesY[month] << fixture
+    #   end
+    # end
 
     # # Output results (completed fixtures)
     # @fixturesX = Hash.new
@@ -275,13 +317,8 @@ class LeaguesController < ApplicationController
     #     league_link:   domestic_league_link,
     #   }
 
-    @orch_config = JSON.parse(open('orch_config.json').read)
-    orchestrate = NoDB::Orchestrate.new({
-      'base-url' => @orch_config['base-url'], user: @orch_config['user']
-    })
-
+    
     response = orchestrate.get_relations(collection: 'leagues', key: league_id_str, relation: 'teams')
-
     results = JSON.parse(response[:body])['results']
     results.each do |result|
 
@@ -290,12 +327,12 @@ class LeaguesController < ApplicationController
       if ["16", "17",].include?(@league.league_id.to_s) 
         if team['league'].downcase == "unknown"
           domestic_league_name = "(#{team['country']})"
-          domestic_league_link = countries_url(country: team.country)
+          domestic_league_link = countries_url(country: team['country'])
         else
           domestic_league_name = team['league']
           domestic_league_link = league_url(League.find_by(league_id: team['league_id']))
         end
-        competition_group_name = @team_group_map[team['team_id'].to_s]
+        competition_group_name = @team_group_map[team['team_id']]
       elsif @league.league_id == 20
         competition_group_name = @team_group_map[team['team_id']]
       end
